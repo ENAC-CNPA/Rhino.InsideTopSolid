@@ -3,11 +3,13 @@
   <MenuStripItems>
 
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommand</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>
     
   </MenuStripItems>
   <ToolStripItems>
 
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommand</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>
    
   </ToolStripItems>
 </ContextMenuItem>

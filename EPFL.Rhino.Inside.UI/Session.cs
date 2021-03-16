@@ -23,9 +23,10 @@ namespace EPFL.RhinoInsideTopSolid.UI
 		{
 			try
 			{
+				
 				// Need to use RhinoCore one time to be able to use Rhino, even if there is nothing into m_rhino_core.
 				m_rhino_core = new Rhino.Runtime.InProcess.RhinoCore(); // Error loading Microsoft.WindowsAPICodePack.dll, but it works!
-				//Maybe a conflict with an already loaded DLL needing CodePack...
+																		//Maybe a conflict with an already loaded DLL needing CodePack...
 
 				// As the Excel sample : Error -200
 				// string SchemeName = $"Inside-TopSolid";
