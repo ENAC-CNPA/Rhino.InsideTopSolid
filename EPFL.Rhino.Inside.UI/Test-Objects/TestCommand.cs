@@ -42,6 +42,8 @@ namespace EPFL.RhinoInsideTopSolid.UI.Test
         /// <summary>
         /// Method call when the command button is pressed
         /// </summary>
+        /// 
+        
         protected override void Invoke()
         {
             //Invoke the base command...
@@ -67,7 +69,12 @@ namespace EPFL.RhinoInsideTopSolid.UI.Test
             //m_rhino_core = new Rhino.Runtime.InProcess.RhinoCore(new[] { "/nosplash" }, Rhino.Runtime.InProcess.WindowStyle.Hidden);
 
             //Nothing happens
+
             //RhinoInside.Resolver.Initialize();
+
+            //m_rhino_core = new Rhino.Runtime.InProcess.RhinoCore();
+
+
 
             //using (new Rhino.Runtime.InProcess.RhinoCore()) //System.IO.FileLoadException: 'Impossible de charger le fichier ou l'assembly 'Microsoft.WindowsAPICodePack.Shell, 
             //{

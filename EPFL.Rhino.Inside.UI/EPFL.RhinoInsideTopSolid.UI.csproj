@@ -249,17 +249,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContextMenu.cs" />
-    <Compile Include="Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources.cs" />
     <Compile Include="Session.cs" />
-    <Compile Include="Test\TestCommandUI.cs" />
-    <Compile Include="Test\TestCommand.cs" />
+    <Compile Include="Test-GH\TestCommandGH.cs" />
+    <Compile Include="Test-UI\TestCommandUI.cs" />
+    <Compile Include="Test-Objects\TestCommand.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ContextMenu.fr.resx">
@@ -267,9 +262,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ContextMenu.resx">
       <DependentUpon>ContextMenu.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources.fr.resx">
       <DependentUpon>Resources.cs</DependentUpon>
@@ -279,16 +271,22 @@
       <DependentUpon>Resources.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Test\TestCommandUI.fr.resx">
+    <EmbeddedResource Include="Test-GH\TestCommandGH.fr.resx">
+      <DependentUpon>TestCommandGH.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Test-GH\TestCommandGH.resx">
+      <DependentUpon>TestCommandGH.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Test-UI\TestCommandUI.fr.resx">
       <DependentUpon>TestCommandUI.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Test\TestCommandUI.resx">
+    <EmbeddedResource Include="Test-UI\TestCommandUI.resx">
       <DependentUpon>TestCommandUI.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Test\TestCommand.fr.resx">
+    <EmbeddedResource Include="Test-Objects\TestCommand.fr.resx">
       <DependentUpon>TestCommand.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Test\TestCommand.resx">
+    <EmbeddedResource Include="Test-Objects\TestCommand.resx">
       <DependentUpon>TestCommand.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
@@ -297,7 +295,7 @@
     <EmbeddedResource Include="ContextMenu.xml" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Test\TestCommand.ico" />
+    <EmbeddedResource Include="Test-Objects\TestCommand.ico" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Rhino.Inside">
@@ -305,8 +303,12 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Test\TestCommandUI.ico" />
+    <EmbeddedResource Include="Test-UI\TestCommandUI.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Test-GH\TestCommandGH.ico" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

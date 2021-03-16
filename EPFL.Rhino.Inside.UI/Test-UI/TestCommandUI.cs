@@ -46,16 +46,20 @@ namespace EPFL.RhinoInsideTopSolid.UI.Test
         /// Method call when the command button is pressed
         /// </summary>
         /// 
-        private static Form1 newMyWindow;
+        //private static Form1 newMyWindow;
 
         protected override void Invoke()
         {
-            RhinoInside.Resolver.Initialize();
+            //Must include Form1.cs to project
+            //System.IO.FileNotFoundException => RhinoWindows.dll
+
+            //RhinoInside.Resolver.Initialize();
             //System.IO:FileNotFoundException : Impossible de charger le fichier ou l'assembly 'RhinoWindows, ...'
-            newMyWindow = new Form1();
-            
-        }       
+            //newMyWindow = new Form1();
+        }
+
 
 
     }
 }
+
