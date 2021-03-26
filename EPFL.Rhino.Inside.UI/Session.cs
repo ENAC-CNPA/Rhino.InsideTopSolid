@@ -1,4 +1,4 @@
-﻿namespace EPFL.RhinoInsideTopSolid.UI
+﻿namespace EPFL.Rhino.Inside.UI
 {
 
     public static class Session
@@ -10,7 +10,7 @@
         }
 
 
-        static private Rhino.Runtime.InProcess.RhinoCore m_rhino_core;
+        static private global::Rhino.Runtime.InProcess.RhinoCore m_rhino_core;
 
         /// <summary>
         /// Starts the session.
@@ -22,8 +22,8 @@
 
 
                 // Need to use RhinoCore one time to be able to use Rhino, even if there is nothing into m_rhino_core.
-                m_rhino_core = new Rhino.Runtime.InProcess.RhinoCore(); // Error loading Microsoft.WindowsAPICodePack.dll, but it works!
-                                                                        //Maybe a conflict with an already loaded DLL needing CodePack...
+                m_rhino_core = new global::Rhino.Runtime.InProcess.RhinoCore(); // Error loading Microsoft.WindowsAPICodePack.dll, but it works!
+                                                                                //Maybe a conflict with an already loaded DLL needing CodePack...
 
                 // As the Excel sample : Error -200
                 // string SchemeName = $"Inside-TopSolid";

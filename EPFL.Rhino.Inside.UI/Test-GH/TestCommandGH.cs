@@ -1,12 +1,7 @@
-﻿using Rhino.Geometry;
-using Rhino.Geometry.Collections;
-using Rhino.Runtime.InProcess;
-//using Sample_2;
+﻿//using Sample_2;
 using System;
-using TK = TopSolid.Kernel;
-using TopSolid.Kernel.WX;
 
-namespace EPFL.RhinoInsideTopSolid.UI.Test
+namespace EPFL.Rhino.Inside.UI.Test
 {
 
     public partial class TestCommandGH : TopSolid.Kernel.UI.Commands.MenuCommand
@@ -114,4 +109,3 @@ namespace EPFL.RhinoInsideTopSolid.UI.Test
 
     }
 }
-

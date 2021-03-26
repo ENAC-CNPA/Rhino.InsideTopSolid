@@ -1,7 +1,7 @@
 ﻿//using Sample_2;
 using System;
 
-namespace EPFL.RhinoInsideTopSolid.UI.Test
+namespace EPFL.Rhino.Inside.UI.Test
 {
 
     public partial class TestCommandUI : TopSolid.Kernel.UI.Commands.MenuCommand
@@ -41,7 +41,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.Test
         /// Method call when the command button is pressed
         /// </summary>
         /// 
-        //private static Form1 newMyWindow;
+        private static Form1 newMyWindow;
 
         protected override void Invoke()
         {
@@ -49,9 +49,9 @@ namespace EPFL.RhinoInsideTopSolid.UI.Test
             //Must include Form1.cs to project
             //System.IO.FileNotFoundException => RhinoWindows.dll
 
-            //RhinoInside.Resolver.Initialize();
+            RhinoInside.Resolver.Initialize();
             //System.IO:FileNotFoundException : Impossible de charger le fichier ou l'assembly 'RhinoWindows, ...'
-            //newMyWindow = new Form1();
+            newMyWindow = new Form1();
         }
 
 

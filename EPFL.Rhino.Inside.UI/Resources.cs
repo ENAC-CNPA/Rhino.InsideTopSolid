@@ -1,6 +1,6 @@
 ﻿using TopSolid.Kernel.SX.Resources;
 
-namespace EPFL.RhinoInsideTopSolid.UI
+namespace EPFL.Rhino.Inside.UI
 {
     /// <summary>
     /// resources of Localization

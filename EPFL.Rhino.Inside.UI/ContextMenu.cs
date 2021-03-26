@@ -1,8 +1,6 @@
-﻿using System.Reflection;
-using TopSolid.Kernel.WX.Documents;
-using TK = TopSolid.Kernel;
+﻿using TopSolid.Kernel.WX.Documents;
 
-namespace EPFL.RhinoInsideTopSolid.UI
+namespace EPFL.Rhino.Inside.UI
 {
     /// <summary>
     /// Implements the context menu management for this AddIn.

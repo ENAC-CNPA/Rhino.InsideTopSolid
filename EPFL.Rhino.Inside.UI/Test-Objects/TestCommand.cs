@@ -8,7 +8,7 @@ using TopSolid.Kernel.GR.Displays;
 using TopSolid.Kernel.SX.Drawing;
 using TK = TopSolid.Kernel;
 
-namespace EPFL.RhinoInsideTopSolid.UI.Test
+namespace EPFL.Rhino.Inside.UI.Test
 {
 
     public partial class TestCommand : TopSolid.Kernel.UI.Commands.MenuCommand
@@ -179,9 +179,9 @@ namespace EPFL.RhinoInsideTopSolid.UI.Test
 
         //static private Rhino.Runtime.InProcess.RhinoCore m_rhino_core;
 
-        public static Rhino.Geometry.Mesh GetMesh()
+        public static global::Rhino.Geometry.Mesh GetMesh()
         {
-            Rhino.Geometry.Mesh mesh = new Rhino.Geometry.Mesh();
+            global::Rhino.Geometry.Mesh mesh = new global::Rhino.Geometry.Mesh();
             return mesh;
         }
 
