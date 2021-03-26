@@ -2,14 +2,14 @@
 
 namespace EPFL.RhinoInsideTopSolid.UI
 {
-	/// <summary>
-	/// Session DB Class
-	/// </summary>
-	[Obfuscation(Exclude = true)]
-	public static class Session
-	{
-		static Session()
-		{
+    /// <summary>
+    /// Session DB Class
+    /// </summary>
+    [Obfuscation(Exclude = true)]
+    public static class Session
+    {
+        static Session()
+        {
             // Important to be in static constructor, I don't know why...
             RhinoInside.Resolver.Initialize();
         }
@@ -20,14 +20,10 @@ namespace EPFL.RhinoInsideTopSolid.UI
         /// Starts the session.
         /// </summary>
         public static void Start()
-		{
-			try
-			{
+        {
+            try
+            {
 
-				
-				// Need to use RhinoCore one time to be able to use Rhino, even if there is nothing into m_rhino_core.
-				m_rhino_core = new Rhino.Runtime.InProcess.RhinoCore(); // Error loading Microsoft.WindowsAPICodePack.dll, but it works!
-																		//Maybe a conflict with an already loaded DLL needing CodePack...
 
                 // Need to use RhinoCore one time to be able to use Rhino, even if there is nothing into m_rhino_core.
                 m_rhino_core = new Rhino.Runtime.InProcess.RhinoCore(); // Error loading Microsoft.WindowsAPICodePack.dll, but it works!
@@ -38,6 +34,6 @@ namespace EPFL.RhinoInsideTopSolid.UI
                 // m_rhino_core = new Rhino.Runtime.InProcess.RhinoCore(new[] { $"/scheme={SchemeName}", "/nosplash" }, Rhino.Runtime.InProcess.WindowStyle.Hidden);
             }
             catch { }
-		}
-	}
+        }
+    }
 }
