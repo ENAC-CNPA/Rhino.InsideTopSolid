@@ -50,6 +50,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.Test
 
         protected override void Invoke()
         {
+<<<<<<< Updated upstream:EPFL.Rhino.Inside.UI/Test-UI/TestCommandUI.cs
             //Must include Form1.cs to project
             //System.IO.FileNotFoundException => RhinoWindows.dll
 
@@ -58,6 +59,13 @@ namespace EPFL.RhinoInsideTopSolid.UI.Test
             //newMyWindow = new Form1();
         }
 
+=======
+            //RhinoInside.Resolver.Initialize();
+            //System.IO:FileNotFoundException : Impossible de charger le fichier ou l'assembly 'RhinoWindows, ...'
+            //newMyWindow = new Form1();
+            
+        }       
+>>>>>>> Stashed changes:EPFL.Rhino.Inside.UI/Test/TestCommandUI.cs
 
 
     }
