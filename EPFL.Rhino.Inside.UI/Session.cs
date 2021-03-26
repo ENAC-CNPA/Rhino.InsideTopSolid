@@ -1,12 +1,6 @@
-﻿using System.Reflection;
-
-namespace EPFL.RhinoInsideTopSolid.UI
+﻿namespace EPFL.RhinoInsideTopSolid.UI
 {
-<<<<<<< Updated upstream
-    /// <summary>
-    /// Session DB Class
-    /// </summary>
-    [Obfuscation(Exclude = true)]
+
     public static class Session
     {
         static Session()
@@ -14,19 +8,7 @@ namespace EPFL.RhinoInsideTopSolid.UI
             // Important to be in static constructor, I don't know why...
             RhinoInside.Resolver.Initialize();
         }
-=======
-	/// <summary>
-	/// Session DB Class
-	/// </summary>
-	[Obfuscation(Exclude = true)]
-	public static class Session
-	{
-		static Session()
-		{
-			// Important to be in static constructor, I don't know why...
-			//RhinoInside.Resolver.Initialize();
-		}
->>>>>>> Stashed changes
+
 
         static private Rhino.Runtime.InProcess.RhinoCore m_rhino_core;
 
