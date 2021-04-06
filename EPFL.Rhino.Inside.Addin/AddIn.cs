@@ -55,17 +55,22 @@ namespace EPFL.Rhino.Inside.AddIn
             get { return new Guid[0]; }
         }
 
-        static readonly string SystemDir = (string)Microsoft.Win32.Registry.GetValue
-        (
-          @"HKEY_LOCAL_MACHINE\SOFTWARE\McNeel\Rhinoceros\7.0\Install", "Path",
-          Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Rhino 7", "System")
-        );
+        static readonly string SystemDir = "C:\\Program Files\\Rhino 7\\System";
+        //static readonly string SystemDir = (string)Microsoft.Win32.Registry.GetValue
+        //(
+        //  @"HKEY_LOCAL_MACHINE\SOFTWARE\McNeel\Rhinoceros\7.0\Install", "Path",
+        //  Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Rhino 7", "System")
+        //);
 
         static AddIn()
         {
+            //EPFL.Rhino.Inside.UI.Resolver.Initialize();
+
             // Force the loading of RhinoCommon.dll to not have the unknown DLL message.
             const string rhinoCommonAssemblyName = "RhinoCommon";
-            Assembly.LoadFrom(Path.Combine(SystemDir, rhinoCommonAssemblyName + ".dll"));
+            const string rhinoWindowsAssemblyName = "RhinoWindows";
+            Assembly.LoadFrom(Path.Combine(SystemDir, rhinoCommonAssemblyName + ".dll"));            
+            Assembly.LoadFrom(Path.Combine(SystemDir, rhinoWindowsAssemblyName + ".dll"));
         }
 
         /// <summary>

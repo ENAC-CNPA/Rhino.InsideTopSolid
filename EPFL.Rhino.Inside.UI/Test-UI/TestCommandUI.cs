@@ -1,5 +1,7 @@
 ﻿//using Sample_2;
 using System;
+using TK = TopSolid.Kernel;
+using TopSolid.Kernel.WX;
 
 namespace EPFL.Rhino.Inside.UI.Test
 {
@@ -42,6 +44,7 @@ namespace EPFL.Rhino.Inside.UI.Test
         /// </summary>
         /// 
         private static Form1 newMyWindow;
+        //private static EPFL.Rhino.Inside.UI.Test_UI.UserControl1 newMyWindow;
 
         protected override void Invoke()
         {
@@ -49,9 +52,22 @@ namespace EPFL.Rhino.Inside.UI.Test
             //Must include Form1.cs to project
             //System.IO.FileNotFoundException => RhinoWindows.dll
 
-            RhinoInside.Resolver.Initialize();
+            //RhinoInside.Resolver.Initialize();
             //System.IO:FileNotFoundException : Impossible de charger le fichier ou l'assembly 'RhinoWindows, ...'
+
+            using (new global::Rhino.Runtime.InProcess.RhinoCore())
+            {
             newMyWindow = new Form1();
+            }
+
+            //newMyWindow = new Test_UI.UserControl1();
+            if (newMyWindow == null)
+            {
+                newMyWindow = new Form1();
+                newMyWindow.AddOrModifyDockedWindow();
+            }
+
+
         }
 
 

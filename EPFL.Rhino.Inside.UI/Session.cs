@@ -6,11 +6,11 @@
         static Session()
         {
             // Important to be in static constructor, I don't know why...
-            RhinoInside.Resolver.Initialize();
+            EPFL.Rhino.Inside.UI.Resolver.Initialize();
         }
 
 
-        static private global::Rhino.Runtime.InProcess.RhinoCore m_rhino_core;
+        //static private global::Rhino.Runtime.InProcess.RhinoCore m_rhino_core;
 
         /// <summary>
         /// Starts the session.
@@ -22,7 +22,7 @@
 
 
                 // Need to use RhinoCore one time to be able to use Rhino, even if there is nothing into m_rhino_core.
-                m_rhino_core = new global::Rhino.Runtime.InProcess.RhinoCore(); // Error loading Microsoft.WindowsAPICodePack.dll, but it works!
+                //m_rhino_core = new global::Rhino.Runtime.InProcess.RhinoCore(); // Error loading Microsoft.WindowsAPICodePack.dll, but it works!
                                                                                 //Maybe a conflict with an already loaded DLL needing CodePack...
 
                 // As the Excel sample : Error -200
