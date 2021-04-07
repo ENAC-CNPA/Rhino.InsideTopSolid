@@ -56,6 +56,8 @@ namespace EPFL.Rhino.Inside.AddIn
         }
 
         static readonly string SystemDir = "C:\\Program Files\\Rhino 7\\System";
+        static readonly string GHDir = "C:\\Program Files\\Rhino 7\\Plug-ins\\Grasshopper";
+        
         //static readonly string SystemDir = (string)Microsoft.Win32.Registry.GetValue
         //(
         //  @"HKEY_LOCAL_MACHINE\SOFTWARE\McNeel\Rhinoceros\7.0\Install", "Path",
@@ -69,8 +71,10 @@ namespace EPFL.Rhino.Inside.AddIn
             // Force the loading of RhinoCommon.dll to not have the unknown DLL message.
             const string rhinoCommonAssemblyName = "RhinoCommon";
             const string rhinoWindowsAssemblyName = "RhinoWindows";
+            const string GHAssemblyName = "Grasshopper";
             Assembly.LoadFrom(Path.Combine(SystemDir, rhinoCommonAssemblyName + ".dll"));            
             Assembly.LoadFrom(Path.Combine(SystemDir, rhinoWindowsAssemblyName + ".dll"));
+            Assembly.LoadFrom(Path.Combine(GHDir, GHAssemblyName + ".dll"));
         }
 
         /// <summary>

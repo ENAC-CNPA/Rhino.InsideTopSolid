@@ -1,5 +1,5 @@
 ﻿
-namespace EPFL.Rhino.Inside.UI.Test_UI
+namespace EPFL.Rhino.Inside.UI
 {
     partial class UserControl1
     {
@@ -34,9 +34,12 @@ namespace EPFL.Rhino.Inside.UI.Test_UI
             // 
             // viewportControl1
             // 
+            this.viewportControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.viewportControl1.Location = new System.Drawing.Point(3, 3);
             this.viewportControl1.Name = "viewportControl1";
-            this.viewportControl1.Size = new System.Drawing.Size(144, 144);
+            this.viewportControl1.Size = new System.Drawing.Size(502, 393);
             this.viewportControl1.TabIndex = 0;
             this.viewportControl1.Text = "viewportControl1";
             // 
@@ -46,6 +49,7 @@ namespace EPFL.Rhino.Inside.UI.Test_UI
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.viewportControl1);
             this.Name = "UserControl1";
+            this.Size = new System.Drawing.Size(508, 399);
             this.ResumeLayout(false);
 
         }

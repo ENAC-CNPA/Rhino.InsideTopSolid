@@ -56,6 +56,10 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Grasshopper">
+      <HintPath>..\..\..\Program Files\Rhino 7\Plug-ins\Grasshopper\Grasshopper.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="RhinoCommon">
       <HintPath>..\..\..\Program Files\Rhino 7\System\RhinoCommon.dll</HintPath>
       <Private>False</Private>
@@ -262,12 +266,6 @@
     <Compile Include="Resources.cs" />
     <Compile Include="Session.cs" />
     <Compile Include="Test-GH\TestCommandGH.cs" />
-    <Compile Include="Test-UI\Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Test-UI\Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </Compile>
     <Compile Include="Test-UI\TestCommandUI.cs" />
     <Compile Include="Test-Objects\TestCommand.cs" />
     <Compile Include="Test-UI\UserControl1.cs">
@@ -298,9 +296,6 @@
     <EmbeddedResource Include="Test-GH\TestCommandGH.resx">
       <DependentUpon>TestCommandGH.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Test-UI\Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Test-UI\TestCommandUI.fr.resx">
       <DependentUpon>TestCommandUI.cs</DependentUpon>
     </EmbeddedResource>
@@ -330,7 +325,6 @@
   <ItemGroup>
     <EmbeddedResource Include="Test-GH\TestCommandGH.ico" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

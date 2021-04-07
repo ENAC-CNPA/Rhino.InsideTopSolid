@@ -43,7 +43,7 @@ namespace EPFL.Rhino.Inside.UI.Test
         /// Method call when the command button is pressed
         /// </summary>
         /// 
-        private static Form1 newMyWindow;
+        private static UserControl1 newMyWindow;
         //private static EPFL.Rhino.Inside.UI.Test_UI.UserControl1 newMyWindow;
 
         protected override void Invoke()
@@ -55,18 +55,21 @@ namespace EPFL.Rhino.Inside.UI.Test
             //RhinoInside.Resolver.Initialize();
             //System.IO:FileNotFoundException : Impossible de charger le fichier ou l'assembly 'RhinoWindows, ...'
 
-            using (new global::Rhino.Runtime.InProcess.RhinoCore())
-            {
-            newMyWindow = new Form1();
-            }
+            //using (new global::Rhino.Runtime.InProcess.RhinoCore())
+            //{
+            //newMyWindow = new Form1();
+            //}
 
             //newMyWindow = new Test_UI.UserControl1();
             if (newMyWindow == null)
             {
-                newMyWindow = new Form1();
+                newMyWindow = new UserControl1();
                 newMyWindow.AddOrModifyDockedWindow();
             }
-
+            else
+            {
+                newMyWindow.DockedContent.Visible = true;
+            }
 
         }
 
