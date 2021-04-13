@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContextMenuItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Icon="Item" Text="$MenuTitle" Resource="EPFL.Rhino.Inside.UI.ContextMenu">
+<ContextMenuItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Icon="Item" Text="$MenuTitle" Resource="EPFL.RhinoInsideTopSolid.UI.ContextMenu">
   <MenuStripItems>
 
-    <MenuItem xsi:type="CommandMenuItem">EPFL.Rhino.Inside.UI.Test.TestCommand</MenuItem>
-    <MenuItem xsi:type="CommandMenuItem">EPFL.Rhino.Inside.UI.Test.TestCommandUI</MenuItem>
-    <MenuItem xsi:type="CommandMenuItem">EPFL.Rhino.Inside.UI.Test.TestCommandGH</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommand</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandGH</MenuItem>
     
   </MenuStripItems>
   <ToolStripItems>
 
-    <MenuItem xsi:type="CommandMenuItem">EPFL.Rhino.Inside.UI.Test.TestCommand</MenuItem>
-    <MenuItem xsi:type="CommandMenuItem">EPFL.Rhino.Inside.UI.Test.TestCommandUI</MenuItem>
-    <MenuItem xsi:type="CommandMenuItem">EPFL.Rhino.Inside.UI.Test.TestCommandGH</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommand</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandGH</MenuItem>
    
   </ToolStripItems>
 </ContextMenuItem>

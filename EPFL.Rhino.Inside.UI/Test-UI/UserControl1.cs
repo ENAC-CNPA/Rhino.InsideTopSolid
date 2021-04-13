@@ -14,11 +14,11 @@ using Rhino.Runtime.InProcess;
 using Rhino;
 using Grasshopper;
 
-namespace EPFL.Rhino.Inside.UI
+namespace EPFL.RhinoInsideTopSolid.UI
 {
     public partial class UserControl1 : EnhancedContainer
     {
-        global::Rhino.Runtime.InProcess.RhinoCore rhinoCore;
+        Rhino.Runtime.InProcess.RhinoCore rhinoCore;
 
         private DockedContent dockedContent = null;
         public DockedContent DockedContent
@@ -64,7 +64,7 @@ namespace EPFL.Rhino.Inside.UI
         }
         protected override void OnHandleCreated(EventArgs e)
         {
-            rhinoCore = new global::Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Hidden, Handle);
+            rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Hidden, Handle);
             base.OnHandleCreated(e);
         }
 
@@ -78,11 +78,11 @@ namespace EPFL.Rhino.Inside.UI
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            //global::Rhino.RhinoDoc.ActiveDoc.Objects.AddSphere(new global::Rhino.Geometry.Sphere(global::Rhino.Geometry.Point3d.Origin, 10));
+            Rhino.RhinoDoc.ActiveDoc.Objects.AddSphere(new Rhino.Geometry.Sphere(Rhino.Geometry.Point3d.Origin, 10));
 
-            global::Rhino.RhinoDoc.Open(@"C:\Sources\RhinoInsideTopSo.3dm", out bool alreadyOpen);
+            Rhino.RhinoDoc.Open(@"C:\Sources\RhinoInsideTopSo.3dm", out bool alreadyOpen);
 
-            viewportControl1.Viewport.DisplayMode = global::Rhino.Display.DisplayModeDescription.FindByName("Arctic");
+            viewportControl1.Viewport.DisplayMode = Rhino.Display.DisplayModeDescription.FindByName("Arctic");
             viewportControl1.Invalidate();
         }
 

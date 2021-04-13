@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using TK = TopSolid.Kernel;
 
-namespace EPFL.Rhino.Inside.AddIn
+namespace EPFL.RhinoInsideTopSolid.AddIn
 {
     /// <summary>
     /// Represents sample command by add-in.
@@ -83,7 +83,7 @@ namespace EPFL.Rhino.Inside.AddIn
         /// </summary>
         public override void InitializeSession()
         {
-            EPFL.Rhino.Inside.UI.ContextMenu.AddMenu();
+            EPFL.RhinoInsideTopSolid.UI.ContextMenu.AddMenu();
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace EPFL.Rhino.Inside.AddIn
         /// </summary>
         public override void StartSession()
         {
-            TK.SX.SessionManager.Start(typeof(EPFL.Rhino.Inside.UI.Session));
+            TK.SX.SessionManager.Start(typeof(EPFL.RhinoInsideTopSolid.UI.Session));
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace EPFL.Rhino.Inside.AddIn
         /// </summary>
         public override string GetRegistrationCertificate()
         {
-            return TK.SX.String.ReadResourceTextFile(typeof(AddIn), "EPFL.Rhino.Inside.AddIn.xml");
+            return TK.SX.String.ReadResourceTextFile(typeof(AddIn), "EPFL.RhinoInsideTopSolid.AddIn.xml");
 
         }
     }

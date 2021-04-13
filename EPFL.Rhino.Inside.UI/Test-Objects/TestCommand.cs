@@ -9,7 +9,7 @@ using TopSolid.Kernel.SX.Drawing;
 using TK = TopSolid.Kernel;
 using Rhino.Runtime.InProcess;
 
-namespace EPFL.Rhino.Inside.UI.Test
+namespace EPFL.RhinoInsideTopSolid.UI.Test
 {
 
     public partial class TestCommand : TopSolid.Kernel.UI.Commands.MenuCommand
@@ -50,7 +50,7 @@ namespace EPFL.Rhino.Inside.UI.Test
         /// </summary>
         /// 
 
-        global::Rhino.Runtime.InProcess.RhinoCore rhinoCore;
+        Rhino.Runtime.InProcess.RhinoCore rhinoCore;
 
         protected override void Invoke()
         {
@@ -85,7 +85,7 @@ namespace EPFL.Rhino.Inside.UI.Test
             //System.IO.FileLoadException: 'Impossible de charger le fichier ou l'assembly 'Microsoft.WindowsAPICodePack.Shell,
             
             if (rhinoCore == null)
-                rhinoCore = new global::Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Hidden);
+                rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Hidden);
             
                 var pt1 = new Point3d(0, 0, 0);
                 var pt2 = new Point3d(5, 5, 5);
@@ -186,9 +186,9 @@ namespace EPFL.Rhino.Inside.UI.Test
 
         //static private Rhino.Runtime.InProcess.RhinoCore m_rhino_core;
 
-        public static global::Rhino.Geometry.Mesh GetMesh()
+        public static Rhino.Geometry.Mesh GetMesh()
         {
-            global::Rhino.Geometry.Mesh mesh = new global::Rhino.Geometry.Mesh();
+            Rhino.Geometry.Mesh mesh = new Rhino.Geometry.Mesh();
             return mesh;
         }
 

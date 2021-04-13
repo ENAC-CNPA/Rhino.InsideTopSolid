@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPFL.Rhino.Inside.AddIn", "EPFL.Rhino.Inside.Addin\EPFL.Rhino.Inside.AddIn.csproj", "{F38BBF97-96F3-4B7A-887B-79AFEA38F387}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPFL.RhinoInsideTopSolid.AddIn", "EPFL.Rhino.Inside.Addin\EPFL.RhinoInsideTopSolid.AddIn.csproj", "{F38BBF97-96F3-4B7A-887B-79AFEA38F387}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPFL.Rhino.Inside.UI", "EPFL.Rhino.Inside.UI\EPFL.Rhino.Inside.UI.csproj", "{A08D75AA-5DF2-4B57-918E-D2F4B2AB7FB8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPFL.RhinoInsideTopSolid.UI", "EPFL.Rhino.Inside.UI\EPFL.RhinoInsideTopSolid.UI.csproj", "{A08D75AA-5DF2-4B57-918E-D2F4B2AB7FB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

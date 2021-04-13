@@ -7,7 +7,7 @@ using System.IO;
 //[assembly: ExtensionApplication(typeof(EPFL.RhinoInsideTopSolid.UI))]
 
 
-namespace EPFL.Rhino.Inside.UI
+namespace EPFL.RhinoInsideTopSolid.UI
 {
     public class Resolver
     {

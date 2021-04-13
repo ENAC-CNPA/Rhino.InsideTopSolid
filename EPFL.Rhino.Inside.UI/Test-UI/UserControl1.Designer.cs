@@ -1,5 +1,5 @@
 ﻿
-namespace EPFL.Rhino.Inside.UI
+namespace EPFL.RhinoInsideTopSolid.UI
 {
     partial class UserControl1
     {

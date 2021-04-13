@@ -3,7 +3,7 @@ using System;
 using TK = TopSolid.Kernel;
 using TopSolid.Kernel.WX;
 
-namespace EPFL.Rhino.Inside.UI.Test
+namespace EPFL.RhinoInsideTopSolid.UI.Test
 {
 
     public partial class TestCommandUI : TopSolid.Kernel.UI.Commands.MenuCommand
@@ -55,7 +55,7 @@ namespace EPFL.Rhino.Inside.UI.Test
             //RhinoInside.Resolver.Initialize();
             //System.IO:FileNotFoundException : Impossible de charger le fichier ou l'assembly 'RhinoWindows, ...'
 
-            //using (new global::Rhino.Runtime.InProcess.RhinoCore())
+            //using (new Rhino.Runtime.InProcess.RhinoCore())
             //{
             //newMyWindow = new Form1();
             //}

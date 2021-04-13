@@ -3,7 +3,7 @@ using System;
 using Rhino.Runtime.InProcess;
 using Grasshopper;
 
-namespace EPFL.Rhino.Inside.UI.Test
+namespace EPFL.RhinoInsideTopSolid.UI.Test
 {
 
     public partial class TestCommandGH : TopSolid.Kernel.UI.Commands.MenuCommand
@@ -50,7 +50,7 @@ namespace EPFL.Rhino.Inside.UI.Test
         protected override void Invoke()
         {
             if (rhinoCore == null)
-                rhinoCore = new global::Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Normal);
+                rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Normal);
         }
 
         //TopSolid.Kernel.TX.Undo.UndoSequence.UndoCurrent();
