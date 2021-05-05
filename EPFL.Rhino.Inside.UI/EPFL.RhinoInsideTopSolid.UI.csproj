@@ -265,7 +265,7 @@
     <Compile Include="Resolver.cs" />
     <Compile Include="Resources.cs" />
     <Compile Include="Session.cs" />
-    <Compile Include="Test-GH\TestCommandGH.cs" />
+    <Compile Include="GHTS\GrasshopperCommand.cs" />
     <Compile Include="Test-UI\TestCommandUI.cs" />
     <Compile Include="Test-Objects\TestCommand.cs" />
     <Compile Include="Test-UI\UserControl1.cs">
@@ -290,11 +290,11 @@
       <DependentUpon>Resources.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Test-GH\TestCommandGH.fr.resx">
-      <DependentUpon>TestCommandGH.cs</DependentUpon>
+    <EmbeddedResource Include="GHTS\GrasshopperCommand.fr.resx">
+      <DependentUpon>GrasshopperCommand.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Test-GH\TestCommandGH.resx">
-      <DependentUpon>TestCommandGH.cs</DependentUpon>
+    <EmbeddedResource Include="GHTS\GrasshopperCommand.resx">
+      <DependentUpon>GrasshopperCommand.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Test-UI\TestCommandUI.fr.resx">
       <DependentUpon>TestCommandUI.cs</DependentUpon>
@@ -323,7 +323,7 @@
     <EmbeddedResource Include="Test-UI\TestCommandUI.ico" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Test-GH\TestCommandGH.ico" />
+    <EmbeddedResource Include="GHTS\GrasshopperCommand.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

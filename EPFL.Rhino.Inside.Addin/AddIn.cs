@@ -66,13 +66,12 @@ namespace EPFL.RhinoInsideTopSolid.AddIn
 
         static AddIn()
         {
-            //EPFL.Rhino.Inside.UI.Resolver.Initialize();
-
+            
             // Force the loading of RhinoCommon.dll to not have the unknown DLL message.
             const string rhinoCommonAssemblyName = "RhinoCommon";
             const string rhinoWindowsAssemblyName = "RhinoWindows";
             const string GHAssemblyName = "Grasshopper";
-            Assembly.LoadFrom(Path.Combine(SystemDir, rhinoCommonAssemblyName + ".dll"));            
+            Assembly.LoadFrom(Path.Combine(SystemDir, rhinoCommonAssemblyName + ".dll"));
             Assembly.LoadFrom(Path.Combine(SystemDir, rhinoWindowsAssemblyName + ".dll"));
             Assembly.LoadFrom(Path.Combine(GHDir, GHAssemblyName + ".dll"));
         }
