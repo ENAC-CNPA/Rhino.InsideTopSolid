@@ -9,6 +9,10 @@
   </PropertyGroup>
 	
   <ItemGroup>
+    <Compile Remove="GrasshopperPreview.cs" />
+  </ItemGroup>
+	
+  <ItemGroup>
     <None Remove="Resources\TopSolid.png" />
   </ItemGroup>
 	
@@ -31,6 +35,18 @@
     </Reference>
     <Reference Include="TopSolid.Kernel.G">
       <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.G.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="TopSolid.Kernel.G.D3.Curves">
+      <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.G.D3.Curves.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="TopSolid.Kernel.G.D3.Shapes">
+      <HintPath>..\..\Topsolid 7.13\Debug x64\TopSolid.Kernel.G.D3.Shapes.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="TopSolid.Kernel.G.D3.Surfaces">
+      <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.G.D3.Surfaces.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="TopSolid.Kernel.GR">

@@ -54,8 +54,17 @@ namespace EPFL.GrasshopperTopSolid.Components
             if (pts == null) { return; }
             if (pts.Count == 0) { return; }
 
+            
+            GeometricDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
+            GeneralDisplay myGeneralDisplay = new GeneralDisplay(null);
             List<TKG.D3.Point> TSpts = new List<TKG.D3.Point>();
-            GeneralDisplay myGeneralDisplay = new GeneralDisplay(null);            
+
+            if (myGeneralDisplay != null && document.Display.ContainsDisplay(myGeneralDisplay))
+            {
+                // Remove the general display to the document display
+                document.Display.RemoveDisplay(myGeneralDisplay);
+            }
+
             foreach (Point3d pt in pts)
             {
                 var p = pt.ToHost();
@@ -65,14 +74,14 @@ namespace EPFL.GrasshopperTopSolid.Components
                 markerTSpoint.MarkerStyle = MarkerStyle.ExtraLargeTriangle;
                 myGeneralDisplay.Add(markerTSpoint);
             }
-
-            GeometricDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
+                        
             document.Display.AddDisplay(myGeneralDisplay);
+            TopSolid.Kernel.UI.Application.Update();
 
             DA.SetDataList(0, TSpts);
 
         }
-
+       
         /// <summary>
         /// Provides an Icon for the component.
         /// </summary>

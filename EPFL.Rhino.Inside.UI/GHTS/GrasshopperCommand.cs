@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using Rhino.Runtime.InProcess;
 using Grasshopper;
+using Grasshopper.Kernel;
 
 namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 {
@@ -66,7 +67,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
             else
             {
                 Script.ShowEditor();                
-            }         
+            }     
         }
 
         public static bool LoadGrasshopperComponents()
@@ -104,5 +105,6 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
             _grasshopperLoaded = true;
             return rc;
         }
+                
     }
 }
