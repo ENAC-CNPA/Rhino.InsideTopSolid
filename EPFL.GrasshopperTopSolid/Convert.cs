@@ -1,25 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Rhino.Geometry;
+using Rhino.Geometry.Collections;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TKG = TopSolid.Kernel.G;
+using TopSolid.Kernel.G.D1;
 using TopSolid.Kernel.G.D3;
 using TopSolid.Kernel.G.D3.Curves;
 using TopSolid.Kernel.G.D3.Surfaces;
 using TopSolid.Kernel.SX.Collections;
-using TopSolid.Kernel.G.D1;
-using Rhino.Geometry;
-using Rhino.Geometry.Collections;
+using TKG = TopSolid.Kernel.G;
 
 namespace EPFL.GrasshopperTopSolid
 {
     public static class Convert
     {
         #region Point
-        static public TKG.D3.Point ToHost(this Point3d p) 
+        static public TKG.D3.Point ToHost(this Point3d p)
         {
-            return new TKG.D3.Point(p.X, p.Y, p.Z);        
+            return new TKG.D3.Point(p.X, p.Y, p.Z);
         }
         static public TKG.D3.Point ToHost(this Rhino.Geometry.Point p)
         {
@@ -48,22 +44,22 @@ namespace EPFL.GrasshopperTopSolid
         }
         static public Rhino.Geometry.Line ToRhino(this TKG.D3.Curves.LineCurve l)
         {
-            return new Rhino.Geometry.Line(l.Ps.ToRhino(),l.Pe.ToRhino());
+            return new Rhino.Geometry.Line(l.Ps.ToRhino(), l.Pe.ToRhino());
         }
 
-        
+
         #endregion
         #region Curve
         static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve c)
         {
             bool r = c.IsRational;
             bool p = c.IsPeriodic;
-            int d = c.Degree;            
+            int d = c.Degree;
             DoubleList k = ToDoubleList(c.Knots, d);
             PointList pts = ToPointList(c.Points);
             DoubleList w = ToDoubleList(c.Points);
             BSpline b = new BSpline(p, d, k);
-            if(r)
+            if (r)
             {
                 //var w = c.Points.ConvertAll(x => x.Weight);
                 BSplineCurve bs = new BSplineCurve(b, pts, w);
@@ -74,7 +70,7 @@ namespace EPFL.GrasshopperTopSolid
                 BSplineCurve bs = new BSplineCurve(b, pts);
                 return bs;
             }
-            
+
         }
         static bool KnotAlmostEqualTo(double max, double min) =>
       KnotAlmostEqualTo(max, min, 1.0e-09);
@@ -110,18 +106,18 @@ namespace EPFL.GrasshopperTopSolid
                 var weight = p.Weight;
                 w.Add(weight);
             }
-            return w;            
+            return w;
         }
         static DoubleList ToDoubleList(NurbsCurveKnotList list, int degree)
         {
-            var count = list.Count;            
+            var count = list.Count;
             var knots = new double[count + 2];
 
             var min = list[0];
             var max = list[count - 1];
             var mid = 0.5 * (min + max);
             var factor = 1.0 / (max - min); // normalized
-            
+
             // End knot
             knots[count + 1] = /*(list[count - 1] - max) * factor +*/ 1.0;
             for (int k = count - 1; k >= count - degree; --k)
@@ -156,7 +152,7 @@ namespace EPFL.GrasshopperTopSolid
 
             knots.ToList();
             var kDl = new DoubleList();
-            foreach(double d in knots)
+            foreach (double d in knots)
             {
                 kDl.Add(d);
             }
@@ -165,14 +161,14 @@ namespace EPFL.GrasshopperTopSolid
         static PointList ToPointList(NurbsCurvePointList list)
         {
             var count = list.Count;
-            PointList points = new PointList();            
-            foreach(ControlPoint p in list)
+            PointList points = new PointList();
+            foreach (ControlPoint p in list)
             {
                 var location = p.Location;
                 var pt = new TKG.D3.Point(location.X, location.Y, location.Z);
                 points.Add(pt);
             }
-            
+
             return points;
         }
         #endregion
@@ -192,7 +188,7 @@ namespace EPFL.GrasshopperTopSolid
             BSpline bU = new BSpline(pU, dU, kU);
             BSpline bV = new BSpline(pV, dV, kV);
 
-            if(r)
+            if (r)
             {
                 BSplineSurface bs = new BSplineSurface(bU, bV, cp, w);
                 return bs;
@@ -202,7 +198,26 @@ namespace EPFL.GrasshopperTopSolid
                 BSplineSurface bs = new BSplineSurface(bU, bV, cp);
                 return bs;
             }
-            
+
+        }
+
+        public static Rhino.Geometry.Surface ToHost(this BSplineSurface s)
+        {
+            bool r = s.IsRational;
+            bool pU = s.IsUPeriodic;
+            bool pV = s.IsVPeriodic;
+            var dU = s.UDegree;
+            var dV = s.VDegree;
+            var kU = s.UBs;
+
+
+            BSpline bU = new BSpline(pU, dU, kU);
+            BSpline bV = new BSpline(pV, dV, kV);
+
+
+            return bs;
+
+
         }
 
         public static DoubleList ToDoubleList(NurbsSurfaceKnotList list)
@@ -228,7 +243,7 @@ namespace EPFL.GrasshopperTopSolid
         {
             var count = list.CountU * list.CountV;
             var points = new PointList(count);
-                        
+
             foreach (ControlPoint p in list)
             {
                 var location = p.Location;

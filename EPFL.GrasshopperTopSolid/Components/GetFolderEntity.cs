@@ -1,11 +1,7 @@
-using Grasshopper;
-using Grasshopper.Kernel;
-using Rhino.Geometry;
+﻿using Grasshopper.Kernel;
 using System;
-using System.Collections.Generic;
-using TopSolid.Kernel.DB.D3.Documents;
-using TopSolid.Kernel.UI;
 using System.Linq;
+using TopSolid.Kernel.DB.D3.Documents;
 using TopSolid.Kernel.DB.Entities;
 
 namespace EPFL.GrasshopperTopSolid
@@ -30,7 +26,7 @@ namespace EPFL.GrasshopperTopSolid
         /// Registers all the input parameters for this component.
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {            
+        {
         }
 
         /// <summary>
@@ -51,9 +47,9 @@ namespace EPFL.GrasshopperTopSolid
             GeometricDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
             TopSolid.Kernel.TX.Undo.UndoSequence.UndoCurrent();
             TopSolid.Kernel.TX.Undo.UndoSequence.Start("Test", true);
-                        
-            var L = document.RootEntity.Entities.Where(x => x is FolderEntity);
-            
+
+            var L = document.RootEntity.DeepEntities.Where(x => x is FolderEntity);
+
             TopSolid.Kernel.TX.Undo.UndoSequence.End();
 
             DA.SetData(0, L);

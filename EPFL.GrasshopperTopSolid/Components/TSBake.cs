@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-
-using Grasshopper.Kernel;
+﻿using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
-
-using TopSolid.Kernel.DB.D3.Documents;
-using TopSolid.Kernel.DB.D3.Points;
+using System;
+using System.Collections.Generic;
+using TopSolid.Kernel.DB.D3.Profiles;
 using TopSolid.Kernel.DB.D3.Curves;
+using TopSolid.Kernel.DB.D3.Documents;
+using TopSolid.Kernel.DB.D3.Modeling.Documents;
+using TopSolid.Kernel.DB.D3.Points;
 using TopSolid.Kernel.DB.D3.Surfaces;
 using TopSolid.Kernel.TX.Undo;
 
@@ -50,15 +50,16 @@ namespace EPFL.GrasshopperTopSolid.Components
             List<IGH_GeometricGoo> geo = new List<IGH_GeometricGoo>();
             bool run = false;
 
-            if (!DA.GetDataList(0, geo)) { return; }            
+            if (!DA.GetDataList(0, geo)) { return; }
 
             if (geo == null) { return; }
             if (geo.Count == 0) { return; }
-            
+
             DA.GetData(1, ref run);
 
-            GeometricDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;    
-            
+            GeometricDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
+            //ModelingDocument doc2 = TopSolid.Kernel.UI.Application.CurrentDocument as ModelingDocument;
+
             if (run == true)
             {
                 UndoSequence.UndoCurrent();
@@ -72,7 +73,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         GH_Convert.ToPoint3d(gp, ref rp, 0);
                         var tp = rp.ToHost();
                         PointEntity pe = new PointEntity(doc, 0);
-                        pe.Geometry = tp;                        
+                        pe.Geometry = tp;
                         pe.Create(doc.PointsFolderEntity);
                     }
                     else if (g is GH_Curve gc)
@@ -83,15 +84,15 @@ namespace EPFL.GrasshopperTopSolid.Components
                         var tc = rn.ToHost();
                         CurveEntity ce = new CurveEntity(doc, 0);
                         ce.Geometry = tc;
-                        ce.Create(doc.PointsFolderEntity);                                                                     
+                        ce.Create(doc.PointsFolderEntity);
                     }
-                    else if(g is GH_Surface gs)
+                    else if (g is GH_Surface gs)
                     {
                         Surface rs = null;
                         GH_Convert.ToSurface(gs, ref rs, 0);
                         var rn = rs.ToNurbsSurface();
                         var ts = rn.ToHost();
-                        SurfaceEntity se = new SurfaceEntity(doc,0);
+                        SurfaceEntity se = new SurfaceEntity(doc, 0);
                         se.Geometry = ts;
                         se.Create(doc.PointsFolderEntity);
                     }

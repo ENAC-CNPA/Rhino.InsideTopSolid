@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	
+
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <Version>1.0</Version>
@@ -7,66 +7,62 @@
     <Description>Description of GrasshopperTopSolid</Description>
     <TargetExt>.gha</TargetExt>
   </PropertyGroup>
-	
+
   <ItemGroup>
     <Compile Remove="GrasshopperPreview.cs" />
   </ItemGroup>
-	
+
   <ItemGroup>
     <None Remove="Resources\TopSolid.png" />
   </ItemGroup>
-	
+
   <ItemGroup>
     <EmbeddedResource Include="Resources\TopSolid.png" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Grasshopper" Version="7.4.21078.1001" IncludeAssets="compile;build" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Reference Include="TopSolid.Kernel.DB">
-      <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.DB.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.DB.D3">
-      <HintPath>..\..\Topsolid 7.13\Debug x64\TopSolid.Kernel.DB.D3.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.D3.dll</HintPath>
+    </Reference>
+    <Reference Include="TopSolid.Kernel.DB.D3.Modeling">
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.D3.Modeling.dll</HintPath>
+    </Reference>
+    <Reference Include="TopSolid.Kernel.DB.D3.Shapes">
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.D3.Shapes.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.G">
-      <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.G.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.G.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.G.D3.Curves">
-      <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.G.D3.Curves.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.G.D3.Curves.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.G.D3.Shapes">
-      <HintPath>..\..\Topsolid 7.13\Debug x64\TopSolid.Kernel.G.D3.Shapes.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.G.D3.Shapes.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.G.D3.Surfaces">
-      <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.G.D3.Surfaces.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.G.D3.Surfaces.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.GR">
-      <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.GR.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.GR.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.SX">
-      <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.SX.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.SX.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.TX">
-      <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.TX.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.TX.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.UI">
-      <HintPath>..\..\Topsolid 7.14\Debug x64\TopSolid.Kernel.UI.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -74,22 +70,22 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
   </ItemGroup>
-  
+
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  
+
   <PropertyGroup Condition="$(Configuration) == 'Debug' AND $([MSBuild]::IsOSPlatform(Windows))">
     <StartProgram>C:\Program Files\Rhino 7\System\Rhino.exe</StartProgram>
     <StartArguments></StartArguments>
     <StartAction>Program</StartAction>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutDir>C:\Sources\Topsolid 7.14\Debug x64\</OutDir>
+    <OutDir>C:\Sources\Topsolid 7.15\Debug x64\</OutDir>
     <DefineConstants>TRACE</DefineConstants>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>

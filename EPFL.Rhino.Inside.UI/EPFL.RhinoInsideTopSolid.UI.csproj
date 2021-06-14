@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\..\..\Sources\Topsolid 7.14\Debug x64\</OutputPath>
+    <OutputPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -57,15 +57,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Grasshopper">
-      <HintPath>..\..\..\Program Files\Rhino 7\Plug-ins\Grasshopper\Grasshopper.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files\Rhino 7\Plug-ins\Grasshopper\Grasshopper.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="RhinoCommon">
-      <HintPath>..\..\..\Program Files\Rhino 7\System\RhinoCommon.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files\Rhino 7\System\RhinoCommon.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="RhinoWindows">
-      <HintPath>..\..\..\Program Files\Rhino 7\System\RhinoWindows.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files\Rhino 7\System\RhinoWindows.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
