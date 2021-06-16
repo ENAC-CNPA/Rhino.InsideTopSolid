@@ -37,6 +37,9 @@
     <Reference Include="TopSolid.Kernel.DB.D3.Shapes">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.D3.Shapes.dll</HintPath>
     </Reference>
+    <Reference Include="TopSolid.Kernel.DB.D3.Sketches">
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.D3.Sketches.dll</HintPath>
+    </Reference>
     <Reference Include="TopSolid.Kernel.G">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.G.dll</HintPath>
     </Reference>

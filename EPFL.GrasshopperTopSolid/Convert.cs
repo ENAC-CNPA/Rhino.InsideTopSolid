@@ -201,7 +201,8 @@ namespace EPFL.GrasshopperTopSolid
 
         }
 
-        public static Rhino.Geometry.Surface ToHost(this BSplineSurface s)
+        //ToDo
+        /*public static Rhino.Geometry.Surface ToRhino(this BSplineSurface s)
         {
             bool r = s.IsRational;
             bool pU = s.IsUPeriodic;
@@ -218,7 +219,7 @@ namespace EPFL.GrasshopperTopSolid
             return bs;
 
 
-        }
+        }*/
 
         public static DoubleList ToDoubleList(NurbsSurfaceKnotList list)
         {
