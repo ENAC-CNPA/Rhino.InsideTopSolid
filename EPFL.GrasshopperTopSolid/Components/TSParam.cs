@@ -49,64 +49,55 @@ namespace EPFL.GrasshopperTopSolid.Components
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No entity was found");
             else
             {
+                TopSolid.Kernel.TX.Undo.UndoSequence.UndoCurrent();
+                TopSolid.Kernel.TX.Undo.UndoSequence.Start("intparam", true);
+                Grasshopper.Kernel.Types.GH_ObjectWrapper _obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
+                DA.GetData(1, ref _obj);
                 switch (entity.GetType().ToString())
                 {
                     case "TopSolid.Kernel.DB.Parameters.TextParameterEntity":
-                        TopSolid.Kernel.TX.Undo.UndoSequence.UndoCurrent();
-                        TopSolid.Kernel.TX.Undo.UndoSequence.Start("textparam", true);
                         var _textParam = entity as TextParameterEntity;
                         string _string = "";
-                        Grasshopper.Kernel.Types.GH_ObjectWrapper _strobj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
-                        DA.GetData(1, ref _strobj);
-                        GH_Convert.ToString(_strobj.Value, out _string, GH_Conversion.Both);
-                        _textParam.Value = _string;
-                        TopSolid.Kernel.TX.Undo.UndoSequence.End();
+                        if (GH_Convert.ToString(_obj.Value, out _string, GH_Conversion.Both))
+                            _textParam.Value = _string;
+                        else
+                            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "input format not string");
                         break;
 
                     case "TopSolid.Kernel.DB.Parameters.BooleanParameterEntity":
-                        TopSolid.Kernel.TX.Undo.UndoSequence.UndoCurrent();
-                        TopSolid.Kernel.TX.Undo.UndoSequence.Start("boolparam", true);
                         var _boolParam = entity as BooleanParameterEntity;
                         bool _bool = true;
-                        Grasshopper.Kernel.Types.GH_ObjectWrapper _boolobj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
-                        DA.GetData(1, ref _boolobj);
-                        GH_Convert.ToBoolean(_boolobj.Value, out _bool, GH_Conversion.Both);
-                        _boolParam.Value = _bool;
-                        TopSolid.Kernel.TX.Undo.UndoSequence.End();
+                        if (GH_Convert.ToBoolean(_obj.Value, out _bool, GH_Conversion.Both))
+                            _boolParam.Value = _bool;
+                        else
+                            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "input format not bool");
                         break;
 
                     case "TopSolid.Kernel.DB.Parameters.RealParameterEntity":
-                        TopSolid.Kernel.TX.Undo.UndoSequence.UndoCurrent();
-                        TopSolid.Kernel.TX.Undo.UndoSequence.Start("realparam", true);
                         var _realParam = entity as RealParameterEntity;
                         double _double = 0.0;
-                        Grasshopper.Kernel.Types.GH_ObjectWrapper _realobj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
-                        DA.GetData(1, ref _realobj);
-                        GH_Convert.ToDouble(_realobj.Value, out _double, GH_Conversion.Both);
-                        _realParam.Value = _double;
-                        TopSolid.Kernel.TX.Undo.UndoSequence.End();
+                        if (GH_Convert.ToDouble(_obj.Value, out _double, GH_Conversion.Both))
+                            _realParam.Value = _double;
+                        else
+                            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "input format not float");
                         break;
 
                     case "TopSolid.Kernel.DB.Parameters.IntegerParameterEntity":
-
-                        TopSolid.Kernel.TX.Undo.UndoSequence.UndoCurrent();
-                        TopSolid.Kernel.TX.Undo.UndoSequence.Start("intparam", true);
-
-
                         IntegerParameterEntity _intParam = entity as IntegerParameterEntity;
                         int _int = 0;
-                        Grasshopper.Kernel.Types.GH_ObjectWrapper _intobj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
-                        DA.GetData(1, ref _intobj);
-                        GH_Convert.ToInt32(_intobj.Value, out _int, GH_Conversion.Both);
-                        _intParam.Value = _int;
-
-                        TopSolid.Kernel.TX.Undo.UndoSequence.End();
+                        if (GH_Convert.ToInt32(_obj.Value, out _int, GH_Conversion.Both))
+                            _intParam.Value = _int;
+                        else
+                            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "input format not integer");
                         break;
 
                     default:
                         AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Parameter Type not Supported");
                         return;
                 }
+                TopSolid.Kernel.UI.Application.Update();
+                TopSolid.Kernel.TX.Undo.UndoSequence.End();
+
             }
 
 
