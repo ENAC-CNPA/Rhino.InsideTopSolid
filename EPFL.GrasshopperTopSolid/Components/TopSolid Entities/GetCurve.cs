@@ -14,7 +14,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
         public GetCurve()
           : base("GetCurve", "GetCrv",
               "Gets a Curve out of a TopSolid Sketch",
-              "Category", "Subcategory")
+              "TopSolid", "TopSolid Entities")
         {
         }
 

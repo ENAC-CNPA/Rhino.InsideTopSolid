@@ -1,10 +1,8 @@
 ﻿//using Sample_2;
+using Rhino.Runtime.InProcess;
 using System;
 using System.IO;
 using System.Reflection;
-using Rhino.Runtime.InProcess;
-using Grasshopper;
-using Grasshopper.Kernel;
 
 namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 {
@@ -48,13 +46,13 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
         /// 
         static RhinoCore rhinoCore;
         private static bool _grasshopperLoaded = false;
-        public static Grasshopper.Plugin.GH_RhinoScriptInterface Script { get; private set; }        
+        public static Grasshopper.Plugin.GH_RhinoScriptInterface Script { get; private set; }
 
         protected override void Invoke()
         {
             //Method that works !!
             if (rhinoCore == null)
-                rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Hidden);
+                rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Normal);
 
             if (!LoadGrasshopperComponents())
             {
@@ -66,8 +64,8 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
                 Script.HideEditor();
             else
             {
-                Script.ShowEditor();                
-            }     
+                Script.ShowEditor();
+            }
         }
 
         public static bool LoadGrasshopperComponents()
@@ -105,6 +103,6 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
             _grasshopperLoaded = true;
             return rc;
         }
-                
+
     }
 }
