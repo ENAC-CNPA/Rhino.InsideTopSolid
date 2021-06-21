@@ -1,19 +1,20 @@
 ﻿using Grasshopper.Kernel;
 using System;
+using System.Linq;
 using TopSolid.Kernel.DB.D3.Documents;
-using TopSolid.Kernel.DB.Entities;
+using TopSolid.Kernel.DB.D3.Sketches;
 
-namespace EPFL.GrasshopperTopSolid.Components
+namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
 {
-    public class GetEntity : GH_Component
+    public class GetCurve : GH_Component
     {
         /// <summary>
-        /// Initializes a new instance of the GetEntity class.
+        /// Initializes a new instance of the GetCurve class.
         /// </summary>
-        public GetEntity()
-          : base("GetEntity", "Getentity",
-              "Gets TopSolid Entity with a specific name",
-              "TopSolid", "TopSolid Entities")
+        public GetCurve()
+          : base("GetCurve", "GetCrv",
+              "Gets a Curve out of a TopSolid Sketch",
+              "Category", "Subcategory")
         {
         }
 
@@ -22,7 +23,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("Name", "N", "Name of the Entity to Get", GH_ParamAccess.item);
+            pManager.AddTextParameter("Name", "N", "Name of Sketch containing Curve", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -30,8 +31,8 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("Entity", "E", "TopSolid Entity from DB", GH_ParamAccess.item);
-            pManager.AddTextParameter("Out", "Out", "Out", GH_ParamAccess.item);
+            pManager.AddCurveParameter("RhinoCurve", "RhCrv", "Converted Rhino Curve", GH_ParamAccess.item);
+            pManager.AddGenericParameter("TopSolidCurve", "TSCrv", "TopSolid Bspline", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -40,13 +41,20 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            string name = "";
-            DA.GetData(0, ref name);
+            string _name = "";
+            DA.GetData("Name", ref _name);
             GeometricDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
 
-            Entity entity = document.RootEntity.SearchDeepEntity(name); //as PositionedSketchEntity;
-            DA.SetData(0, entity);
-            DA.SetData("Out", entity.GetType().ToString());
+            PositionedSketchEntity entity = document.RootEntity.SearchDeepEntity(_name) as PositionedSketchEntity;
+
+            if (entity.Geometry.Profiles.Count() != 1)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"Sketch Contains {entity.Geometry.Profiles.Count()} curves, it must contain 1 curve");
+                return;
+            }
+            Rhino.Geometry.Curve crv = Convert.ToRhino(entity.Geometry.Profiles.First());
+            DA.SetData("RhinoCurve", crv);
+            DA.SetData("TopSolidCurve", entity.Geometry.Profiles.First());
         }
 
         /// <summary>
@@ -65,7 +73,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// </summary>
         public override Guid ComponentGuid
         {
-            get { return new Guid("8f58e33a-6197-4164-b12e-38c6c773f909"); }
+            get { return new Guid("bcc6e9dc-68ae-45e6-b5a5-f2ae3fc1b16d"); }
         }
     }
 }

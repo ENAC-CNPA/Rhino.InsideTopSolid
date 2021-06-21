@@ -129,7 +129,7 @@ namespace EPFL.GrasshopperTopSolid
 
                 for (int i = 1; i < curve.Bs.Count - 1; i++)
                 {
-                    rhCurve.Knots[i] = curve.Bs[i - 1];
+                    rhCurve.Knots[i - 1] = curve.Bs[i];
                 }
             }
             #endregion
