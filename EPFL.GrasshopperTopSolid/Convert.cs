@@ -4,6 +4,7 @@ using System.Linq;
 using TopSolid.Kernel.G.D1;
 using TopSolid.Kernel.G.D3;
 using TopSolid.Kernel.G.D3.Curves;
+using TopSolid.Kernel.G.D3.Sketches;
 using TopSolid.Kernel.G.D3.Surfaces;
 using TopSolid.Kernel.SX.Collections;
 using TKG = TopSolid.Kernel.G;
@@ -72,8 +73,90 @@ namespace EPFL.GrasshopperTopSolid
             }
 
         }
+
+        /// <summary>
+        /// Converts a single segment of a TopSolid Profile to a Rhino NurbsCurve
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <returns></returns>
+        static public Rhino.Geometry.NurbsCurve ToRhino(BSplineCurve curve)
+        {
+
+            #region Variables Declaration           
+            Rhino.Collections.Point3dList Cpts = new Rhino.Collections.Point3dList();
+            Rhino.Geometry.NurbsCurve rhCurve = null;
+            #endregion
+
+            #region Conversion cases         
+            if (curve.IsLinear())
+            {
+                rhCurve = ToRhino(new TKG.D3.Curves.LineCurve(curve.Ps, curve.Pe)).ToNurbsCurve();
+            }
+
+            //TODO : Case of a complete circle
+            //checks if Circular and Converts to Rhino Arc
+            else if (curve.IsCircular())
+            {
+                try
+                {
+                    rhCurve = new Arc(ToRhino(curve.Ps), ToRhino(curve.Pm), ToRhino(curve.Pe)).ToNurbsCurve();
+                }
+                catch { }
+            }
+
+            else
+            {
+                foreach (TopSolid.Kernel.G.D3.Point P in curve.CPts)
+                {
+                    Cpts.Add(ToRhino(P));
+                }
+
+                rhCurve = NurbsCurve.Create(false, curve.Degree, Cpts);
+
+                int k = 0;
+                foreach (Point3d P in Cpts)
+                {
+                    try
+                    {
+                        rhCurve.Points.SetPoint(k, P, curve.CWts[k]);
+                    }
+                    catch
+                    {
+                        rhCurve.Points.SetPoint(k, P, 1);
+                    }
+                    k++;
+                }
+
+                for (int i = 1; i < curve.Bs.Count - 1; i++)
+                {
+                    rhCurve.Knots[i] = curve.Bs[i - 1];
+                }
+            }
+            #endregion
+
+            return rhCurve;
+        }
+
+        static public Rhino.Geometry.NurbsCurve ToRhino(Profile profile)
+        {
+            Rhino.Collections.CurveList rhCurvesList = new Rhino.Collections.CurveList();
+            Rhino.Geometry.NurbsCurve rhCurve = null;
+
+            for (int i = 0; i < (profile.Segments.Count()); i++)
+            {
+                rhCurvesList.Add(ToRhino(profile.Segments.ElementAt(i).Geometry.GetBSplineCurve(false, false, TopSolid.Kernel.G.Precision.LinearPrecision)));
+            }
+
+            if (NurbsCurve.JoinCurves(rhCurvesList).Length != 0)
+            {
+                rhCurve = NurbsCurve.JoinCurves(rhCurvesList)[0].ToNurbsCurve();
+            }
+
+            return rhCurve;
+        }
+
         static bool KnotAlmostEqualTo(double max, double min) =>
-      KnotAlmostEqualTo(max, min, 1.0e-09);
+        KnotAlmostEqualTo(max, min, 1.0e-09);
 
         static bool KnotAlmostEqualTo(double max, double min, double tol)
         {
@@ -83,6 +166,7 @@ namespace EPFL.GrasshopperTopSolid
 
             return length <= max * tol;
         }
+
 
         static double KnotPrevNotEqual(double max) =>
           KnotPrevNotEqual(max, 1.0000000E-9 * 1000.0);
@@ -201,25 +285,64 @@ namespace EPFL.GrasshopperTopSolid
 
         }
 
-        //ToDo
-        /*public static Rhino.Geometry.Surface ToRhino(this BSplineSurface s)
+        public static Rhino.Geometry.Surface ToRhino(this BSplineSurface surface)
         {
-            bool r = s.IsRational;
-            bool pU = s.IsUPeriodic;
-            bool pV = s.IsVPeriodic;
-            var dU = s.UDegree;
-            var dV = s.VDegree;
-            var kU = s.UBs;
+            BSplineSurface _surface = surface;
 
 
-            BSpline bU = new BSpline(pU, dU, kU);
-            BSpline bV = new BSpline(pV, dV, kV);
+            bool is_rational = _surface.IsRational;
+            int number_of_dimensions = 3;
+            int u_degree = _surface.UDegree;
+            int v_degree = _surface.VDegree;
+            int u_control_point_count = _surface.UCptsCount;
+            int v_control_point_count = _surface.VCptsCount;
 
+            var control_points = new Point3d[u_control_point_count, v_control_point_count];
 
-            return bs;
+            for (int u = 0; u < u_control_point_count; u++)
+            {
+                for (int v = 0; v < v_control_point_count; v++)
+                {
+                    control_points[u, v] = new Point3d(_surface.GetCPt(u, v).X, _surface.GetCPt(u, v).Y, _surface.GetCPt(u, v).Z);
+                }
+            }
 
+            // creates internal uninitialized arrays for 
+            // control points and knots
+            var rhsurface = NurbsSurface.Create(
+              number_of_dimensions,
+              is_rational,
+              u_degree + 1,
+              v_degree + 1,
+              u_control_point_count,
+              v_control_point_count
+              );
 
-        }*/
+            //add the knots + Adjusting to Rhino removing the 2 extra knots (Superfluous)
+            for (int u = 1; u < (_surface.UBs.Count - 1); u++)
+                rhsurface.KnotsU[u - 1] = _surface.UBs[u];
+            for (int v = 1; v < (_surface.VBs.Count - 1); v++)
+                rhsurface.KnotsV[v - 1] = _surface.VBs[v];
+
+            // add the control points
+            for (int u = 0; u < rhsurface.Points.CountU; u++)
+            {
+                for (int v = 0; v < rhsurface.Points.CountV; v++)
+                {
+                    rhsurface.Points.SetPoint(u, v, control_points[u, v]);
+                    try
+                    {
+                        rhsurface.Points.SetWeight(u, v, _surface.GetCWt(u, v));
+                    }
+                    catch
+                    {
+                        rhsurface.Points.SetWeight(u, v, 1);
+                    }
+                }
+            }
+            return rhsurface;
+        }
+
 
         public static DoubleList ToDoubleList(NurbsSurfaceKnotList list)
         {
