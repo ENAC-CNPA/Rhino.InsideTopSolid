@@ -107,7 +107,6 @@ namespace EPFL.GrasshopperTopSolid.Components
                     TopSolid.Kernel.DB.D3.Surfaces.SurfaceEntity srfentity = new TopSolid.Kernel.DB.D3.Surfaces.SurfaceEntity(doc, 0);
                     srfentity.Geometry = x;
                     if (srfentity.Display.Items.Count != 0)
-
                     {
                         for (int i = 0; i < srfentity.Display.Items.Count; i++)
                         { gd.Add(srfentity.Display.Items.ElementAt(i)); }
