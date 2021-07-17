@@ -43,6 +43,9 @@
     <Reference Include="TopSolid.Kernel.G">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.G.dll</HintPath>
     </Reference>
+    <Reference Include="TopSolid.Kernel.G.D2.Curves">
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.G.D2.Curves.dll</HintPath>
+    </Reference>
     <Reference Include="TopSolid.Kernel.G.D3.Curves">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.G.D3.Curves.dll</HintPath>
     </Reference>

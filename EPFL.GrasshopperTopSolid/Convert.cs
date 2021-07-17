@@ -1,13 +1,19 @@
-﻿using Rhino.Geometry;
+﻿using Rhino;
+using Rhino.Geometry;
 using Rhino.Geometry.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using TopSolid.Kernel.G.D1;
 using TopSolid.Kernel.G.D3;
 using TopSolid.Kernel.G.D3.Curves;
+using TopSolid.Kernel.G.D3.Shapes;
 using TopSolid.Kernel.G.D3.Sketches;
 using TopSolid.Kernel.G.D3.Surfaces;
 using TopSolid.Kernel.SX.Collections;
 using TKG = TopSolid.Kernel.G;
+using TKGD2 = TopSolid.Kernel.G.D2;
+using TKGD3 = TopSolid.Kernel.G.D3;
+using TSXGen = TopSolid.Kernel.SX.Collections.Generic;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -389,5 +395,241 @@ namespace EPFL.GrasshopperTopSolid
             return w;
         }
         #endregion
+
+        static public List<Brep> ToRhino(Shape shape)
+        {
+            List<Brep> listofBrepsrf = new List<Brep>();
+            Brep brep = new Brep();
+
+            foreach (Face f in shape.Faces)
+            {
+                listofBrepsrf.Add(FaceToBrep(f));
+            }
+
+            //var result = Brep.JoinBreps(listofBrepsrf, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+
+            //for (int i = 0; i < result.Length; i++)
+            //{
+            //    result[i].Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+            //}
+
+            return listofBrepsrf;
+
+
+
+
+
+
+            //shape.Edges.First().
+            /*
+             public RH.Brep BrepToNative(Brep brep)
+    {
+      var tol = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+      try
+      {
+        // TODO: Provenance exception is meaningless now, must change for provenance build checks.
+        // if (brep.provenance != Speckle.Core.Kits.Applications.Rhino)
+        //   throw new Exception("Unknown brep provenance: " + brep.provenance +
+        //                       ". Don't know how to convert from one to the other.");
+
+        var newBrep = new RH.Brep();
+        brep.Curve3D.ForEach(crv => newBrep.AddEdgeCurve(CurveToNative(crv)));
+        brep.Curve2D.ForEach(crv => newBrep.AddTrimCurve(CurveToNative(crv)));
+        brep.Surfaces.ForEach(surf => newBrep.AddSurface(SurfaceToNative(surf)));
+        brep.Vertices.ForEach(vert => newBrep.Vertices.Add(PointToNative(vert).Location, tol));
+        brep.Edges.ForEach(edge =>
+        {
+          if (edge.Domain == null || (edge.Domain.start == edge.Curve.domain.start && edge.Domain.end == edge.Curve.domain.end))
+            newBrep.Edges.Add(edge.Curve3dIndex);
+          else
+            newBrep.Edges.Add(edge.StartIndex, edge.EndIndex, edge.Curve3dIndex, IntervalToNative(edge.Domain), tol);
+        });
+        brep.Faces.ForEach(face =>
+        {
+          var f = newBrep.Faces.Add(face.SurfaceIndex);
+          f.OrientationIsReversed = face.OrientationReversed;
+        });
+
+        brep.Loops.ForEach(loop =>
+        {
+          var f = newBrep.Faces[loop.FaceIndex];
+          var l = newBrep.Loops.Add((RH.BrepLoopType)loop.Type, f);
+          loop.Trims.ToList().ForEach(trim =>
+          {
+            RH.BrepTrim rhTrim;
+            if (trim.EdgeIndex != -1)
+              rhTrim = newBrep.Trims.Add(newBrep.Edges[trim.EdgeIndex], trim.IsReversed,
+                newBrep.Loops[trim.LoopIndex], trim.CurveIndex);
+            else if (trim.TrimType == BrepTrimType.Singular)
+              rhTrim = newBrep.Trims.AddSingularTrim(newBrep.Vertices[trim.EndIndex],
+                newBrep.Loops[trim.LoopIndex], (RH.IsoStatus)trim.IsoStatus, trim.CurveIndex);
+            else
+              rhTrim = newBrep.Trims.Add(trim.IsReversed, newBrep.Loops[trim.LoopIndex], trim.CurveIndex);
+
+            rhTrim.IsoStatus = (IsoStatus)trim.IsoStatus;
+            rhTrim.TrimType = (RH.BrepTrimType)trim.TrimType;
+            rhTrim.SetTolerances(tol, tol);
+          });
+        });
+
+        newBrep.Repair(tol);
+
+        return newBrep;
+      }
+             */
+
+
+
+        }
+
+        static private Brep FaceToBrep(Face face)
+        {
+            //Create the *out* variables
+            BoolList outer = new BoolList();
+            TSXGen.List<TKGD2.Curves.IGeometricProfile> list2D = new TSXGen.List<TKGD2.Curves.IGeometricProfile>();
+            TSXGen.List<TKGD3.Curves.IGeometricProfile> list3D = new TSXGen.List<TKGD3.Curves.IGeometricProfile>();
+            TSXGen.List<EdgeList> listEdges = new TSXGen.List<EdgeList>();
+            List<TKGD3.Shapes.Vertex> vertexlist = new List<TKGD3.Shapes.Vertex>();
+            double tol_Rh = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+            double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
+
+            //Topology indexes ?
+            int c_index = 0;
+            //int e_ps_index = 0;
+            //int e_pe_index = 0;
+            //int ind = 0;
+
+            //Create the Brep Surface
+            Brep brepsrf = new Brep();
+
+
+
+            OrientedSurface osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, false, outer, list2D, list3D, listEdges);
+
+
+            //list2D.IndexOf(list2D.Where(x => x.Pe == x.Ps && x.Te == x.Tm).FirstOrDefault());
+
+            //Add Vertices
+            foreach (EdgeList list in listEdges)
+            {
+                foreach (TKGD3.Shapes.Edge e in list)
+                {
+                    vertexlist.Add(e.StartVertex);
+                }
+            }
+            foreach (TKG.D3.Shapes.Vertex v in vertexlist)
+            {
+                brepsrf.Vertices.Add(Convert.ToRhino(v.GetGeometry()), tol_TS);
+            }
+
+            //Get the 3D Curves and convert them to Rhino
+            //List<BrepEdge> brepEdges = new List<BrepEdge>();
+            foreach (TKGD3.Curves.IGeometricProfile c in list3D)
+            {
+                foreach (TKGD3.Curves.IGeometricSegment ic in c.Segments)
+                {
+
+
+                    c_index = brepsrf.AddEdgeCurve(Convert.ToRhino(ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false)));
+                    //if (ic.IsReversed)
+                    //    brepsrf.Curves3D[c_index].Reverse();
+                    //brepEdges.Add(brepsrf.Edges.Add(c_index));
+
+                }
+            }
+
+            //Edges
+            int i = 0;
+            //int j = 0;
+            foreach (EdgeList list in listEdges)
+            {
+                foreach (Edge e in list)
+                {
+                    if (i + 1 == list.Count)
+                    {
+                        if (e.IsReversed())
+                            brepsrf.Edges.Add(brepsrf.Vertices[0], brepsrf.Vertices[i], i, tol_TS);
+                        else
+                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_TS);
+                    }
+                    else
+                    {
+                        if (e.IsReversed())
+                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_TS);
+                        else
+                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[i + 1], i, tol_TS);
+                    }
+
+                    i++;
+                }
+            }
+
+
+
+            int loopindex = 0;
+            BrepTrim rhTrim;
+            brepsrf.AddSurface(ToRhino(osurf.Surface as BSplineSurface));
+            BrepFace bface = brepsrf.Faces.Add(0);
+            BrepLoop rh_loop;
+
+            //Get the 2D Curves and convert them to Rhino
+            int x = 0;
+            foreach (TKGD2.Curves.IGeometricProfile c in list2D)
+            {
+                c.Adjust(TKGD2.Curves.AdjustType.ByMove, true, tol_TS);
+                var tsloop = face.Loops.ElementAt(loopindex);
+
+                if (tsloop.IsOuter)
+                    rh_loop = brepsrf.Loops.Add(BrepLoopType.Outer, bface);
+                else
+                    rh_loop = brepsrf.Loops.Add(BrepLoopType.Inner, bface);
+
+
+
+                foreach (TKGD2.Curves.IGeometricSegment ic in c.Segments)
+                {
+                    //TKGD3.Plane plane = new TKGD3.Plane(new TKGD3.Point(ic.Ps.X, ic.Ps.Y, 0.0), new TKGD3.Point(ic.Pm.X, ic.Pm.Y, 0.0), new TKGD3.Point(ic.Pe.X, ic.Pe.Y, 0.0));
+                    x = brepsrf.AddTrimCurve(Convert.ToRhino(TKGD3.Curves.Curve.MakeD3Curve(ic.GetOrientedCurve().Curve, TKGD3.Plane.OXY).GetBSplineCurve(false, false)));
+                    rhTrim = brepsrf.Trims.Add(brepsrf.Edges[x], listEdges[0][x].IsReversed(), rh_loop, x);
+                    rhTrim.SetTolerances(tol_Rh, tol_Rh);
+                    rhTrim.TrimType = BrepTrimType.Boundary;
+                    //rhTrim.IsoStatus = IsoStatus.
+
+                }
+
+
+                loopindex++;
+            }
+
+            foreach (BrepTrim rht in brepsrf.Trims)
+            {
+                rht.SetTolerances(0.001, 0.001);
+                rht.TrimType = BrepTrimType.Boundary;
+            }
+
+
+            if (osurf.IsReversed)
+            {
+                brepsrf.Faces.First().OrientationIsReversed = true;
+            }
+
+            //Debug invalid breps
+            string log1, log2, log3;
+            bool topo = brepsrf.IsValidTopology(out log1);
+            bool geo = brepsrf.IsValidGeometry(out log2);
+            bool tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
+
+            brepsrf.Repair(tol_TS);
+
+
+            //Debug after repair
+            topo = brepsrf.IsValidTopology(out log1);
+            geo = brepsrf.IsValidGeometry(out log2);
+            tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
+
+
+            return brepsrf;
+
+        }
     }
 }

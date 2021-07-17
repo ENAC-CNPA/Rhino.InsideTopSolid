@@ -5,19 +5,17 @@ using System.Collections.Generic;
 using System.Linq;
 using TopSolid.Kernel.DB.D3.Documents;
 using TopSolid.Kernel.DB.D3.Shapes;
-using TopSolid.Kernel.G.D3.Shapes;
-using TopSolid.Kernel.G.D3.Surfaces;
 
 namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
 {
-    public class GetSurface : GH_Component
+    public class GetShape : GH_Component
     {
         /// <summary>
-        /// Initializes a new instance of the GetSurface class.
+        /// Initializes a new instance of the MyComponent1 class.
         /// </summary>
-        public GetSurface()
-          : base("GetSurface", "GetSrf",
-              "Get a TopSolid Surface of given name",
+        public GetShape()
+          : base("GetShape", "GetShape",
+              "Gets a TopSolid Shape by Name and retruns a Rhino Brep",
               "TopSolid", "TopSolid Entities")
         {
         }
@@ -27,7 +25,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("Name", "N", "Name of Shape-Surface", GH_ParamAccess.item);
+            pManager.AddTextParameter("Name", "N", "Name of Shape", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -35,8 +33,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddSurfaceParameter("RhinoSurface", "RhSrf", "Converted Rhino Surface", GH_ParamAccess.item);
-            pManager.AddGenericParameter("TopSolidSurface", "TSSrf", "TopSolid Bspline Surface", GH_ParamAccess.list);
+            pManager.AddGenericParameter("RhinoBrep", "RhBrep", "Converted Rhino Brep", GH_ParamAccess.list);
+            pManager.AddGenericParameter("TopSolidShape", "TSShape", "TopSolid Shape", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -48,8 +46,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
             string _name = "";
             DA.GetData("Name", ref _name);
             GeometricDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
-            List<NurbsSurface> list = new List<NurbsSurface>();
-            List<BSplineSurface> listTs = new List<BSplineSurface>();
+            //Brep brep;
+            List<Brep> list = new List<Brep>();
 
             ShapeEntity entity = document.RootEntity.SearchDeepEntity(_name) as ShapeEntity;
             if (entity.Geometry.Faces.Count() == 0)
@@ -59,15 +57,17 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
             }
             else
             {
-                foreach (Face f in entity.Geometry.Faces)
-                {
-                    list.Add(Convert.ToRhino(f.GetBsplineGeometry(TopSolid.Kernel.G.Precision.LinearPrecision, false, false, false) as BSplineSurface).ToNurbsSurface());
-                    listTs.Add(f.GetBsplineGeometry(TopSolid.Kernel.G.Precision.LinearPrecision, false, false, false) as BSplineSurface);
-                }
+                list = Convert.ToRhino(entity.Geometry);
             }
 
-            DA.SetDataList("RhinoSurface", list);
-            DA.SetDataList("TopSolidSurface", listTs);
+
+            //for (int i = 0; i < brep.Length; i++)
+            //{
+            //    list.Add(brep[i]);
+            //}
+
+            DA.SetDataList("RhinoBrep", list);
+            DA.SetData("TopSolidShape", entity);
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
         /// </summary>
         public override Guid ComponentGuid
         {
-            get { return new Guid("5b44b36a-a29e-4249-969d-5091892f878b"); }
+            get { return new Guid("99640714-70e0-4dc2-a63c-d9768c1c276f"); }
         }
     }
 }
