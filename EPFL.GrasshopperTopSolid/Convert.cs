@@ -491,6 +491,7 @@ namespace EPFL.GrasshopperTopSolid
             TSXGen.List<EdgeList> listEdges = new TSXGen.List<EdgeList>();
             List<TKGD3.Shapes.Vertex> vertexlist = new List<TKGD3.Shapes.Vertex>();
             double tol_Rh = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+
             double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
 
             //Topology indexes ?
@@ -519,7 +520,7 @@ namespace EPFL.GrasshopperTopSolid
             }
             foreach (TKG.D3.Shapes.Vertex v in vertexlist)
             {
-                brepsrf.Vertices.Add(Convert.ToRhino(v.GetGeometry()), tol_TS);
+                brepsrf.Vertices.Add(Convert.ToRhino(v.GetGeometry()), tol_Rh);
             }
 
             //Get the 3D Curves and convert them to Rhino
@@ -548,16 +549,16 @@ namespace EPFL.GrasshopperTopSolid
                     if (i + 1 == list.Count)
                     {
                         if (e.IsReversed())
-                            brepsrf.Edges.Add(brepsrf.Vertices[0], brepsrf.Vertices[i], i, tol_TS);
+                            brepsrf.Edges.Add(brepsrf.Vertices[0], brepsrf.Vertices[i], i, tol_Rh);
                         else
-                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_TS);
+                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_Rh);
                     }
                     else
                     {
                         if (e.IsReversed())
-                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_TS);
+                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_Rh);
                         else
-                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[i + 1], i, tol_TS);
+                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[i + 1], i, tol_Rh);
                     }
 
                     i++;
@@ -590,22 +591,26 @@ namespace EPFL.GrasshopperTopSolid
                 {
                     //TKGD3.Plane plane = new TKGD3.Plane(new TKGD3.Point(ic.Ps.X, ic.Ps.Y, 0.0), new TKGD3.Point(ic.Pm.X, ic.Pm.Y, 0.0), new TKGD3.Point(ic.Pe.X, ic.Pe.Y, 0.0));
                     x = brepsrf.AddTrimCurve(Convert.ToRhino(TKGD3.Curves.Curve.MakeD3Curve(ic.GetOrientedCurve().Curve, TKGD3.Plane.OXY).GetBSplineCurve(false, false)));
-                    rhTrim = brepsrf.Trims.Add(brepsrf.Edges[x], listEdges[0][x].IsReversed(), rh_loop, x);
+                    rhTrim = brepsrf.Trims.Add(brepsrf.Edges[x], false /*listEdges[0][x].IsReversed()*/, rh_loop, x);
                     rhTrim.SetTolerances(tol_Rh, tol_Rh);
                     rhTrim.TrimType = BrepTrimType.Boundary;
+
                     //rhTrim.IsoStatus = IsoStatus.
 
                 }
 
 
+
                 loopindex++;
             }
 
-            foreach (BrepTrim rht in brepsrf.Trims)
-            {
-                rht.SetTolerances(0.001, 0.001);
-                rht.TrimType = BrepTrimType.Boundary;
-            }
+
+            //foreach (BrepTrim rht in brepsrf.Trims)
+            //{
+            //    rht.SetTolerances(0.001, 0.001);
+            //    rht.TrimType = BrepTrimType.Boundary;
+
+            //}
 
 
             if (osurf.IsReversed)
@@ -619,8 +624,16 @@ namespace EPFL.GrasshopperTopSolid
             bool geo = brepsrf.IsValidGeometry(out log2);
             bool tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
 
-            brepsrf.Repair(tol_TS);
+            //ON_Brep::SetEdgeTolerance
+            // ON_Brep::SetTrimTolerance
 
+            brepsrf.SetTolerancesBoxesAndFlags(false, true, true, true, true, false, false, false);
+
+            var match = brepsrf.Trims.MatchEnds();
+
+            brepsrf.Repair(tol_Rh);
+
+            match = brepsrf.Trims.MatchEnds();
 
             //Debug after repair
             topo = brepsrf.IsValidTopology(out log1);
