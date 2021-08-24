@@ -567,9 +567,7 @@ namespace EPFL.GrasshopperTopSolid
 
             //Topology indexes ?
             int c_index = 0;
-            //int e_ps_index = 0;
-            //int e_pe_index = 0;
-            //int ind = 0;
+
 
             //Create the Brep Surface
             Brep brepsrf = new Brep();
@@ -587,22 +585,6 @@ namespace EPFL.GrasshopperTopSolid
             {
                 foreach (TKGD3.Shapes.Edge e in list)
                 {
-                    //if ((ver != 0))
-                    //{
-                    //    if (ver == list.Count - 1)
-                    //    {
-                    //        if (list[ver].StartVertex.IsCoincident(list[0].StartVertex, tol_TS))
-                    //        {
-                    //            continue;
-                    //        }
-                    //    }
-                    //    else if (list[ver].StartVertex.IsCoincident(list[ver - 1].StartVertex, tol_TS))
-                    //    {
-                    //        ver++;
-                    //        continue;
-                    //    }
-
-                    //} 
                     vertexlist.Add(e.StartVertex);
                     ver++;
                 }
@@ -696,34 +678,18 @@ namespace EPFL.GrasshopperTopSolid
                     crv = Convert.ToRhino(tcrvv);
                     Rh_2dCurves.Add(crv);
 
-
-
-
-                    //if (listEdges[loopindex][x].IsReversed())
-                    //    crvbool = crv.Reverse();
+                    crvbool = (listEdges[loopindex][x].IsReversed());
 
                     x = brepsrf.AddTrimCurve(crv);
 
 
-                    rhTrim.Add(brepsrf.Trims.Add(edge[x], listEdges[loopindex][x].IsReversed(), rh_loop, x));
+                    rhTrim.Add(brepsrf.Trims.Add(edge[x], !ic.IsReversed, rh_loop, x));
                     rhTrim[x].SetTolerances(tol_Rh, tol_Rh);
-
-
-
-
-                    //crvbool = crv.IsValidWithLog(out crvlog);
-
-
-
-
 
                     //rhTrim[x].TrimType = BrepTrimType.Unknown;
                     trimbool = rhTrim[x].IsValidWithLog(out trimlog);
 
-
                     x++;
-
-                    //rhTrim.IsoStatus = IsoStatus.
 
                 }
 
@@ -742,6 +708,8 @@ namespace EPFL.GrasshopperTopSolid
                 brepsrf.Faces.First().OrientationIsReversed = true;
             }
 
+
+
             //Debug invalid breps
             string whyyyyy = "";
             bool whyy = brepsrf.IsValidWithLog(out whyyyyy);
@@ -751,9 +719,9 @@ namespace EPFL.GrasshopperTopSolid
             bool geo = brepsrf.IsValidGeometry(out log2);
             bool tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
 
-            //brepsrf.SetVertices();
+            brepsrf.Repair(tol_Rh);
 
-            var match = brepsrf.Trims.MatchEnds();
+            bool match = brepsrf.Trims.MatchEnds();
             brepsrf.SetTolerancesBoxesAndFlags(false, true, true, true, true, false, false, false);
 
             topo = brepsrf.IsValidTopology(out log1);
@@ -765,7 +733,7 @@ namespace EPFL.GrasshopperTopSolid
             //topo = brepsrf.IsValidTopology(out log1);
             //geo = brepsrf.IsValidGeometry(out log2);
             //tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
-            if (!match)
+            if (!match || !brepsrf.IsValid)
             {
                 brepsrf.Repair(tol_Rh);
                 topo = brepsrf.IsValidTopology(out log1);
