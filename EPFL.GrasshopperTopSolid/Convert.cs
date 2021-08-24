@@ -33,6 +33,11 @@ namespace EPFL.GrasshopperTopSolid
         {
             return new Point3d(p.X, p.Y, p.Z);
         }
+
+        static public Point2d ToRhino(this TKG.D2.Point p)
+        {
+            return new Point2d(p.X, p.Y);
+        }
         #endregion
         #region Vector
         static public TKG.D3.Vector ToHost(this Vector3d v)
@@ -52,6 +57,11 @@ namespace EPFL.GrasshopperTopSolid
         static public Rhino.Geometry.Line ToRhino(this TKG.D3.Curves.LineCurve l)
         {
             return new Rhino.Geometry.Line(l.Ps.ToRhino(), l.Pe.ToRhino());
+        }
+
+        static public Rhino.Geometry.Line ToRhino(this TKG.D2.Curves.LineCurve l)
+        {
+            return new Rhino.Geometry.Line(new Point3d(l.Ps.X, l.Ps.Y, 0), new Point3d(l.Pe.X, l.Pe.Y, 0));
         }
 
 
@@ -143,6 +153,66 @@ namespace EPFL.GrasshopperTopSolid
             return rhCurve;
         }
 
+
+
+        static public Rhino.Geometry.NurbsCurve ToRhino(TKGD2.Curves.BSplineCurve curve)
+        {
+
+            #region Variables Declaration           
+            Rhino.Collections.Point3dList Cpts = new Rhino.Collections.Point3dList();
+            Rhino.Geometry.NurbsCurve rhCurve = null;
+            #endregion
+
+            #region Conversion cases         
+            //if (curve.IsLinear())
+            //{
+            //    rhCurve = ToRhino(new TKG.D2.Curves.LineCurve(curve.Ps, curve.Pe)).ToNurbsCurve();
+            //}
+
+            ////TODO : Case of a complete circle
+            ////checks if Circular and Converts to Rhino Arc
+            //else if (curve.IsCircular())
+            //{
+            //    try
+            //    {
+            //        rhCurve = new Arc(ToRhino(curve.Ps), ToRhino(curve.Pm), ToRhino(curve.Pe)).ToNurbsCurve();
+            //    }
+            //    catch { }
+            //}
+
+            //else
+            {
+                foreach (TopSolid.Kernel.G.D2.Point P in curve.CPts)
+                {
+                    Cpts.Add(P.X, P.Y, 0);
+                }
+
+                rhCurve = NurbsCurve.Create(false, curve.Degree, Cpts);
+
+                int k = 0;
+                foreach (Point3d P in Cpts)
+                {
+                    try
+                    {
+                        rhCurve.Points.SetPoint(k, P, curve.CWts[k]);
+                    }
+                    catch
+                    {
+                        rhCurve.Points.SetPoint(k, P, 1);
+                    }
+                    k++;
+                }
+
+                for (int i = 1; i < curve.Bs.Count - 1; i++)
+                {
+                    rhCurve.Knots[i - 1] = curve.Bs[i];
+                }
+            }
+            #endregion
+
+            return rhCurve;
+        }
+
         static public Rhino.Geometry.NurbsCurve ToRhino(Profile profile)
         {
             Rhino.Collections.CurveList rhCurvesList = new Rhino.Collections.CurveList();
@@ -160,6 +230,7 @@ namespace EPFL.GrasshopperTopSolid
 
             return rhCurve;
         }
+
 
         static bool KnotAlmostEqualTo(double max, double min) =>
         KnotAlmostEqualTo(max, min, 1.0e-09);
@@ -511,16 +582,34 @@ namespace EPFL.GrasshopperTopSolid
             //list2D.IndexOf(list2D.Where(x => x.Pe == x.Ps && x.Te == x.Tm).FirstOrDefault());
 
             //Add Vertices
+            int ver = 0;
             foreach (EdgeList list in listEdges)
             {
                 foreach (TKGD3.Shapes.Edge e in list)
                 {
+                    //if ((ver != 0))
+                    //{
+                    //    if (ver == list.Count - 1)
+                    //    {
+                    //        if (list[ver].StartVertex.IsCoincident(list[0].StartVertex, tol_TS))
+                    //        {
+                    //            continue;
+                    //        }
+                    //    }
+                    //    else if (list[ver].StartVertex.IsCoincident(list[ver - 1].StartVertex, tol_TS))
+                    //    {
+                    //        ver++;
+                    //        continue;
+                    //    }
+
+                    //} 
                     vertexlist.Add(e.StartVertex);
+                    ver++;
                 }
             }
             foreach (TKG.D3.Shapes.Vertex v in vertexlist)
             {
-                brepsrf.Vertices.Add(Convert.ToRhino(v.GetGeometry()), tol_Rh);
+                brepsrf.Vertices.Add(Convert.ToRhino(v.GetGeometry()), tol_TS);
             }
 
             //Get the 3D Curves and convert them to Rhino
@@ -529,8 +618,6 @@ namespace EPFL.GrasshopperTopSolid
             {
                 foreach (TKGD3.Curves.IGeometricSegment ic in c.Segments)
                 {
-
-
                     c_index = brepsrf.AddEdgeCurve(Convert.ToRhino(ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false)));
                     //if (ic.IsReversed)
                     //    brepsrf.Curves3D[c_index].Reverse();
@@ -542,23 +629,25 @@ namespace EPFL.GrasshopperTopSolid
             //Edges
             int i = 0;
             //int j = 0;
+            List<BrepEdge> edge = new List<BrepEdge>();
             foreach (EdgeList list in listEdges)
             {
                 foreach (Edge e in list)
                 {
                     if (i + 1 == list.Count)
                     {
-                        if (e.IsReversed())
-                            brepsrf.Edges.Add(brepsrf.Vertices[0], brepsrf.Vertices[i], i, tol_Rh);
-                        else
-                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_Rh);
+                        //if (e.IsReversed())
+                        //    brepsrf.Edges.Add(brepsrf.Vertices[0], brepsrf.Vertices[i], i, tol_Rh);
+                        //else
+                        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_TS));
                     }
                     else
                     {
-                        if (e.IsReversed())
-                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_Rh);
-                        else
-                            brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[i + 1], i, tol_Rh);
+                        //if (e.IsReversed())
+                        //    brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_Rh);
+                        //else
+                        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[i + 1], i, tol_TS));
+
                     }
 
                     i++;
@@ -568,16 +657,21 @@ namespace EPFL.GrasshopperTopSolid
 
 
             int loopindex = 0;
-            BrepTrim rhTrim;
+            List<BrepTrim> rhTrim = new List<BrepTrim>();
             brepsrf.AddSurface(ToRhino(osurf.Surface as BSplineSurface));
             BrepFace bface = brepsrf.Faces.Add(0);
-            BrepLoop rh_loop;
+            BrepLoop rh_loop = null;
+
+
+            //For Debug
+            List<Rhino.Geometry.Curve> Rh_2dCurves = new List<Rhino.Geometry.Curve>();
+            bool crvbool;
 
             //Get the 2D Curves and convert them to Rhino
             int x = 0;
             foreach (TKGD2.Curves.IGeometricProfile c in list2D)
             {
-                c.Adjust(TKGD2.Curves.AdjustType.ByMove, true, tol_TS);
+                //c.Adjust(TKGD2.Curves.AdjustType.ByMove, true, tol_TS);
                 var tsloop = face.Loops.ElementAt(loopindex);
 
                 if (tsloop.IsOuter)
@@ -589,28 +683,58 @@ namespace EPFL.GrasshopperTopSolid
 
                 foreach (TKGD2.Curves.IGeometricSegment ic in c.Segments)
                 {
-                    //TKGD3.Plane plane = new TKGD3.Plane(new TKGD3.Point(ic.Ps.X, ic.Ps.Y, 0.0), new TKGD3.Point(ic.Pm.X, ic.Pm.Y, 0.0), new TKGD3.Point(ic.Pe.X, ic.Pe.Y, 0.0));
-                    x = brepsrf.AddTrimCurve(Convert.ToRhino(TKGD3.Curves.Curve.MakeD3Curve(ic.GetOrientedCurve().Curve, TKGD3.Plane.OXY).GetBSplineCurve(false, false)));
-                    rhTrim = brepsrf.Trims.Add(brepsrf.Edges[x], false /*listEdges[0][x].IsReversed()*/, rh_loop, x);
-                    rhTrim.SetTolerances(tol_Rh, tol_Rh);
-                    rhTrim.TrimType = BrepTrimType.Boundary;
+                    string trimlog = "";
+                    bool trimbool;
+                    Rhino.Geometry.Curve crv;
+
+                    TKGD2.Curves.BSplineCurve tcrvv = ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false);
+                    if (ic.IsReversed)
+                    {
+                        tcrvv.Reverse();
+                    }
+
+                    crv = Convert.ToRhino(tcrvv);
+                    Rh_2dCurves.Add(crv);
+
+
+
+
+                    //if (listEdges[loopindex][x].IsReversed())
+                    //    crvbool = crv.Reverse();
+
+                    x = brepsrf.AddTrimCurve(crv);
+
+
+                    rhTrim.Add(brepsrf.Trims.Add(edge[x], listEdges[loopindex][x].IsReversed(), rh_loop, x));
+                    rhTrim[x].SetTolerances(tol_Rh, tol_Rh);
+
+
+
+
+                    //crvbool = crv.IsValidWithLog(out crvlog);
+
+
+
+
+
+                    //rhTrim[x].TrimType = BrepTrimType.Unknown;
+                    trimbool = rhTrim[x].IsValidWithLog(out trimlog);
+
+
+                    x++;
 
                     //rhTrim.IsoStatus = IsoStatus.
 
                 }
 
-
+                //loopbool2 = brepsrf.Trims.MatchEnds(rh_loop);
 
                 loopindex++;
             }
 
 
-            //foreach (BrepTrim rht in brepsrf.Trims)
-            //{
-            //    rht.SetTolerances(0.001, 0.001);
-            //    rht.TrimType = BrepTrimType.Boundary;
-
-            //}
+            string looplog = "";
+            bool loopbool = rh_loop.IsValidWithLog(out looplog);
 
 
             if (osurf.IsReversed)
@@ -619,27 +743,66 @@ namespace EPFL.GrasshopperTopSolid
             }
 
             //Debug invalid breps
+            string whyyyyy = "";
+            bool whyy = brepsrf.IsValidWithLog(out whyyyyy);
+
             string log1, log2, log3;
             bool topo = brepsrf.IsValidTopology(out log1);
             bool geo = brepsrf.IsValidGeometry(out log2);
             bool tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
 
-            //ON_Brep::SetEdgeTolerance
-            // ON_Brep::SetTrimTolerance
-
-            brepsrf.SetTolerancesBoxesAndFlags(false, true, true, true, true, false, false, false);
+            //brepsrf.SetVertices();
 
             var match = brepsrf.Trims.MatchEnds();
+            brepsrf.SetTolerancesBoxesAndFlags(false, true, true, true, true, false, false, false);
 
-            brepsrf.Repair(tol_Rh);
-
-            match = brepsrf.Trims.MatchEnds();
-
-            //Debug after repair
             topo = brepsrf.IsValidTopology(out log1);
             geo = brepsrf.IsValidGeometry(out log2);
             tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
 
+            //match = brepsrf.Trims.MatchEnds();
+
+            //topo = brepsrf.IsValidTopology(out log1);
+            //geo = brepsrf.IsValidGeometry(out log2);
+            //tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
+            if (!match)
+            {
+                brepsrf.Repair(tol_Rh);
+                topo = brepsrf.IsValidTopology(out log1);
+                geo = brepsrf.IsValidGeometry(out log2);
+                tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
+
+                match = brepsrf.Trims.MatchEnds();
+                topo = brepsrf.IsValidTopology(out log1);
+                geo = brepsrf.IsValidGeometry(out log2);
+                tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
+
+
+            }
+
+
+            //match = brepsrf.Trims.MatchEnds();
+
+
+
+            //brepsrf.Standardize();
+            //brepsrf.Compact();
+
+            //brepsrf.Repair(tol_TS);
+
+
+            //Debug after repair
+
+
+            whyy = brepsrf.IsValidWithLog(out whyyyyy);
+
+
+            if (brepsrf.IsValid == false)
+            {
+                bool rep = brepsrf.Repair(tol_Rh);
+            }
+
+            whyy = brepsrf.IsValidWithLog(out whyyyyy);
 
             return brepsrf;
 
