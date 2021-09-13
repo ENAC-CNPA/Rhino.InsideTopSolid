@@ -57,17 +57,20 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
             }
             else
             {
-                list = Convert.ToRhino(entity.Geometry);
+                list = Convert.ToRhino(entity.Geometry).ToList();
+                //for (int i = 0; i < r; i++)
+                //{
+                //    list.Add(brep[i]);
+                //}
+
             }
 
 
-            //for (int i = 0; i < brep.Length; i++)
-            //{
-            //    list.Add(brep[i]);
-            //}
+
 
             DA.SetDataList("RhinoBrep", list);
             DA.SetData("TopSolidShape", entity);
+
         }
 
         /// <summary>

@@ -467,7 +467,7 @@ namespace EPFL.GrasshopperTopSolid
         }
         #endregion
 
-        static public List<Brep> ToRhino(Shape shape)
+        static public Brep[] ToRhino(Shape shape)
         {
             List<Brep> listofBrepsrf = new List<Brep>();
             Brep brep = new Brep();
@@ -477,79 +477,14 @@ namespace EPFL.GrasshopperTopSolid
                 listofBrepsrf.Add(FaceToBrep(f));
             }
 
-            //var result = Brep.JoinBreps(listofBrepsrf, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+            var result = Brep.JoinBreps(listofBrepsrf, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
 
-            //for (int i = 0; i < result.Length; i++)
-            //{
-            //    result[i].Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-            //}
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i].Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+            }
 
-            return listofBrepsrf;
-
-
-
-
-
-
-            //shape.Edges.First().
-            /*
-             public RH.Brep BrepToNative(Brep brep)
-    {
-      var tol = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
-      try
-      {
-        // TODO: Provenance exception is meaningless now, must change for provenance build checks.
-        // if (brep.provenance != Speckle.Core.Kits.Applications.Rhino)
-        //   throw new Exception("Unknown brep provenance: " + brep.provenance +
-        //                       ". Don't know how to convert from one to the other.");
-
-        var newBrep = new RH.Brep();
-        brep.Curve3D.ForEach(crv => newBrep.AddEdgeCurve(CurveToNative(crv)));
-        brep.Curve2D.ForEach(crv => newBrep.AddTrimCurve(CurveToNative(crv)));
-        brep.Surfaces.ForEach(surf => newBrep.AddSurface(SurfaceToNative(surf)));
-        brep.Vertices.ForEach(vert => newBrep.Vertices.Add(PointToNative(vert).Location, tol));
-        brep.Edges.ForEach(edge =>
-        {
-          if (edge.Domain == null || (edge.Domain.start == edge.Curve.domain.start && edge.Domain.end == edge.Curve.domain.end))
-            newBrep.Edges.Add(edge.Curve3dIndex);
-          else
-            newBrep.Edges.Add(edge.StartIndex, edge.EndIndex, edge.Curve3dIndex, IntervalToNative(edge.Domain), tol);
-        });
-        brep.Faces.ForEach(face =>
-        {
-          var f = newBrep.Faces.Add(face.SurfaceIndex);
-          f.OrientationIsReversed = face.OrientationReversed;
-        });
-
-        brep.Loops.ForEach(loop =>
-        {
-          var f = newBrep.Faces[loop.FaceIndex];
-          var l = newBrep.Loops.Add((RH.BrepLoopType)loop.Type, f);
-          loop.Trims.ToList().ForEach(trim =>
-          {
-            RH.BrepTrim rhTrim;
-            if (trim.EdgeIndex != -1)
-              rhTrim = newBrep.Trims.Add(newBrep.Edges[trim.EdgeIndex], trim.IsReversed,
-                newBrep.Loops[trim.LoopIndex], trim.CurveIndex);
-            else if (trim.TrimType == BrepTrimType.Singular)
-              rhTrim = newBrep.Trims.AddSingularTrim(newBrep.Vertices[trim.EndIndex],
-                newBrep.Loops[trim.LoopIndex], (RH.IsoStatus)trim.IsoStatus, trim.CurveIndex);
-            else
-              rhTrim = newBrep.Trims.Add(trim.IsReversed, newBrep.Loops[trim.LoopIndex], trim.CurveIndex);
-
-            rhTrim.IsoStatus = (IsoStatus)trim.IsoStatus;
-            rhTrim.TrimType = (RH.BrepTrimType)trim.TrimType;
-            rhTrim.SetTolerances(tol, tol);
-          });
-        });
-
-        newBrep.Repair(tol);
-
-        return newBrep;
-      }
-             */
-
-
+            return result;
 
         }
 
@@ -573,11 +508,8 @@ namespace EPFL.GrasshopperTopSolid
             Brep brepsrf = new Brep();
 
 
-
+            //function added on request, gets the 2DCurves, 3dCurves and Edges in the correct order
             OrientedSurface osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, false, outer, list2D, list3D, listEdges);
-
-
-            //list2D.IndexOf(list2D.Where(x => x.Pe == x.Ps && x.Te == x.Tm).FirstOrDefault());
 
             //Add Vertices
             int ver = 0;
@@ -585,7 +517,15 @@ namespace EPFL.GrasshopperTopSolid
             {
                 foreach (TKGD3.Shapes.Edge e in list)
                 {
+                    //TODO UNCOMMENT as soon as error with IsReversedwithFin is resolved
+                    //if (!e.IsReversedWithFin())
+                    //{
+                    //    vertexlist.Add(e.EndVertex);
+                    //}
+                    //else
+                    //{
                     vertexlist.Add(e.StartVertex);
+                    //}
                     ver++;
                 }
             }
@@ -594,42 +534,73 @@ namespace EPFL.GrasshopperTopSolid
                 brepsrf.Vertices.Add(Convert.ToRhino(v.GetGeometry()), tol_TS);
             }
 
-            //Get the 3D Curves and convert them to Rhino
-            //List<BrepEdge> brepEdges = new List<BrepEdge>();
+            //Get the 3D Curves and convert them to Rhino            
+            int ind = 0;
+            //bool rev;
             foreach (TKGD3.Curves.IGeometricProfile c in list3D)
             {
                 foreach (TKGD3.Curves.IGeometricSegment ic in c.Segments)
                 {
-                    c_index = brepsrf.AddEdgeCurve(Convert.ToRhino(ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false)));
-                    //if (ic.IsReversed)
-                    //    brepsrf.Curves3D[c_index].Reverse();
-                    //brepEdges.Add(brepsrf.Edges.Add(c_index));
+                    var crv = ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false);
+                    //c_index++;
+                    //if (!listEdges.ElementAt(ind)[c_index].IsReversedWithFin())
+                    //{
+                    //    crv.Reverse();
+                    //}
 
+                    //if (!listEdges.ElementAt(ind)[c_index].IsReversedWithFin())
+                    //    rev = brepsrf.Curves3D[c_index].Reverse();
+
+                    c_index = brepsrf.AddEdgeCurve(Convert.ToRhino(crv));
                 }
+                ind++;
             }
 
             //Edges
             int i = 0;
             //int j = 0;
-            List<BrepEdge> edge = new List<BrepEdge>();
+            List<BrepEdge> rhEdges = new List<BrepEdge>();
             foreach (EdgeList list in listEdges)
             {
                 foreach (Edge e in list)
                 {
+                    //Other possible method to add edges
+                    //if (i + 1 == list.Count)
+
+
+                    //{
+                    //    if (!e.IsReversedWithFin())
+                    //        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[0], brepsrf.Vertices[i], i, tol_TS));
+                    //    else
+                    //        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_TS));
+                    //}
+
+
+                    //else
+                    //{
+                    //    if (!e.IsReversedWithFin())
+                    //        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[i + 1], brepsrf.Vertices[i], i, tol_TS));
+                    //    else
+                    //        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[i + 1], i, tol_TS));
+
+                    //}
+
                     if (i + 1 == list.Count)
                     {
-                        //if (e.IsReversed())
-                        //    brepsrf.Edges.Add(brepsrf.Vertices[0], brepsrf.Vertices[i], i, tol_Rh);
+
+                        //TODO UNCOMMENT
+                        //if (!e.IsReversedWithFin())
+                        //    rhEdges.Add(brepsrf.Edges.Add(0, i, i, tol_TS));
                         //else
-                        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_TS));
+                        rhEdges.Add(brepsrf.Edges.Add(i, 0, i, tol_TS));
                     }
                     else
                     {
-                        //if (e.IsReversed())
-                        //    brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_Rh);
+                        // TODO UnComment
+                        //if (!e.IsReversedWithFin())
+                        //    rhEdges.Add(brepsrf.Edges.Add(i + 1, i, i, tol_TS));
                         //else
-                        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[i + 1], i, tol_TS));
-
+                        rhEdges.Add(brepsrf.Edges.Add(i, i + 1, i, tol_TS));
                     }
 
                     i++;
@@ -644,16 +615,10 @@ namespace EPFL.GrasshopperTopSolid
             BrepFace bface = brepsrf.Faces.Add(0);
             BrepLoop rh_loop = null;
 
-
-            //For Debug
-            List<Rhino.Geometry.Curve> Rh_2dCurves = new List<Rhino.Geometry.Curve>();
-            bool crvbool;
-
             //Get the 2D Curves and convert them to Rhino
             int x = 0;
             foreach (TKGD2.Curves.IGeometricProfile c in list2D)
             {
-                //c.Adjust(TKGD2.Curves.AdjustType.ByMove, true, tol_TS);
                 var tsloop = face.Loops.ElementAt(loopindex);
 
                 if (tsloop.IsOuter)
@@ -662,13 +627,9 @@ namespace EPFL.GrasshopperTopSolid
                     rh_loop = brepsrf.Loops.Add(BrepLoopType.Inner, bface);
 
 
-
                 foreach (TKGD2.Curves.IGeometricSegment ic in c.Segments)
                 {
-                    string trimlog = "";
-                    bool trimbool;
                     Rhino.Geometry.Curve crv;
-
                     TKGD2.Curves.BSplineCurve tcrvv = ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false);
                     if (ic.IsReversed)
                     {
@@ -676,24 +637,16 @@ namespace EPFL.GrasshopperTopSolid
                     }
 
                     crv = Convert.ToRhino(tcrvv);
-                    Rh_2dCurves.Add(crv);
-
-                    crvbool = (listEdges[loopindex][x].IsReversed());
-
                     x = brepsrf.AddTrimCurve(crv);
-
-
-                    rhTrim.Add(brepsrf.Trims.Add(edge[x], !ic.IsReversed, rh_loop, x));
+                    rhTrim.Add(brepsrf.Trims.Add(rhEdges[x], false, rh_loop, x));
                     rhTrim[x].SetTolerances(tol_Rh, tol_Rh);
-
-                    //rhTrim[x].TrimType = BrepTrimType.Unknown;
-                    trimbool = rhTrim[x].IsValidWithLog(out trimlog);
-
+                    rhTrim[x].TrimType = BrepTrimType.Boundary;
+                    rhTrim[x].IsoStatus = IsoStatus.None;
                     x++;
 
                 }
 
-                //loopbool2 = brepsrf.Trims.MatchEnds(rh_loop);
+
 
                 loopindex++;
             }
@@ -708,70 +661,21 @@ namespace EPFL.GrasshopperTopSolid
                 brepsrf.Faces.First().OrientationIsReversed = true;
             }
 
+            bool match = true;
 
+            if (!brepsrf.IsValid)
+            {
+                brepsrf.Repair(tol_TS);
+                match = brepsrf.Trims.MatchEnds();
+            }
 
-            //Debug invalid breps
-            string whyyyyy = "";
-            bool whyy = brepsrf.IsValidWithLog(out whyyyyy);
-
-            string log1, log2, log3;
-            bool topo = brepsrf.IsValidTopology(out log1);
-            bool geo = brepsrf.IsValidGeometry(out log2);
-            bool tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
-
-            brepsrf.Repair(tol_Rh);
-
-            bool match = brepsrf.Trims.MatchEnds();
             brepsrf.SetTolerancesBoxesAndFlags(false, true, true, true, true, false, false, false);
 
-            topo = brepsrf.IsValidTopology(out log1);
-            geo = brepsrf.IsValidGeometry(out log2);
-            tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
-
-            //match = brepsrf.Trims.MatchEnds();
-
-            //topo = brepsrf.IsValidTopology(out log1);
-            //geo = brepsrf.IsValidGeometry(out log2);
-            //tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
             if (!match || !brepsrf.IsValid)
             {
-                brepsrf.Repair(tol_Rh);
-                topo = brepsrf.IsValidTopology(out log1);
-                geo = brepsrf.IsValidGeometry(out log2);
-                tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
-
+                brepsrf.Repair(tol_TS);
                 match = brepsrf.Trims.MatchEnds();
-                topo = brepsrf.IsValidTopology(out log1);
-                geo = brepsrf.IsValidGeometry(out log2);
-                tol_flags = brepsrf.IsValidTolerancesAndFlags(out log3);
-
-
             }
-
-
-            //match = brepsrf.Trims.MatchEnds();
-
-
-
-            //brepsrf.Standardize();
-            //brepsrf.Compact();
-
-            //brepsrf.Repair(tol_TS);
-
-
-            //Debug after repair
-
-
-            whyy = brepsrf.IsValidWithLog(out whyyyyy);
-
-
-            if (brepsrf.IsValid == false)
-            {
-                bool rep = brepsrf.Repair(tol_Rh);
-            }
-
-            whyy = brepsrf.IsValidWithLog(out whyyyyy);
-
             return brepsrf;
 
         }
