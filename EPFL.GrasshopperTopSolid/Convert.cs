@@ -3,13 +3,17 @@ using Rhino.Geometry;
 using Rhino.Geometry.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TopSolid.Kernel.G;
 using TopSolid.Kernel.G.D1;
 using TopSolid.Kernel.G.D3;
 using TopSolid.Kernel.G.D3.Curves;
 using TopSolid.Kernel.G.D3.Shapes;
+using TopSolid.Kernel.G.D3.Shapes.Creations;
 using TopSolid.Kernel.G.D3.Sketches;
 using TopSolid.Kernel.G.D3.Surfaces;
+using TopSolid.Kernel.SX;
 using TopSolid.Kernel.SX.Collections;
+using TopSolid.Kernel.TX.Items;
 using TKG = TopSolid.Kernel.G;
 using TKGD2 = TopSolid.Kernel.G.D2;
 using TKGD3 = TopSolid.Kernel.G.D3;
@@ -85,6 +89,29 @@ namespace EPFL.GrasshopperTopSolid
             else
             {
                 BSplineCurve bs = new BSplineCurve(b, pts);
+                return bs;
+            }
+
+        }
+
+        static public TopSolid.Kernel.G.D2.Curves.BSplineCurve ToHost2d(this Rhino.Geometry.NurbsCurve c)
+        {
+            bool r = c.IsRational;
+            bool p = c.IsPeriodic;
+            int d = c.Degree;
+            DoubleList k = ToDoubleList(c.Knots, d);
+            TKGD2.PointList pts = ToPointList2D(c.Points);
+            DoubleList w = ToDoubleList(c.Points);
+            BSpline b = new BSpline(p, d, k);
+            if (r)
+            {
+                //var w = c.Points.ConvertAll(x => x.Weight);
+                TKGD2.Curves.BSplineCurve bs = new TKGD2.Curves.BSplineCurve(b, pts, w);
+                return bs;
+            }
+            else
+            {
+                TKGD2.Curves.BSplineCurve bs = new TKGD2.Curves.BSplineCurve(b, pts);
                 return bs;
             }
 
@@ -332,6 +359,20 @@ namespace EPFL.GrasshopperTopSolid
 
             return points;
         }
+
+        static TKGD2.PointList ToPointList2D(NurbsCurvePointList list)
+        {
+            var count = list.Count;
+            TKGD2.PointList points = new TKGD2.PointList();
+            foreach (ControlPoint p in list)
+            {
+                var location = p.Location;
+                var pt = new TKG.D2.Point(location.X, location.Y);
+                points.Add(pt);
+            }
+
+            return points;
+        }
         #endregion
         #region Surface
         public static TKG.D3.Surfaces.BSplineSurface ToHost(this NurbsSurface s)
@@ -466,6 +507,8 @@ namespace EPFL.GrasshopperTopSolid
             return w;
         }
         #endregion
+        #region Breps
+
 
         static public Brep[] ToRhino(Shape shape)
         {
@@ -518,14 +561,14 @@ namespace EPFL.GrasshopperTopSolid
                 foreach (TKGD3.Shapes.Edge e in list)
                 {
                     //TODO UNCOMMENT as soon as error with IsReversedwithFin is resolved
-                    //if (!e.IsReversedWithFin())
-                    //{
-                    //    vertexlist.Add(e.EndVertex);
-                    //}
-                    //else
-                    //{
-                    vertexlist.Add(e.StartVertex);
-                    //}
+                    if (!e.IsReversedWithFin(face))
+                    {
+                        vertexlist.Add(e.EndVertex);
+                    }
+                    else
+                    {
+                        vertexlist.Add(e.StartVertex);
+                    }
                     ver++;
                 }
             }
@@ -542,11 +585,11 @@ namespace EPFL.GrasshopperTopSolid
                 foreach (TKGD3.Curves.IGeometricSegment ic in c.Segments)
                 {
                     var crv = ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false);
-                    //c_index++;
-                    //if (!listEdges.ElementAt(ind)[c_index].IsReversedWithFin())
-                    //{
-                    //    crv.Reverse();
-                    //}
+                    c_index++;
+                    if (!listEdges.ElementAt(ind)[c_index].IsReversedWithFin(face))
+                    {
+                        crv.Reverse();
+                    }
 
                     //if (!listEdges.ElementAt(ind)[c_index].IsReversedWithFin())
                     //    rev = brepsrf.Curves3D[c_index].Reverse();
@@ -566,41 +609,36 @@ namespace EPFL.GrasshopperTopSolid
                 {
                     //Other possible method to add edges
                     //if (i + 1 == list.Count)
-
-
                     //{
                     //    if (!e.IsReversedWithFin())
                     //        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[0], brepsrf.Vertices[i], i, tol_TS));
                     //    else
                     //        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[0], i, tol_TS));
                     //}
-
-
                     //else
                     //{
                     //    if (!e.IsReversedWithFin())
                     //        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[i + 1], brepsrf.Vertices[i], i, tol_TS));
                     //    else
                     //        edge.Add(brepsrf.Edges.Add(brepsrf.Vertices[i], brepsrf.Vertices[i + 1], i, tol_TS));
-
                     //}
 
                     if (i + 1 == list.Count)
                     {
 
                         //TODO UNCOMMENT
-                        //if (!e.IsReversedWithFin())
-                        //    rhEdges.Add(brepsrf.Edges.Add(0, i, i, tol_TS));
-                        //else
-                        rhEdges.Add(brepsrf.Edges.Add(i, 0, i, tol_TS));
+                        if (!e.IsReversedWithFin(face))
+                            rhEdges.Add(brepsrf.Edges.Add(0, i, i, tol_TS));
+                        else
+                            rhEdges.Add(brepsrf.Edges.Add(i, 0, i, tol_TS));
                     }
                     else
                     {
                         // TODO UnComment
-                        //if (!e.IsReversedWithFin())
-                        //    rhEdges.Add(brepsrf.Edges.Add(i + 1, i, i, tol_TS));
-                        //else
-                        rhEdges.Add(brepsrf.Edges.Add(i, i + 1, i, tol_TS));
+                        if (!e.IsReversedWithFin(face))
+                            rhEdges.Add(brepsrf.Edges.Add(i + 1, i, i, tol_TS));
+                        else
+                            rhEdges.Add(brepsrf.Edges.Add(i, i + 1, i, tol_TS));
                     }
 
                     i++;
@@ -643,17 +681,9 @@ namespace EPFL.GrasshopperTopSolid
                     rhTrim[x].TrimType = BrepTrimType.Boundary;
                     rhTrim[x].IsoStatus = IsoStatus.None;
                     x++;
-
                 }
-
-
-
                 loopindex++;
             }
-
-
-            string looplog = "";
-            bool loopbool = rh_loop.IsValidWithLog(out looplog);
 
 
             if (osurf.IsReversed)
@@ -662,7 +692,6 @@ namespace EPFL.GrasshopperTopSolid
             }
 
             bool match = true;
-
             if (!brepsrf.IsValid)
             {
                 brepsrf.Repair(tol_TS);
@@ -679,5 +708,338 @@ namespace EPFL.GrasshopperTopSolid
             return brepsrf;
 
         }
+        /*
+               static public Shape ToHost(Brep brep)
+               {
+
+                   double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
+                   Shape shape = null;
+                   if (brep.IsValid)
+                   {
+
+                       shape = MakeSheetFrom3d(brep, brep.Faces, tol_TS);
+
+                       if (shape == null || shape.IsEmpty)
+                           shape = MakeSheetFrom2d(brep, face, tol_TS);
+
+                       if (shape == null || shape.IsEmpty)
+                       {
+                           shape = MakeSheet(brep, face);
+                           inLog.Report("Face not limited.");
+                       }
+
+                       if (shape == null || shape.IsEmpty)
+                           inLog.Report("Missing face.");
+                       else
+                           ioShapes.Add(shape);
+                   }
+                   return shape;
+               }
+
+
+               internal static void MakeSurfacesAndLoops(Brep inBrep, ShapeList ioSurfs, List<TKG.D3.Sketches.PositionedSketch> ioLoops3d, List<TKG.D2.Sketches.PositionedSketch> ioLoops2d)
+               {
+                   if (inBrep != null && ioSurfs != null && ioLoops3d != null && ioLoops2d != null)
+                   {
+                       SheetMaker sheetMaker = new SheetMaker(Version.Current);
+
+                       foreach (BrepFace f in inBrep.Faces)
+                       {
+                           Brep face = f.ToBrep();
+                           if (inBrep.IsValid)
+                           {
+                               sheetMaker.Surface = Convert.ToHost(face.Faces.First().UnderlyingSurface().ToNurbsSurface());
+
+                               Shape shape = null;
+                               try
+                               {
+                                   shape = sheetMaker.Make(null, null);
+                               }
+                               catch
+                               {
+                               }
+
+                               if (shape != null && shape.IsEmpty == false)
+                               {
+                                   int i;
+                                   TKGD3.Point po;
+                                   TKGD3.Vector vu, vv;
+                                   //Color[] colors = new Color[] { Color.White, Color.Red, Color.Orange, Color.Yellow, Color.Green, Color.Cyan, Color.Violet };
+                                   TKGD3.Curves.LineCurve l1;
+                                   TKGD3.Curves.LineCurve l2;
+                                   TKGD3.Sketches.Segment seg;
+
+                                   try
+                                   {
+                                       double u = sheetMaker.Surface.Us;
+                                       double v = sheetMaker.Surface.Vs;
+
+                                       if (!Double.IsFinite(u))
+                                           u = 0.0;
+
+                                       if (!Double.IsFinite(v))
+                                           v = 0.0;
+
+                                       po = sheetMaker.Surface.GetPoint(u, v);
+                                       vu = sheetMaker.Surface.GetDerivative(1, 0, u, v);
+                                       vv = sheetMaker.Surface.GetDerivative(0, 1, u, v);
+                                   }
+                                   catch
+                                   {
+                                       continue;
+                                   }
+
+                                   ioSurfs.Add(shape);
+
+                                   // Surface frame.
+
+                                   TKGD3.Sketches.PositionedSketch sketch = new TKGD3.Sketches.PositionedSketch(null, null, false);
+                                   sketch.SetManagementType(TKGD2.Sketches.SketchVertexManagementType.AllowsVertices, TKGD2.Sketches.SketchProfileManagementType.Manual);
+
+                                   if (vu.Norm > Precision.MinimalLength)
+                                   {
+                                       l1 = new TKGD3.Curves.LineCurve(po, po + vu);
+                                       seg = sketch.AddSegment(ItemOperationKey.PreviewKey, TKGD3.Sketches.Vertex.Empty, TKGD3.Sketches.Vertex.Empty, l1, false);
+                                       //seg.Color = Color.Red;
+                                   }
+
+                                   if (vv.Norm > Precision.MinimalLength)
+                                   {
+                                       l2 = new TKGD3.Curves.LineCurve(po, po + vv);
+                                       seg = sketch.AddSegment(ItemOperationKey.PreviewKey, TKGD3.Sketches.Vertex.Empty, TKGD3.Sketches.Vertex.Empty, l2, false);
+                                       //seg.Color = Color.Green;
+                                   }
+
+                                   ioLoops3d.Add(sketch);
+
+                                   // Face Loops.
+                                   int j = 0;
+                                   List<TKGD3.Curves.CurveList> loops3d = new List<CurveList>();
+
+                                   foreach (Rhino.Geometry.Curve crv in face.Curves3D)
+                                   {                                
+                                       loops3d[j].Add(Convert.ToHost(crv.ToNurbsCurve()));                                
+                                   }
+
+                                   if (loops3d != null)
+                                   {
+                                       foreach (TKGD3.Curves.CurveList cvs in loops3d)
+                                       {
+                                           sketch = new TKGD3.Sketches.PositionedSketch(null, null, false);
+                                           sketch.SetManagementType(TKGD2.Sketches.SketchVertexManagementType.AllowsVertices, TKGD2.Sketches.SketchProfileManagementType.Manual);
+
+                                           i = 0;
+                                           foreach (TKGD3.Curves.Curve cv in cvs)
+                                           {
+                                               sketch.AddSegment(ItemOperationKey.PreviewKey, TKGD3.Sketches.Vertex.Empty, TKGD3.Sketches.Vertex.Empty, cv, false);
+
+                                               // deriv
+                                               try
+                                               {
+                                                   l1 = new TKGD3.Curves.LineCurve(cv.Ps, cv.Ps + cv.Vs);
+                                               }
+                                               catch
+                                               {
+                                                   continue;
+                                               }
+                                               seg = sketch.AddSegment(ItemOperationKey.PreviewKey, TKGD3.Sketches.Vertex.Empty, TKGD3.Sketches.Vertex.Empty, l1, false);
+                                               //seg.Color = colors[i++];
+
+                                               //if (i == colors.Length)
+                                               //    i = 1;
+                                           }
+
+                                           ioLoops3d.Add(sketch);
+                                       }
+                                   }
+
+
+                                   List<TKGD2.Curves.CurveList> loops2d = new List<TKGD2.Curves.CurveList>();
+                                   foreach (Rhino.Geometry.Curve crv in face.Curves2D)
+                                   {
+                                       loops2d.Add(Convert.ToHost(crv.ToNurbsCurve()));
+                                   }
+                                   if (loops2d != null)
+                                   {
+                                       foreach (TKGD2.Curves.CurveList cvs in loops2d)
+                                       {
+                                           Sk2d.PositionedSketch sketch2d = new Sk2d.PositionedSketch(null, null, false);
+                                           sketch2d.SetManagementType(Sk2d.SketchVertexManagementType.AllowsVertices, Sk2d.SketchProfileManagementType.Manual);
+
+                                           i = 0;
+                                           foreach (Cv2d.Curve cv in cvs)
+                                           {
+                                               Cv2d.LineCurve lin;
+                                               sketch2d.AddSegment(ItemOperationKey.PreviewKey, Sk2d.Vertex.Empty, Sk2d.Vertex.Empty, cv, false);
+
+                                               // deriv
+                                               try
+                                               {
+                                                   lin = new Cv2d.LineCurve(cv.Ps, cv.Ps + cv.Vs);
+                                               }
+                                               catch
+                                               {
+                                                   continue;
+                                               }
+                                               Sk2d.Segment seg2d = sketch2d.AddSegment(ItemOperationKey.PreviewKey, Sk2d.Vertex.Empty, Sk2d.Vertex.Empty, lin, false);
+                                               seg2d.Color = colors[i++];
+
+                                               if (i == colors.Length)
+                                                   i = 1;
+                                           }
+
+                                           ioLoops2d.Add(sketch2d);
+                                       }
+                                   }
+                               }
+                           }
+                       }
+                   }
+               }
+
+               private static Shape MakeSheetFrom3d(BRep inBRep, BRep.Face inFace, double inLinearPrecision)
+               {
+                   Shape shape = null;
+
+                   TrimmedSheetMaker sheetMaker = new TrimmedSheetMaker(Version.Current);
+                   sheetMaker.LinearTolerance = inLinearPrecision;
+                   //sheetMaker.UsesBRepMethod = true;
+
+                   Surface surface = inBRep.Surfaces[inFace.s];
+
+                   // Reverse surface and curves in 3d mode(according to the drilled cylinder crossed by cube in v5_example.3dm).
+                   //if (inFace.rev)
+                   //    surface = ImporterHelper.MakeReversed(surface); // Useless.
+
+                   // Closed BSpline surfaces must not be periodic for parasolid with 3d curves (according to wishbone.3dm and dinnermug.3dm).
+                   // If new problems come, see about the periodicity of the curves.
+                   BSplineSurface bsSurface = surface as BSplineSurface;
+                   if (bsSurface != null && (bsSurface.IsUPeriodic || bsSurface.IsVPeriodic))
+                   {
+                       bsSurface = (BSplineSurface)bsSurface.Clone();
+
+                       if (bsSurface.IsUPeriodic)
+                           bsSurface.MakeUNonPeriodic();
+
+                       if (bsSurface.IsVPeriodic)
+                           bsSurface.MakeVNonPeriodic();
+
+                       surface = bsSurface;
+                   }
+
+                   sheetMaker.Surface = new OrientedSurface(surface, false);
+
+                   var loops3d = inBRep.GetLoops3d(inFace.ls);
+                   if (loops3d != null && loops3d.IsEmpty == false)
+                   {
+                       // if (inFace.rev == false || ImporterHelper.MakeReversed(loops3d)) // Useless
+                       {
+                           sheetMaker.SetCurves(loops3d, null);
+
+                           try
+                           {
+                               shape = sheetMaker.Make(null, null);
+                           }
+                           catch
+                           {
+                           }
+                       }
+                   }
+
+                   return shape;
+               }
+
+               private static Shape MakeSheetFrom2d(BRep inBRep, BRep.Face inFace, double inLinearPrecision)
+               {
+                   Shape shape = null;
+
+                   TrimmedSheetMaker sheetMaker = new TrimmedSheetMaker(Version.Current);
+                   sheetMaker.LinearTolerance = inLinearPrecision;
+                   Surface surface = inBRep.Surfaces[inFace.s];
+
+                   // Closed BSpline surfaces must be made periodic for parasolid with 2d curves (according to torus and sphere in v5_example.3dm).
+                   // If new problems come, see about the periodicity of the curves.
+                   BSplineSurface bsSurface = surface as BSplineSurface;
+                   if (bsSurface != null && ((bsSurface.IsUClosed && bsSurface.IsUPeriodic == false) || (bsSurface.IsVClosed && bsSurface.IsVPeriodic == false)))
+                   {
+                       bsSurface = (BSplineSurface)bsSurface.Clone();
+
+                       if (bsSurface.IsUClosed)
+                           bsSurface.MakeUPeriodic();
+
+                       if (bsSurface.IsVClosed)
+                           bsSurface.MakeVPeriodic();
+
+                       surface = bsSurface;
+                   }
+                   sheetMaker.Surface = new OrientedSurface(surface, false);
+
+                   var loops2d = inBRep.GetLoops2d(inFace.ls);
+                   if (loops2d != null)
+                   {
+                       sheetMaker.SetCurves(loops2d, null);
+
+                       try
+                       {
+                           shape = sheetMaker.Make(null, null);
+                       }
+                       catch
+                       {
+                       }
+                   }
+
+                   return shape;
+               }
+
+               private static Shape MakeSheet(BRep inBRep, BRep.Face inFace)
+               {
+                   Shape shape = null;
+                   SheetMaker sheetMaker = new SheetMaker(Version.Current);
+                   sheetMaker.Surface = inBRep.Surfaces[inFace.s];
+
+                   try
+                   {
+                       shape = sheetMaker.Make(null, null);
+                   }
+                   catch
+                   {
+                   }
+
+                   return shape;
+               }
+
+               internal static void MakeShapes(BRep inBRep, LogBuilder inLog, double inLinearPrecision, double inAngularPrecision, ShapeList ioShapes)
+               {
+                   if (inBRep != null && inLog != null && ioShapes != null)
+                   {
+                       foreach (BRep.Face face in inBRep.Faces)
+                       {
+                           if (inBRep.IsValid(face))
+                           {
+                               Shape shape = null;
+
+                               shape = MakeSheetFrom3d(inBRep, face, inLinearPrecision);
+
+                               if (shape == null || shape.IsEmpty)
+                                   shape = MakeSheetFrom2d(inBRep, face, inLinearPrecision);
+
+                               if (shape == null || shape.IsEmpty)
+                               {
+                                   shape = MakeSheet(inBRep, face);
+                                   inLog.Report("Face not limited.");
+                               }
+
+                               if (shape == null || shape.IsEmpty)
+                                   inLog.Report("Missing face.");
+                               else
+                                   ioShapes.Add(shape);
+                           }
+                           else if (inLog != null)
+                               inLog.Report("Invalid face.");
+                       }
+                   }
+               }
+        */
+        #endregion
     }
 }
