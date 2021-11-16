@@ -1078,19 +1078,40 @@ namespace EPFL.GrasshopperTopSolid
             listItemMok.Add(new ItemMonikerList());
             int i = 0;
 
-            var list = inBRep.Loops.Where(x => x.Face.FaceIndex == inFace.FaceIndex).Select(x => x.;
-            //TODO organize using coincidance between start and end point
-            foreach (var edge in inBRep.Edges)
-            //Where(x => x.AdjacentFaces().Contains(inFace.FaceIndex)).OrderBy(y => y.EdgeIndex))
-            {
-                if (inBRep.Faces[inFace.FaceIndex].AdjacentEdges().Contains(edge.EdgeIndex))
-                {
-                    var convertedCrv = ToHost(edge.EdgeCurve.ToNurbsCurve());
-                    listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
-                    loops3d.First().Add(convertedCrv);
-                }
+            List<int> indices = new List<int>();
 
+            foreach (int ind in inFace.AdjacentEdges())
+            {
+                indices.Add(ind);
             }
+
+            int counter = 0;
+            foreach (int ind in indices)
+            {
+                var rhCurve = inBRep.Edges.ElementAt(ind).EdgeCurve.ToNurbsCurve();
+                if (counter != 0 && rhCurve.PointAtStart.DistanceTo(inBRep.Edges.ElementAt(indices[counter - 1]).PointAtEnd) > inLinearPrecision)
+                {
+                    rhCurve.Reverse();
+                }
+                var convertedCrv = ToHost(rhCurve);
+                listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
+                loops3d.First().Add(convertedCrv);
+                counter++;
+            }
+
+
+            //TODO organize using coincidance between start and end point
+            //foreach (BrepEdge edge in inBRep.Edges)
+            ////Where(x => x.AdjacentFaces().Contains(inFace.FaceIndex)).OrderBy(y => y.EdgeIndex))
+            //{
+            //    if (inBRep.Faces[inFace.FaceIndex].AdjacentEdges().Contains(edge.EdgeIndex))
+            //    {
+            //        var convertedCrv = ToHost(edge.EdgeCurve.ToNurbsCurve());
+            //        listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
+            //        loops3d.First().Add(convertedCrv);
+            //    }
+
+            //}
 
 
             if (loops3d != null && loops3d.Count != 0)

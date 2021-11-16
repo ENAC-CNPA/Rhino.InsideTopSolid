@@ -104,12 +104,16 @@ namespace EPFL.GrasshopperTopSolid.Components
                         GH_Convert.ToBrep(gbrep, ref rs, 0);
 
                         var shapes = rs.ToHost();
+
+
                         foreach (var ts in shapes)
                         {
                             ShapeEntity se = new ShapeEntity(doc, 0);
                             se.Geometry = ts;
                             se.Create(doc.PointsFolderEntity);
                         }
+
+
 
                     }
                 }

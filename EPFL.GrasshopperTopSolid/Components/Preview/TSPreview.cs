@@ -120,6 +120,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                     var x = Convert.ToHost(_brep);
                     foreach (var s in x)
                     {
+                        //TODO
                         TopSolid.Kernel.DB.D3.Shapes.ShapeEntity shapeentity = new TopSolid.Kernel.DB.D3.Shapes.ShapeEntity(doc, 0);
                         shapeentity.Geometry = s;
                         if (shapeentity.Display.Items.Count != 0)
