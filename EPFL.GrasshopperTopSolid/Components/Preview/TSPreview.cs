@@ -111,6 +111,25 @@ namespace EPFL.GrasshopperTopSolid.Components
                         for (int i = 0; i < srfentity.Display.Items.Count; i++)
                         { gd.Add(srfentity.Display.Items.ElementAt(i)); }
                     }
+                }
+
+                else if (g is GH_Brep brep)
+                {
+                    Rhino.Geometry.Brep _brep = null;
+                    GH_Convert.ToBrep(brep, ref _brep, GH_Conversion.Both);
+                    var x = Convert.ToHost(_brep);
+                    foreach (var s in x)
+                    {
+                        TopSolid.Kernel.DB.D3.Shapes.ShapeEntity shapeentity = new TopSolid.Kernel.DB.D3.Shapes.ShapeEntity(doc, 0);
+                        shapeentity.Geometry = s;
+                        if (shapeentity.Display.Items.Count != 0)
+                        {
+                            for (int i = 0; i < shapeentity.Display.Items.Count; i++)
+                            { gd.Add(shapeentity.Display.Items.ElementAt(i)); }
+                        }
+
+                    }
+
 
 
                 }

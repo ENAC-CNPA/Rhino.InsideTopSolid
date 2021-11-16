@@ -4,12 +4,21 @@ using Rhino.Geometry;
 using Rhino.Geometry.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TopSolid.Kernel.DB.D3.Documents;
+using TopSolid.Kernel.DB.D3.Modeling.Documents;
+using TopSolid.Kernel.DB.D3.Shapes;
+using TopSolid.Kernel.DB.D3.Sketches;
+using TopSolid.Kernel.DB.D2.Sketches;
+
 using TopSolid.Kernel.G;
 using TopSolid.Kernel.G.D1;
 using TopSolid.Kernel.G.D3;
 using TopSolid.Kernel.G.D3.Curves;
 using TopSolid.Kernel.G.D3.Shapes;
 using TopSolid.Kernel.G.D3.Shapes.Creations;
+using TopSolid.Kernel.G.D3.Shapes.Modifications;
+using TopSolid.Kernel.G.D3.Shapes.Sew;
+using TopSolid.Kernel.G.D3.Shapes.Sketches;
 using TopSolid.Kernel.G.D3.Sketches;
 using TopSolid.Kernel.G.D3.Surfaces;
 using TopSolid.Kernel.SX;
@@ -19,6 +28,13 @@ using TKG = TopSolid.Kernel.G;
 using TKGD2 = TopSolid.Kernel.G.D2;
 using TKGD3 = TopSolid.Kernel.G.D3;
 using TSXGen = TopSolid.Kernel.SX.Collections.Generic;
+using SketchEntity = TopSolid.Kernel.DB.D2.Sketches.SketchEntity;
+using TopSolid.Kernel.G.D3.Shapes.Healing;
+using TopSolid.Kernel.DB.Operations;
+using TopSolid.Kernel.DB.D3.Sketches.Operations;
+using TopSolid.Kernel.DB.D3.Curves;
+using TopSolid.Kernel.TX.Undo;
+using TX = TopSolid.Kernel.TX;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -757,17 +773,17 @@ namespace EPFL.GrasshopperTopSolid
                 brepsrf.Faces.First().OrientationIsReversed = true;
             }
 
-            string log = null;
-            brepsrf.IsValidWithLog(out log);
+            //string log = null;
+            //brepsrf.IsValidWithLog(out log);
 
 
             bool match = true;
             if (!brepsrf.IsValid)
             {
                 brepsrf.Repair(tol_TS);
-                brepsrf.IsValidWithLog(out log);
+                //brepsrf.IsValidWithLog(out log);
                 match = brepsrf.Trims.MatchEnds();
-                brepsrf.IsValidWithLog(out log);
+                //brepsrf.IsValidWithLog(out log);
 
             }
 
@@ -776,40 +792,75 @@ namespace EPFL.GrasshopperTopSolid
             if (!match || !brepsrf.IsValid)
             {
                 brepsrf.Repair(tol_TS);
-                brepsrf.IsValidWithLog(out log);
+                //brepsrf.IsValidWithLog(out log);
                 match = brepsrf.Trims.MatchEnds();
             }
             return brepsrf;
 
         }
 
-        static public Shape ToHost(Brep brep)
+        static public ShapeList ToHost(this Brep brep)
         {
 
             double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
             Shape shape = null;
             ShapeList ioShapes = new ShapeList();
-            var face = brep.Faces.First();
+            //List<PositionedSketch> list3dSktech = new List<PositionedSketch>();
+            //List<TKGD2.Sketches.PositionedSketch> list2dSketch = new List<TKGD2.Sketches.PositionedSketch>();
+
+
             if (brep.IsValid)
             {
-
-                shape = MakeSheetFrom3d(brep, brep.Faces.First(), tol_TS);
-
-                if (shape == null || shape.IsEmpty)
-                    shape = MakeSheetFrom2d(brep, face, tol_TS);
-
-                if (shape == null || shape.IsEmpty)
+                foreach (BrepFace bface in brep.Faces)
                 {
-                    shape = MakeSheet(brep, face);
-                    //inLog.Report("Face not limited.");
+                    shape = null;
+
+                    //MakeSurfacesAndLoops(bface.ToBrep(), ioShapes, list3dSktech, list2dSketch);
+
+                    shape = MakeSheetFrom3d(brep, bface, tol_TS);
+
+                    if (shape == null || shape.IsEmpty)
+                        shape = MakeSheetFrom2d(brep, bface, tol_TS);
+
+                    if (shape == null || shape.IsEmpty)
+                    {
+                        shape = MakeSheet(brep, bface);
+                        //inLog.Report("Face not limited.");
+                    }
+
+                    if (shape == null || shape.IsEmpty)
+                    { }//inLog.Report("Missing face.");
+                    else
+                        ioShapes.Add(shape);
                 }
 
-                if (shape == null || shape.IsEmpty)
-                { }//inLog.Report("Missing face.");
-                else
-                    ioShapes.Add(shape);
+
             }
-            return shape;
+
+            SheetsSewer sewer = new SheetsSewer(Version.Current, shape);
+            //sewer.RemovesDuplicateSurfaces = true; //useless
+            sewer.ResetEdgesPrecision = true;
+
+            //donner une tolérance
+            //foreach (Shape s in ioShapes)
+            //{
+            //    //unicité des monikers sur la forme finale = méthode avec ID
+            //    //gap width = taille des trous à boucher - 10^-5 par défault
+
+            //    sewer.AddTool(s);            //    
+            //}
+
+            //try
+            //{
+            //    sewer.Sew(null);
+            //}
+
+
+            //catch { }
+
+
+            //return shape;
+            return ioShapes;
         }
 
 
@@ -821,10 +872,11 @@ namespace EPFL.GrasshopperTopSolid
 
                 foreach (BrepFace f in inBrep.Faces)
                 {
-                    Brep face = f.ToBrep();
+
+                    //Brep face = f.ToBrep();
                     if (inBrep.IsValid)
                     {
-                        sheetMaker.Surface = Convert.ToHost(face.Faces.First().UnderlyingSurface().ToNurbsSurface());
+                        sheetMaker.Surface = Convert.ToHost(f.DuplicateSurface().ToNurbsSurface());
 
                         Shape shape = null;
                         try
@@ -892,9 +944,10 @@ namespace EPFL.GrasshopperTopSolid
                             int j = 0;
                             List<TKGD3.Curves.CurveList> loops3d = new List<CurveList>();
 
-                            foreach (Rhino.Geometry.Curve crv in face.Curves3D)
+                            foreach (var crv in f.ToBrep().Edges)
                             {
-                                loops3d[j].Add(Convert.ToHost(crv.ToNurbsCurve()));
+                                loops3d[j].Add(Convert.ToHost(crv.EdgeCurve.ToNurbsCurve()));
+                                j++;
                             }
 
                             if (loops3d != null)
@@ -931,9 +984,11 @@ namespace EPFL.GrasshopperTopSolid
 
 
                             List<TKGD2.Curves.CurveList> loops2d = new List<TKGD2.Curves.CurveList>();
-                            foreach (Rhino.Geometry.Curve crv in face.Curves2D)
+                            foreach (Rhino.Geometry.Curve crv in inBrep.Curves2D)
                             {
-                                loops2d.First().Add(Convert.ToHost2d(crv.ToNurbsCurve()));
+                                if (f.AdjacentEdges().Contains(crv.ComponentIndex().Index))
+                                    loops2d.First().Add(Convert.ToHost2d(crv.ToNurbsCurve()));
+
                             }
                             if (loops2d != null)
                             {
@@ -979,9 +1034,13 @@ namespace EPFL.GrasshopperTopSolid
 
             TrimmedSheetMaker sheetMaker = new TrimmedSheetMaker(Version.Current);
             sheetMaker.LinearTolerance = inLinearPrecision;
-            //sheetMaker.UsesBRepMethod = true;
+            sheetMaker.UsesBRepMethod = false;
 
-            Rhino.Geometry.Surface surface = inBRep.Surfaces.First();
+            TX.Items.ItemMonikerKey key = new TX.Items.ItemMonikerKey(TX.Items.ItemOperationKey.BasicKey);
+
+            // Get surface and set to maker.
+
+            Rhino.Geometry.Surface surface = inBRep.Surfaces[inFace.FaceIndex];
 
             // Reverse surface and curves in 3d mode(according to the drilled cylinder crossed by cube in v5_example.3dm).
             //if (inFace.rev)
@@ -990,6 +1049,7 @@ namespace EPFL.GrasshopperTopSolid
             // Closed BSpline surfaces must not be periodic for parasolid with 3d curves (according to wishbone.3dm and dinnermug.3dm).
             // If new problems come, see about the periodicity of the curves.
             BSplineSurface bsSurface = Convert.ToHost(surface.ToNurbsSurface());
+
             if (bsSurface != null && (bsSurface.IsUPeriodic || bsSurface.IsVPeriodic))
             {
                 bsSurface = (BSplineSurface)bsSurface.Clone();
@@ -1000,29 +1060,49 @@ namespace EPFL.GrasshopperTopSolid
                 if (bsSurface.IsVPeriodic)
                     bsSurface.MakeVNonPeriodic();
 
+
+
                 //surface = bsSurface;
             }
 
-            sheetMaker.Surface = new OrientedSurface(bsSurface, false);
 
-            TopSolid.Kernel.SX.Collections.Generic.List<TKGD2.Curves.CurveList> loops3d = new TSXGen.List<TKGD2.Curves.CurveList>();
-            foreach (Rhino.Geometry.Curve crv in inBRep.Curves3D)
+            sheetMaker.Surface = new OrientedSurface(bsSurface, false);
+            sheetMaker.SurfaceMoniker = new ItemMoniker(false, (byte)ItemType.ShapeFace, key, 1);
+
+            // Get spatial curves and set to maker.
+            TopSolid.Kernel.SX.Collections.Generic.List<TKGD3.Curves.CurveList> loops3d = new TSXGen.List<TKGD3.Curves.CurveList>();
+            loops3d.Add(new TKGD3.Curves.CurveList());
+
+
+            TopSolid.Kernel.SX.Collections.Generic.List<ItemMonikerList> listItemMok = new TSXGen.List<ItemMonikerList>();
+            listItemMok.Add(new ItemMonikerList());
+            int i = 0;
+
+            var list = inBRep.Loops.Where(x => x.Face.FaceIndex == inFace.FaceIndex).Select(x => x.;
+            //TODO organize using coincidance between start and end point
+            foreach (var edge in inBRep.Edges)
+            //Where(x => x.AdjacentFaces().Contains(inFace.FaceIndex)).OrderBy(y => y.EdgeIndex))
             {
-                loops3d.First().Add(ToHost2d(crv.ToNurbsCurve()));
+                if (inBRep.Faces[inFace.FaceIndex].AdjacentEdges().Contains(edge.EdgeIndex))
+                {
+                    var convertedCrv = ToHost(edge.EdgeCurve.ToNurbsCurve());
+                    listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
+                    loops3d.First().Add(convertedCrv);
+                }
+
             }
+
+
             if (loops3d != null && loops3d.Count != 0)
             {
                 // if (inFace.rev == false || ImporterHelper.MakeReversed(loops3d)) // Useless
                 {
-                    sheetMaker.SetCurves(loops3d, null);
+                    sheetMaker.SetCurves(loops3d, listItemMok);
 
-                    try
-                    {
-                        shape = sheetMaker.Make(null, null);
-                    }
-                    catch
-                    {
-                    }
+                    //AHW setting to true causes an error
+                    //sheetMaker.UsesBRepMethod = true;
+                    //var x = new ItemMoniker(new CString($"S{op2.Id}"));
+                    shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
                 }
             }
 
@@ -1035,7 +1115,7 @@ namespace EPFL.GrasshopperTopSolid
 
             TrimmedSheetMaker sheetMaker = new TrimmedSheetMaker(Version.Current);
             sheetMaker.LinearTolerance = inLinearPrecision;
-            Rhino.Geometry.Surface surface = inBRep.Surfaces.First();
+            Rhino.Geometry.Surface surface = inFace.DuplicateSurface();
 
             // Closed BSpline surfaces must be made periodic for parasolid with 2d curves (according to torus and sphere in v5_example.3dm).
             // If new problems come, see about the periodicity of the curves.
@@ -1052,26 +1132,31 @@ namespace EPFL.GrasshopperTopSolid
 
                 //surface = bsSurface;
             }
-            sheetMaker.Surface = new OrientedSurface(bsSurface, false);
+            TopSolid.Kernel.SX.Collections.Generic.List<TKGD2.Curves.CurveList> loops2d = new TSXGen.List<TKGD2.Curves.CurveList>();
+            loops2d.Add(new TKGD2.Curves.CurveList());
+            TopSolid.Kernel.SX.Collections.Generic.List<ItemMonikerList> listItemMok = new TSXGen.List<ItemMonikerList>();
+            listItemMok.Add(new ItemMonikerList());
+            ItemMonikerKey key = new ItemMonikerKey(ItemOperationKey.BasicKey);
+            int i = 0;
 
-            TSXGen.List<TKGD2.Curves.CurveList> loops2d = new TSXGen.List<TKGD2.Curves.CurveList>();
-            foreach (Rhino.Geometry.Curve crv in inBRep.Curves2D)
+            foreach (var crv in surface.ToBrep().Curves2D)
             {
-                loops2d.First().Add(Convert.ToHost2d(crv.ToNurbsCurve()));
+                var convertedCrv = ToHost2d(crv.ToNurbsCurve());
+
+                listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
+
+
+                loops2d.First().Add(convertedCrv);
             }
 
-            if (loops2d != null)
-            {
-                sheetMaker.SetCurves(loops2d, null);
 
-                try
-                {
-                    shape = sheetMaker.Make(null, null);
-                }
-                catch
-                {
-                }
-            }
+            var osurf = new OrientedSurface(bsSurface, inFace.OrientationIsReversed);
+            sheetMaker.Surface = osurf;
+            var entity = new TopSolid.Kernel.DB.D2.Sketches.PositionedSketchEntity(TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument, 0);
+            TopSolid.Kernel.G.D2.Sketches.Sketch sk2d = new TKGD2.Sketches.Sketch(entity, null, false);
+
+            sheetMaker.SetCurves(loops2d, listItemMok);
+            shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
 
             return shape;
         }
@@ -1092,6 +1177,8 @@ namespace EPFL.GrasshopperTopSolid
 
             return shape;
         }
+
+
 
         internal static void MakeShapes(Brep inBRep, LogBuilder inLog, double inLinearPrecision, double inAngularPrecision, ShapeList ioShapes)
         {

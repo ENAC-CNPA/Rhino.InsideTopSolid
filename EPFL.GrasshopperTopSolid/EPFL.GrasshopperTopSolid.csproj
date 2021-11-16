@@ -29,6 +29,12 @@
     <Reference Include="TopSolid.Kernel.DB">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.dll</HintPath>
     </Reference>
+    <Reference Include="TopSolid.Kernel.DB.D2">
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.D2.dll</HintPath>
+    </Reference>
+    <Reference Include="TopSolid.Kernel.DB.D2.Sketches">
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.D2.Sketches.dll</HintPath>
+    </Reference>
     <Reference Include="TopSolid.Kernel.DB.D3">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.D3.dll</HintPath>
     </Reference>

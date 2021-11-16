@@ -10,6 +10,7 @@ using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using TopSolid.Kernel.DB.D3.Points;
 using TopSolid.Kernel.DB.D3.Surfaces;
 using TopSolid.Kernel.TX.Undo;
+using TopSolid.Kernel.DB.D3.Shapes;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -95,6 +96,21 @@ namespace EPFL.GrasshopperTopSolid.Components
                         SurfaceEntity se = new SurfaceEntity(doc, 0);
                         se.Geometry = ts;
                         se.Create(doc.PointsFolderEntity);
+                    }
+
+                    else if (g is GH_Brep gbrep)
+                    {
+                        Brep rs = null;
+                        GH_Convert.ToBrep(gbrep, ref rs, 0);
+
+                        var shapes = rs.ToHost();
+                        foreach (var ts in shapes)
+                        {
+                            ShapeEntity se = new ShapeEntity(doc, 0);
+                            se.Geometry = ts;
+                            se.Create(doc.PointsFolderEntity);
+                        }
+
                     }
                 }
                 UndoSequence.End();
