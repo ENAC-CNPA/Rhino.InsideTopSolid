@@ -837,29 +837,31 @@ namespace EPFL.GrasshopperTopSolid
 
             }
 
-            SheetsSewer sewer = new SheetsSewer(Version.Current, shape);
+            Shape sewedShape = new Shape(null);
+            SheetsSewer sewer = new SheetsSewer(Version.Current, sewedShape);
             //sewer.RemovesDuplicateSurfaces = true; //useless
             sewer.ResetEdgesPrecision = true;
+            sewer.GapWidth = tol_TS;
 
-            //donner une tolérance
-            //foreach (Shape s in ioShapes)
-            //{
-            //    //unicité des monikers sur la forme finale = méthode avec ID
-            //    //gap width = taille des trous à boucher - 10^-5 par défault
+            int id = 0;
+            foreach (Shape s in ioShapes)
+            {
+                //unicité des monikers  = méthode avec ID
 
-            //    sewer.AddTool(s);            //    
-            //}
+
+                sewer.AddTool(s, id++);            //    
+            }
 
             //try
             //{
-            //    sewer.Sew(null);
+            //sewer.Sew(ItemOperationKey.BasicKey);
             //}
 
 
             //catch { }
 
 
-            //return shape;
+            //return sewedShape;
             return ioShapes;
         }
 
