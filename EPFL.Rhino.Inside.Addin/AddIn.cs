@@ -57,7 +57,7 @@ namespace EPFL.RhinoInsideTopSolid.AddIn
 
         static readonly string SystemDir = "C:\\Program Files\\Rhino 7\\System";
         static readonly string GHDir = "C:\\Program Files\\Rhino 7\\Plug-ins\\Grasshopper";
-        
+
         //static readonly string SystemDir = (string)Microsoft.Win32.Registry.GetValue
         //(
         //  @"HKEY_LOCAL_MACHINE\SOFTWARE\McNeel\Rhinoceros\7.0\Install", "Path",
@@ -66,7 +66,7 @@ namespace EPFL.RhinoInsideTopSolid.AddIn
 
         static AddIn()
         {
-            
+
             // Force the loading of RhinoCommon.dll to not have the unknown DLL message.
             const string rhinoCommonAssemblyName = "RhinoCommon";
             const string rhinoWindowsAssemblyName = "RhinoWindows";
@@ -92,6 +92,7 @@ namespace EPFL.RhinoInsideTopSolid.AddIn
         public override void StartSession()
         {
             TK.SX.SessionManager.Start(typeof(EPFL.RhinoInsideTopSolid.UI.Session));
+            TK.SX.SessionManager.Start(typeof(EPFL.RhinoInsideTopSolid.DB.Session));
         }
 
         /// <summary>

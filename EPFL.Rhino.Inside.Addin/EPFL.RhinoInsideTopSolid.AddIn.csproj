@@ -101,6 +101,10 @@
       <Project>{a08d75aa-5df2-4b57-918e-d2f4b2ab7fb8}</Project>
       <Name>EPFL.RhinoInsideTopSolid.UI</Name>
     </ProjectReference>
+    <ProjectReference Include="..\EPFL.RhinoInsideTopSolid.DB\EPFL.RhinoInsideTopSolid.DB.csproj">
+      <Project>{21d11bcd-4f5a-4691-94ef-c44d5367749f}</Project>
+      <Name>EPFL.RhinoInsideTopSolid.DB</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

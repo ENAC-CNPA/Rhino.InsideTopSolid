@@ -803,6 +803,9 @@ namespace EPFL.GrasshopperTopSolid
         {
 
             double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
+
+            brep.Trims.MatchEnds();
+            brep.Repair(tol_TS);
             Shape shape = null;
             ShapeList ioShapes = new ShapeList();
             //List<PositionedSketch> list3dSktech = new List<PositionedSketch>();
@@ -833,35 +836,8 @@ namespace EPFL.GrasshopperTopSolid
                     else
                         ioShapes.Add(shape);
                 }
-
-
             }
 
-            Shape sewedShape = new Shape(null);
-            SheetsSewer sewer = new SheetsSewer(Version.Current, sewedShape);
-            //sewer.RemovesDuplicateSurfaces = true; //useless
-            sewer.ResetEdgesPrecision = true;
-            sewer.GapWidth = tol_TS;
-
-            int id = 0;
-            foreach (Shape s in ioShapes)
-            {
-                //unicité des monikers  = méthode avec ID
-
-
-                sewer.AddTool(s, id++);            //    
-            }
-
-            //try
-            //{
-            //sewer.Sew(ItemOperationKey.BasicKey);
-            //}
-
-
-            //catch { }
-
-
-            //return sewedShape;
             return ioShapes;
         }
 
@@ -1050,6 +1026,8 @@ namespace EPFL.GrasshopperTopSolid
 
             // Closed BSpline surfaces must not be periodic for parasolid with 3d curves (according to wishbone.3dm and dinnermug.3dm).
             // If new problems come, see about the periodicity of the curves.
+
+            //TODO check if planar to simplify
             BSplineSurface bsSurface = Convert.ToHost(surface.ToNurbsSurface());
 
             if (bsSurface != null && (bsSurface.IsUPeriodic || bsSurface.IsVPeriodic))
