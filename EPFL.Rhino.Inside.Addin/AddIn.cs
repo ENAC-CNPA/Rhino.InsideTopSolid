@@ -92,7 +92,7 @@ namespace EPFL.RhinoInsideTopSolid.AddIn
         public override void StartSession()
         {
             TK.SX.SessionManager.Start(typeof(EPFL.RhinoInsideTopSolid.UI.Session));
-            TK.SX.SessionManager.Start(typeof(EPFL.RhinoInsideTopSolid.DB.Session));
+            //TK.SX.SessionManager.Start(typeof(EPFL.RhinoInsideTopSolid.DB.Session));
         }
 
         /// <summary>

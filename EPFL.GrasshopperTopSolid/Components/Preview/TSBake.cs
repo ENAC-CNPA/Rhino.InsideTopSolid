@@ -12,7 +12,7 @@ using TopSolid.Kernel.DB.D3.Surfaces;
 using TopSolid.Kernel.TX.Undo;
 using TopSolid.Kernel.DB.D3.Shapes;
 using TopSolid.Kernel.DB.Parameters;
-using EPFL.RhinoInsideTopSolid.DB.Operations;
+
 using TopSolid.Kernel.G.D3.Shapes.Sew;
 using TopSolid.Kernel.DB.D3.Shapes.Sew;
 using System.Linq;
