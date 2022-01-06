@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "GrasshopperTopSolid": {
+      "commandName": "Project"
+    },
+    "newProfile1": {
+      "commandName": "Executable"
+    }
+  }
+}

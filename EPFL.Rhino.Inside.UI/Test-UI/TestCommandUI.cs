@@ -1,7 +1,4 @@
-﻿using Rhino.Geometry;
-using Rhino.Geometry.Collections;
-using Rhino.Runtime.InProcess;
-//using Sample_2;
+﻿//using Sample_2;
 using System;
 using TK = TopSolid.Kernel;
 using TopSolid.Kernel.WX;
@@ -46,15 +43,37 @@ namespace EPFL.RhinoInsideTopSolid.UI.Test
         /// Method call when the command button is pressed
         /// </summary>
         /// 
-        private static Form1 newMyWindow;
+        private static UserControl1 newMyWindow;
+        //private static EPFL.Rhino.Inside.UI.Test_UI.UserControl1 newMyWindow;
 
         protected override void Invoke()
         {
-            RhinoInside.Resolver.Initialize();
+
+            //Must include Form1.cs to project
+            //System.IO.FileNotFoundException => RhinoWindows.dll
+
+            //RhinoInside.Resolver.Initialize();
             //System.IO:FileNotFoundException : Impossible de charger le fichier ou l'assembly 'RhinoWindows, ...'
-            newMyWindow = new Form1();
-            
-        }       
+
+            //using (new Rhino.Runtime.InProcess.RhinoCore())
+            //{
+            //newMyWindow = new Form1();
+            //}
+
+            //newMyWindow = new Test_UI.UserControl1();
+            if (newMyWindow == null)
+            {
+                newMyWindow = new UserControl1();
+                newMyWindow.AddOrModifyDockedWindow();
+            }
+            else
+            {
+                newMyWindow.DockedContent.Visible = true;
+            }
+
+        }
+
+
 
 
     }

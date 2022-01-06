@@ -2,19 +2,16 @@
 <ContextMenuItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Icon="Item" Text="$MenuTitle" Resource="EPFL.RhinoInsideTopSolid.UI.ContextMenu">
   <MenuStripItems>
 
-    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommand</MenuItem>
-    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>
+    <!--<MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommand</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>-->
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.GrasshopperCommand</MenuItem>
     
   </MenuStripItems>
   <ToolStripItems>
 
-    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommand</MenuItem>
-    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>
+    <!--<MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommand</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>-->
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.GrasshopperCommand</MenuItem>
    
   </ToolStripItems>
 </ContextMenuItem>
-
-
-
-
-

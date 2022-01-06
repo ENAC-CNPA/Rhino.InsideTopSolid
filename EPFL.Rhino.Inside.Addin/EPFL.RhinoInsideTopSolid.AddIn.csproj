@@ -8,8 +8,8 @@
     <ProjectGuid>{F38BBF97-96F3-4B7A-887B-79AFEA38F387}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>EPFL.Rhino.Inside.Addin</RootNamespace>
-    <AssemblyName>EPFL.Rhino.Inside.Addin</AssemblyName>
+    <RootNamespace>EPFL.RhinoInsideTopSolid.AddIn</RootNamespace>
+    <AssemblyName>EPFL.RhinoInsideTopSolid.AddIn</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
@@ -20,11 +20,12 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\..\Sources\Topsolid 7.14\Debug x64\</OutputPath>
+    <OutputPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -36,10 +37,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\..\..\..\Sources\Topsolid 7.14\Debug x64\</OutputPath>
+    <OutputPath>..\..\Topsolid 7.14\Debug x64\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <NoWarn>1607</NoWarn>
@@ -54,6 +55,14 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="RhinoCommon">
+      <HintPath>..\..\..\..\..\..\Program Files\Rhino 7\System\RhinoCommon.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RhinoWindows">
+      <HintPath>..\..\..\..\..\..\Program Files\Rhino 7\System\RhinoWindows.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -76,7 +85,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="EPFL.Rhino.Inside.Addin.xml" />
+    <EmbeddedResource Include="EPFL.RhinoInsideTopSolid.AddIn.xml" />
     <Content Include="Readme.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -91,6 +100,10 @@
     <ProjectReference Include="..\EPFL.Rhino.Inside.UI\EPFL.RhinoInsideTopSolid.UI.csproj">
       <Project>{a08d75aa-5df2-4b57-918e-d2f4b2ab7fb8}</Project>
       <Name>EPFL.RhinoInsideTopSolid.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EPFL.RhinoInsideTopSolid.DB\EPFL.RhinoInsideTopSolid.DB.csproj">
+      <Project>{21d11bcd-4f5a-4691-94ef-c44d5367749f}</Project>
+      <Name>EPFL.RhinoInsideTopSolid.DB</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

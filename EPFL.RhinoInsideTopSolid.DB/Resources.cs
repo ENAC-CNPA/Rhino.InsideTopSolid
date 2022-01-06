@@ -1,6 +1,6 @@
 ﻿using TopSolid.Kernel.SX.Resources;
 
-namespace EPFL.RhinoInsideTopSolid.AddIn
+namespace EPFL.RhinoInsideTopSolid.DB
 {
     /// <summary>
     /// resources of Localization
@@ -20,7 +20,6 @@ namespace EPFL.RhinoInsideTopSolid.AddIn
         {
             get
             {
-                //$SpecificSolutionName$
                 if (instance == null)
                 {
                     instance = new ResourceManager(typeof(Resources));

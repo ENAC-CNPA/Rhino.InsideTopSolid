@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using TopSolid.Kernel.WX.Documents;
-using TK = TopSolid.Kernel;
+﻿using TopSolid.Kernel.WX.Documents;
 
 namespace EPFL.RhinoInsideTopSolid.UI
 {
