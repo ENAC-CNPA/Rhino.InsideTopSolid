@@ -551,6 +551,12 @@ namespace EPFL.GrasshopperTopSolid
 
             var result = Brep.JoinBreps(listofBrepsrf, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
 
+            foreach (Brep b in result)
+            {
+                b.Trims.MatchEnds();
+                b.Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+            }
+
             for (int i = 0; i < result.Length; i++)
             {
                 result[i].Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
