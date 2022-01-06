@@ -138,11 +138,11 @@ namespace EPFL.GrasshopperTopSolid.Components
                         }
                         sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
                         sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
-                        //sewOperation.Create();
+                        sewOperation.Create();
                         //TODO
                         //ShapeEntity se = new ShapeEntity(doc, 0);
                         //se.Geometry = shape;
-                        //se.Create(doc2.ShapesFolderEntity);
+                        //se.Create(doc.ShapesFolderEntity);
 
                     }
                 }

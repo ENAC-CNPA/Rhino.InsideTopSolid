@@ -26,10 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EPFL.RhinoInsideTopSolid.DB\EPFL.RhinoInsideTopSolid.DB.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="TopSolid.Kernel.DB">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.15\Debug x64\TopSolid.Kernel.DB.dll</HintPath>
     </Reference>
