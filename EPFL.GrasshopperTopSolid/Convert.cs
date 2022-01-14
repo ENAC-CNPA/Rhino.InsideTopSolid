@@ -1109,7 +1109,14 @@ namespace EPFL.GrasshopperTopSolid
                     //AHW setting to true causes an error
                     //sheetMaker.UsesBRepMethod = true;
                     //var x = new ItemMoniker(new CString($"S{op2.Id}"));
-                    shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
+                    try
+                    {
+                        shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
+                    }
+                    catch
+                    {
+
+                    }
                 }
             }
 

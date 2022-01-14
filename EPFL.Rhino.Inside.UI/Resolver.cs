@@ -62,9 +62,9 @@ namespace EPFL.RhinoInsideTopSolid.UI
         }
         static Assembly ResolveForGhAssemblies(object sender, ResolveEventArgs args)
         {
-            var assemblyName = new AssemblyName(args.Name).Name;            
+            var assemblyName = new AssemblyName(args.Name).Name;
 
-            string path = System.IO.Path.Combine("C:\\Program Files\\Rhino 7\\Plug-ins\\Grasshopper", assemblyName + ".dll");           
+            string path = System.IO.Path.Combine("C:\\Program Files\\Rhino 7\\Plug-ins\\Grasshopper", assemblyName + ".dll");
 
             //string path = System.IO.Path.Combine(RhinoSystemDirectory, assemblyName + ".dll");
             if (System.IO.File.Exists(path))
@@ -106,7 +106,7 @@ namespace EPFL.RhinoInsideTopSolid.UI
         //    }
         //    return null;
         //}
-        
+
     }
 }
 

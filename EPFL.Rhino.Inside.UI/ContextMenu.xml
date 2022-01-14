@@ -4,14 +4,16 @@
 
     <!--<MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommand</MenuItem>
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>-->
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.RhinoCommand</MenuItem>
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.GrasshopperCommand</MenuItem>
-    
+
   </MenuStripItems>
   <ToolStripItems>
 
     <!--<MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommand</MenuItem>
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>-->
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.RhinoCommand</MenuItem>
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.GrasshopperCommand</MenuItem>
-   
+
   </ToolStripItems>
 </ContextMenuItem>

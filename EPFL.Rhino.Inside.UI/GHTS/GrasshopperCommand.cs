@@ -68,6 +68,22 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
             }
         }
 
+        internal static bool Shutdown()
+        {
+            if (rhinoCore is object)
+            {
+                try
+                {
+                    rhinoCore.Dispose();
+                    rhinoCore = null;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
         public static bool LoadGrasshopperComponents()
         {
             if (_grasshopperLoaded)

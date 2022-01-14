@@ -261,6 +261,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContextMenu.cs" />
+    <Compile Include="GHTS\RhinoCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resolver.cs" />
     <Compile Include="Resources.cs" />
@@ -281,6 +282,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ContextMenu.resx">
       <DependentUpon>ContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GHTS\RhinoCommand.fr.resx">
+      <DependentUpon>RhinoCommand.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GHTS\RhinoCommand.resx">
+      <DependentUpon>RhinoCommand.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources.fr.resx">
       <DependentUpon>Resources.cs</DependentUpon>
@@ -324,6 +331,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="GHTS\GrasshopperCommand.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="GHTS\RhinoCommand.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

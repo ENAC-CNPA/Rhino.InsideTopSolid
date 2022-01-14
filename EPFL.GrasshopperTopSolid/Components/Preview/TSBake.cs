@@ -128,17 +128,36 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                         shapesCreation.Create();
 
-
-                        SewOperation sewOperation = new SewOperation(doc, 0);
-                        sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
-                        for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
+                        try
                         {
-                            shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;
-                            sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
+                            SewOperation sewOperation = new SewOperation(doc, 0);
+                            sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
+                            for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
+                            {
+                                //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;
+                                sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
+                            }
+                            sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
+                            sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
+                            sewOperation.Create();
+
+                            //Hides other shapes when successfull, otherwise keep them shown
+                            bool isInvalid = sewOperation.IsInvalid;
+                            if (!isInvalid)
+                            {
+                                for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
+                                {
+                                    shapesCreation.ChildrenEntities.ElementAt(i).Hide();
+                                }
+                            }
+
                         }
-                        sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
-                        sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
-                        sewOperation.Create();
+
+                        catch
+                        {
+
+                        }
+
                         //TODO
                         //ShapeEntity se = new ShapeEntity(doc, 0);
                         //se.Geometry = shape;
