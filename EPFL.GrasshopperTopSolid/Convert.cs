@@ -87,6 +87,13 @@ namespace EPFL.GrasshopperTopSolid
 
 
         #endregion
+        static public TKG.D3.Plane ToHost(this Rhino.Geometry.Plane p)
+        {
+            return new TKG.D3.Plane(p.Origin.ToHost(), new UnitVector(p.ZAxis.ToHost()));
+        }
+        #region Plane
+
+        #endregion
         #region Curve
         static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve c)
         {

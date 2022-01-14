@@ -1,5 +1,6 @@
 ﻿using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
+using Grasshopper.Kernel.Parameters;
 using Rhino.Geometry;
 using System;
 using System.Collections.Generic;
@@ -18,10 +19,11 @@ using TopSolid.Kernel.DB.D3.Shapes.Sew;
 using System.Linq;
 using TopSolid.Kernel.TX.Units;
 using TopSolid.Kernel.DB.Operations;
+using TopSolid.Kernel.DB.D3.Planes;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
-    public class TSBake : GH_Component
+    public class TSBake : GH_Component, IGH_VariableParameterComponent
     {
         /// <summary>
         /// Initializes a new instance of the TSBake class.
@@ -84,6 +86,16 @@ namespace EPFL.GrasshopperTopSolid.Components
                         PointEntity pe = new PointEntity(doc, 0);
                         pe.Geometry = tp;
                         pe.Create(doc.PointsFolderEntity);
+                    }
+
+                    if (g is GH_Plane ghPlane)
+                    {
+                        var rhPlane = new Plane();
+                        GH_Convert.ToPlane(ghPlane, ref rhPlane, 0);
+                        var tp = rhPlane.ToHost();
+                        PlaneEntity pe = new PlaneEntity(doc, 0);
+                        pe.Geometry = tp;
+                        pe.Create(doc.PlanesFolderEntity);
                     }
                     else if (g is GH_Curve gc)
                     {
@@ -167,6 +179,40 @@ namespace EPFL.GrasshopperTopSolid.Components
                 }
                 UndoSequence.End();
             }
+        }
+
+        public bool CanInsertParameter(GH_ParameterSide side, int index)
+        {
+            if (side == GH_ParameterSide.Input && index == 2)
+                return true;
+            return false;
+        }
+
+        public bool CanRemoveParameter(GH_ParameterSide side, int index)
+        {
+            if (side == GH_ParameterSide.Input && index > 1)
+                return true;
+            return false;
+        }
+
+        public IGH_Param CreateParameter(GH_ParameterSide side, int index)
+        {
+            var param = new Param_Number();
+            param.Name = "Tolerance";
+            param.Optional = true;
+            param.NickName = "Tol";
+            param.Description = "Tolerance for TopSolid conversion and sewing";
+            return param;
+        }
+
+        public bool DestroyParameter(GH_ParameterSide side, int index)
+        {
+            return true;
+        }
+
+        public void VariableParameterMaintenance()
+        {
+
         }
 
         /// <summary>
