@@ -3,10 +3,20 @@ using System.Collections.Generic;
 
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
+using Rhino;
 using Rhino.Geometry;
 using TopSolid.Kernel.DB.D2.Curves;
+using TopSolid.Kernel.DB.D3.Documents;
 using TopSolid.Kernel.DB.D3.Modeling.Documents;
+using TopSolid.Kernel.DB.D3.Planes;
+using TopSolid.Kernel.DB.D3.Points;
+using TopSolid.Kernel.DB.D3.Sketches;
+using TopSolid.Kernel.DB.D3.Sketches.Operations;
+using TopSolid.Kernel.DB.D3.Sketches.Planar.Operations;
 using TopSolid.Kernel.G.D2.Curves;
+using TopSolid.Kernel.G.D3;
+using TopSolid.Kernel.G.D3.Sketches;
+using TopSolid.Kernel.TX.Items;
 using TopSolid.Kernel.TX.Undo;
 
 namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
@@ -22,16 +32,17 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
               "TopSolid", "TopSolid Operations")
         {
         }
-
+        int SKNumber = 0;
         /// <summary>
         /// Registers all the input parameters for this component.
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddCurveParameter("Curves", "crvs", "curves to send", GH_ParamAccess.list);
+            pManager.AddCurveParameter("Curve", "crvs", "curves to send", GH_ParamAccess.item);
             pManager.AddPlaneParameter("Base Plane", "bPlane", "Plane to be Base plane", GH_ParamAccess.item);
             pManager.AddTextParameter("Sketch Name", "Name", "Sketch Name to give to TopSolid", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Create", "Create", "Execute Creation", GH_ParamAccess.item);
+
         }
 
         /// <summary>
@@ -48,60 +59,101 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            List<IGH_GeometricGoo> geo = new List<IGH_GeometricGoo>();
+
+            Rhino.Geometry.Curve rc = null;
+            Rhino.Geometry.Plane rhPlane = new Rhino.Geometry.Plane();
             bool run = false;
-
-            Plane rhPlane = new Plane();
+            string name = "";
             DA.GetData("Base Plane", ref rhPlane);
+            DA.GetData("Sketch Name", ref name);
 
-            if (!DA.GetDataList(0, geo)) { return; }
+            if (!DA.GetData("Curve", ref rc))
+                return;
+            if (rc == null) return;
 
-            if (geo == null) { return; }
-            if (geo.Count == 0) { return; }
-
-            DA.GetData(1, ref run);
+            DA.GetData("Create", ref run);
 
             //GeometricDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
             ModelingDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as ModelingDocument;
-
+            UndoSequence.UndoCurrent();
+            UndoSequence.Start("Bake", true);
 
             if (run == true)
             {
-                UndoSequence.UndoCurrent();
-                UndoSequence.Start("Bake", true);
 
-                foreach (var g in geo)
+                Double tol = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+
+                PlanarSketchOperationMaker maker = new PlanarSketchOperationMaker(TopSolid.Kernel.SX.Version.Current);
+                maker.Plane = new BasicSmartPlane(null, new BoundedPlane(rhPlane.ToHost(), TopSolid.Kernel.G.D2.Extent.UnitCentered));
+                //maker.Origin = new BasicSmartPoint(null, r);
+                maker.Document = doc;
+
+
+                maker.Make();
+                if (maker.NewSolvingOperation.ChildEntity.Name != name && SKNumber == 0)
                 {
-                    TSSketch sketchOp = new TSSketch();
-                    if (g is GH_Curve gc)
+                    maker.NewSolvingOperation.ChildEntity.Name = name;
+                }
+
+                else
+                {
+                    maker.NewSolvingOperation.ChildEntity.Name = name + SKNumber.ToString();
+                }
+                SKNumber++;
+                maker.NewSolvingOperation.IsEdited = true;
+
+                //PositionedSketchSolvingOperation sketchOp = new PositionedSketchSolvingOperation((TopSolid.Kernel.DB.D3.Sketches.Documents.GeometricDocument)doc, 0);
+                //var TsPlane = rhPlane.ToHost();
+                //PositionedSketchEntity skEntity = new PositionedSketchEntity(doc, 0);
+
+                //PositionedSketch sketch = new PositionedSketch(skEntity, ItemOperationKey.BasicKey, false);
+                //sketch.Frame = rhPlane.ToHost(rhPlane.XAxis.ToHost(), rhPlane.YAxis.ToHost(), rhPlane.ZAxis.ToHost());
+
+                if (!rc.IsPlanar())
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Non planar Curves, Curves will be projected onto plane");
+                    rc = Rhino.Geometry.Curve.ProjectToPlane(rc, rhPlane);
+                }
+
+                if (rc.IsPolyline())
+                {
+                    TopSolid.Kernel.G.D3.Sketches.Planar.PlanarSketch plSketch = maker.NewSolvingOperation.ChildEntity.Geometry;
+                    ItemOperationKey key = new ItemOperationKey(maker.NewSolvingOperation.Id);
+                    var svex = plSketch.AddVertex(key, rc.PointAtStart.ToHost2d());
+                    var abssvex = svex;
+                    List<TopSolid.Kernel.G.D2.Sketches.Segment> listseg = new List<TopSolid.Kernel.G.D2.Sketches.Segment>();
+                    TopSolid.Kernel.G.D2.Sketches.SegmentList seglist = new TopSolid.Kernel.G.D2.Sketches.SegmentList();
+                    int count = 0;
+                    var dup = rc.DuplicateSegments();
+                    foreach (var seg in dup)
                     {
-                        Rhino.Geometry.Curve rc = null;
-                        if (!rc.IsPlanar())
-                        {
-                            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Non planar Curves, Curves will be projected onto plane");
-                            rc = Rhino.Geometry.Curve.ProjectToPlane(rc, rhPlane);
+                        var evex = plSketch.AddVertex(key, seg.PointAtEnd.ToHost2d());
+                        if (count == dup.Length - 1)
+                            evex = abssvex;
 
-                        }
-                        GH_Convert.ToCurve(gc, ref rc, 0);
-                        if (rc.IsPolyline())
-                        {
+                        Line line = new Line(seg.PointAtStart, seg.PointAtEnd);
+                        var segm = plSketch.AddSegment(key, svex, evex, new TopSolid.Kernel.G.D2.Curves.LineCurve(svex.Geometry, evex.Geometry), false);
 
-                        }
+                        svex = evex;
 
-                        else
-                            var rn = rc.ToNurbsCurve();
-                        BSplineCurve tc = rn.ToHost2d();
-
-
-                        ce.Geometry = tc;
-                        ce.Create(doc.PointsFolderEntity);
+                        seglist.Add(segm);
+                        count++;
                     }
 
-
-
+                    plSketch.AddProfile(key, seglist);
                 }
-                UndoSequence.End();
+
+                maker.NewSolvingOperation.Update();
+
+
+                maker.NewSolvingOperation.ChildEntity.AddRollbackMarks();
+                maker.NewSolvingOperation.IsEdited = false;
+
             }
+
+
+            UndoSequence.End();
+
         }
 
         /// <summary>

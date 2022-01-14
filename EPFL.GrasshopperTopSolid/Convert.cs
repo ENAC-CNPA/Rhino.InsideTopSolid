@@ -45,10 +45,20 @@ namespace EPFL.GrasshopperTopSolid
         {
             return new TKG.D3.Point(p.X, p.Y, p.Z);
         }
+
+        static public TKG.D2.Point ToHost2d(this Point3d p)
+        {
+            return new TKG.D2.Point(p.X, p.Y);
+        }
         static public TKG.D3.Point ToHost(this Rhino.Geometry.Point p)
         {
             Point3d pt = p.Location;
             return new TKG.D3.Point(pt.X, pt.Y, pt.Z);
+        }
+        static public TKG.D2.Point ToHost2d(this Rhino.Geometry.Point p)
+        {
+            Point3d pt = p.Location;
+            return new TKG.D2.Point(pt.X, pt.Y);
         }
         static public Point3d ToRhino(this TKG.D3.Point p)
         {
@@ -87,12 +97,42 @@ namespace EPFL.GrasshopperTopSolid
 
 
         #endregion
+
+        #region Plane
         static public TKG.D3.Plane ToHost(this Rhino.Geometry.Plane p)
         {
             return new TKG.D3.Plane(p.Origin.ToHost(), new UnitVector(p.ZAxis.ToHost()));
         }
-        #region Plane
+        static public TKG.D3.Frame ToHost(this Rhino.Geometry.Plane p, Vector xVec, Vector yVec, Vector zVec)
+        {
+            return new TKG.D3.Frame(p.Origin.ToHost(), new UnitVector(xVec), new UnitVector(yVec), new UnitVector(zVec));
+        }
 
+        #endregion
+        #region Polyline
+        static public TKG.D3.Curves.PolylineCurve ToHost(this Rhino.Geometry.Polyline p)
+        {
+            var pointList = new PointList(p.Count);
+            foreach (var pt in p)
+            {
+                pointList.Add(pt.ToHost());
+            }
+
+            return new TKG.D3.Curves.PolylineCurve(p.IsClosed, pointList);
+        }
+
+
+
+        static public TKG.D2.Curves.PolylineCurve ToHost2d(this Rhino.Geometry.Polyline p)
+        {
+            var pointList = new TopSolid.Kernel.G.D2.PointList(p.Count);
+            foreach (var pt in p)
+            {
+                pointList.Add(pt.ToHost2d());
+            }
+
+            return new TKG.D2.Curves.PolylineCurve(p.IsClosed, pointList);
+        }
         #endregion
         #region Curve
         static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve c)

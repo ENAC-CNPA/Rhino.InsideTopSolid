@@ -4,6 +4,7 @@ using Rhino.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TopSolid.Kernel.DB.D3.Curves;
 using TopSolid.Kernel.DB.D3.Documents;
 using TopSolid.Kernel.GR.Attributes;
 using TopSolid.Kernel.GR.D3;
@@ -70,6 +71,7 @@ namespace EPFL.GrasshopperTopSolid.Components
 
             foreach (var g in geo)
             {
+
                 if (g is GH_Point gp)
                 {
                     var rp = new Point3d();
@@ -90,14 +92,21 @@ namespace EPFL.GrasshopperTopSolid.Components
                     li.LineStyle = LineStyle.SolidMedium;
                     gd.Add(li);
                 }
-                //else if (g is GH_Curve gc)
-                //{
-                //    Curve rc = null;
-                //    GH_Convert.ToCurve(gc, ref rc, 0);
-                //    rp = rc.ToPolyline(0.01, 0.01, 0.01, 0.05);
-                //    var tc = rc.ToHost();
+                else if (g is GH_Curve gc)
+                {
 
-                //}
+
+                    Curve rc = null;
+                    GH_Convert.ToCurve(gc, ref rc, 0);
+                    var rn = rc.ToNurbsCurve();
+                    var tc = rn.ToHost();
+                    CurveEntity ce = new CurveEntity(doc, 0);
+                    ce.Geometry = tc;
+                    ce.Create();
+                    foreach (var item in ce.Display.Items)
+                    { gd.Add(item); }
+
+                }
 
                 else if (g is GH_Surface srf)
                 {
