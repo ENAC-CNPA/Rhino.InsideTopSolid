@@ -156,6 +156,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
         }
 
+
+
         /// <summary>
         /// Provides an Icon for the component.
         /// </summary>

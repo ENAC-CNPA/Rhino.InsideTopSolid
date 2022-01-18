@@ -13,10 +13,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Geometrie.Old.png" />
     <None Remove="Resources\TopSolid.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Geometrie.Old.png" />
     <EmbeddedResource Include="Resources\TopSolid.png" />
   </ItemGroup>
 

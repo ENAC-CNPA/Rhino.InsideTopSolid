@@ -10,6 +10,7 @@ using TopSolid.Kernel.DB.D3.Sections;
 using TopSolid.Kernel.DB.D3.Shapes.Extruded;
 using TopSolid.Kernel.DB.D3.Sketches.Planar;
 using TopSolid.Kernel.DB.D3.Sketches.Planar.Operations;
+using TopSolid.Kernel.DB.Operations;
 using TopSolid.Kernel.DB.Parameters;
 using TopSolid.Kernel.G.D3.Curves;
 using TopSolid.Kernel.G.D3.Shapes.Extruded;
@@ -47,14 +48,14 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
             pManager.AddGenericParameter("Extruded Forms", "Forms", "resulting TopSolid Extruded Forms", GH_ParamAccess.item);
 
         }
-
+        ModelingDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as ModelingDocument;
         /// <summary>
         /// This is the method that actually does the work.
         /// </summary>
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            ModelingDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as ModelingDocument;
+
             UndoSequence.UndoCurrent();
             UndoSequence.Start("Extrude", true);
 
@@ -73,6 +74,21 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
 
 
+            OperationList list = new OperationList();
+            doc.RootOperation.GetDeepOperations(list);
+            ExtrudedCreation op = null;
+            if (list != null && list.Count != 0)
+
+            {
+                op = doc.RootOperation.SearchDeepOperation(typeof(ExtrudedCreation)) as ExtrudedCreation;
+                if (op != null)
+                {
+                    op.FirstSide.Length = new BasicSmartReal(null, length, TopSolid.Kernel.TX.Units.UnitType.Length, doc);
+                    return;
+                }
+
+
+            }
 
 
             //Creation of the extruded operation
@@ -80,6 +96,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
             ////Parameters are given to the operation
             //Section
+            extruded.Section = new ProvidedSmartSection(null, sketchEntity, ItemLabel.Empty, true);
             extruded.Section = new ProvidedSmartSection(null, sketchEntity, ItemLabel.Empty, true);
 
             //Direction
@@ -90,6 +107,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
 
             extruded.FirstSide.Length = new BasicSmartReal(null, length, TopSolid.Kernel.TX.Units.UnitType.Length, doc);
+
+
 
             //The operation is created
             extruded.Create();
@@ -108,6 +127,14 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
                 // return Resources.IconForThisComponent;
                 return null;
             }
+        }
+
+        protected override void BeforeSolveInstance()
+        {
+
+
+
+            base.BeforeSolveInstance();
         }
 
         /// <summary>
