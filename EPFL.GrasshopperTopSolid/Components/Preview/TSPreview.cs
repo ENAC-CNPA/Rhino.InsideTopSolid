@@ -285,11 +285,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// </summary>
         protected override System.Drawing.Bitmap Icon => Properties.Resources.Geometrie_Old;
 
-        protected override void AfterSolveInstance()
-        {
-            gd.Clear();
-            base.AfterSolveInstance();
-        }
+
 
         /// <summary>
         /// Gets the unique ID for this component. Do not change this ID after release.
