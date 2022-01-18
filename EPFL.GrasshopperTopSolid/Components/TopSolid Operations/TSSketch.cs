@@ -148,7 +148,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
                 maker.NewSolvingOperation.ChildEntity.AddRollbackMarks();
                 maker.NewSolvingOperation.IsEdited = false;
-
+                DA.SetData(0, maker.NewSolvingOperation.ChildEntity);
             }
 
 

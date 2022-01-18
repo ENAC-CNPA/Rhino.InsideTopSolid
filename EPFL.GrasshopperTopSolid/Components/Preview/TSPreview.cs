@@ -1,5 +1,6 @@
 ﻿using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
+using Rhino.DocObjects;
 using Rhino.Geometry;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using TopSolid.Kernel.GR.Attributes;
 using TopSolid.Kernel.GR.D3;
 using TopSolid.Kernel.GR.Displays;
 using TopSolid.Kernel.SX.Drawing;
+using TopSolid.Kernel.TX.Items;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -31,6 +33,9 @@ namespace EPFL.GrasshopperTopSolid.Components
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddGeometryParameter("Geometries", "G", "Geometries to display", GH_ParamAccess.list);
+            pManager.AddColourParameter("Colour", "C", "Preview Colour in TopSolid", GH_ParamAccess.item);
+            pManager[1].Optional = true;
+
         }
 
         /// <summary>
@@ -68,6 +73,18 @@ namespace EPFL.GrasshopperTopSolid.Components
                 doc.Display.AddDisplay(gd);
             }
 
+            var tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+
+            GH_Colour color = null;
+            DA.GetData("Colour", ref color);
+
+            if (color == null) return;
+            float h = color.Value.GetHue();
+            float s = color.Value.GetSaturation();
+            float l = color.Value.GetBrightness();
+
+
+            Color tsColor = Color.FromHLS(h, l, s);
 
             foreach (var g in geo)
             {
@@ -78,7 +95,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                     GH_Convert.ToPoint3d(gp, ref rp, 0);
                     var tp = rp.ToHost();
                     MarkerItem mi = new MarkerItem(tp);
-                    mi.Color = Color.Green;
+                    //mi.Color = Color.Green;
+                    mi.Color = tsColor;
                     mi.MarkerStyle = MarkerStyle.ExtraLargePlus;
                     gd.Add(mi);
                 }
@@ -88,7 +106,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                     GH_Convert.ToLine(gl, ref rl, 0);
                     var tl = rl.ToHost();
                     LineItem li = new LineItem(tl.Ps, tl.Pe);
-                    li.Color = Color.Green;
+                    //li.Color = Color.Green;
+                    li.Color = tsColor;
                     li.LineStyle = LineStyle.SolidMedium;
                     gd.Add(li);
                 }
@@ -98,13 +117,53 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                     Curve rc = null;
                     GH_Convert.ToCurve(gc, ref rc, 0);
-                    var rn = rc.ToNurbsCurve();
-                    var tc = rn.ToHost();
-                    CurveEntity ce = new CurveEntity(doc, 0);
-                    ce.Geometry = tc;
-                    ce.Create();
-                    foreach (var item in ce.Display.Items)
-                    { gd.Add(item); }
+                    Rhino.Geometry.Point3d[] points;
+
+                    //if (rc.IsLinear() || rc.Degree == 1)
+                    //{
+                    //    LineItem li = new LineItem(rc.PointAtStart.ToHost(), rc.PointAtEnd.ToHost());
+                    //    li.Color = Color.Green;
+                    //    li.LineStyle = LineStyle.SolidMedium;
+                    //    gd.Add(li);
+                    //}
+
+                    if (rc.IsPolyline())
+                    {
+                        var pline = rc.DuplicateSegments();
+                        foreach (var seg in pline)
+                        {
+                            LineItem li = new LineItem(seg.PointAtStart.ToHost(), seg.PointAtEnd.ToHost());
+                            li.Color = tsColor;
+                            li.LineStyle = LineStyle.SolidMedium;
+                            gd.Add(li);
+                        }
+                    }
+
+                    else
+                    {
+                        var crvs = rc.DivideByLength(tol * 10, true, out points);
+                        if (points == null)
+                            return;
+                        for (int i = 0; i < points.Length; i++)
+                        {
+                            if (i < points.Length - 1)
+                            {
+                                LineItem li = new LineItem(points[i].ToHost(), points[i + 1].ToHost());
+                                //li.Color = Color.Green;
+                                li.Color = tsColor;
+                                li.LineStyle = LineStyle.SolidMedium;
+                                gd.Add(li);
+                            }
+                            else if (i == points.Length - 1 && rc.IsClosed)
+                            {
+                                LineItem li = new LineItem(points[i].ToHost(), points[0].ToHost());
+                                //li.Color = Color.Green;
+                                li.Color = tsColor;
+                                li.LineStyle = LineStyle.SolidMedium;
+                                gd.Add(li);
+                            }
+                        }
+                    }
 
                 }
 
@@ -112,33 +171,108 @@ namespace EPFL.GrasshopperTopSolid.Components
                 {
                     Rhino.Geometry.Surface _srf = null;
                     GH_Convert.ToSurface(srf, ref _srf, GH_Conversion.Both);
-                    var x = Convert.ToHost(_srf.ToNurbsSurface());
-                    TopSolid.Kernel.DB.D3.Surfaces.SurfaceEntity srfentity = new TopSolid.Kernel.DB.D3.Surfaces.SurfaceEntity(doc, 0);
-                    srfentity.Geometry = x;
-                    if (srfentity.Display.Items.Count != 0)
+
+                    Mesh[] meshes = Mesh.CreateFromBrep(_srf.ToBrep(), MeshingParameters.Default);
+
+                    foreach (Mesh mesh in meshes)
                     {
-                        for (int i = 0; i < srfentity.Display.Items.Count; i++)
-                        { gd.Add(srfentity.Display.Items.ElementAt(i)); }
+                        mesh.Faces.ConvertQuadsToTriangles();
+                        int faceind = 0;
+                        foreach (var f in mesh.Faces)
+                        {
+                            List<TopSolid.Kernel.G.S.D3.Point> vertList = new List<TopSolid.Kernel.G.S.D3.Point>();
+
+                            FaceItemMaker maker = new FaceItemMaker();
+                            //maker.Color = Color.Green;
+                            maker.Color = tsColor;
+
+
+                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.A].X, mesh.Vertices[f.A].Y, mesh.Vertices[f.A].Z));
+                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.B].X, mesh.Vertices[f.B].Y, mesh.Vertices[f.B].Z));
+                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.C].X, mesh.Vertices[f.C].Y, mesh.Vertices[f.C].Z));
+                            if (f.D != f.C)
+                            {
+                                vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.D].X, mesh.Vertices[f.D].Y, mesh.Vertices[f.D].Z));
+                            }
+
+
+                            mesh.FaceNormals.ComputeFaceNormals();
+                            mesh.FaceNormals[faceind].Unitize();
+                            FaceItem faceitem = maker.Make(vertList, ItemLabel.Empty, 0, new TopSolid.Kernel.G.S.D3.UnitVector(mesh.FaceNormals[faceind].X, mesh.FaceNormals[faceind].Y, mesh.FaceNormals[faceind].Z));
+                            faceitem.LineStyle = LineStyle.SolidMedium;
+                            faceitem.Transparency = Transparency.PreviewTransparency;
+                            gd.Add(faceitem);
+                            faceind++;
+                        }
                     }
+
+
+
+
+                    //var x = Convert.ToHost(_srf.ToNurbsSurface());
+
+                    //TopSolid.Kernel.DB.D3.Surfaces.SurfaceEntity srfentity = new TopSolid.Kernel.DB.D3.Surfaces.SurfaceEntity(doc, 0);
+                    //srfentity.Geometry = x;
+                    //if (srfentity.Display.Items.Count != 0)
+                    //{
+                    //    for (int i = 0; i < srfentity.Display.Items.Count; i++)
+                    //    { gd.Add(srfentity.Display.Items.ElementAt(i)); }
+                    //}
                 }
 
                 else if (g is GH_Brep brep)
                 {
                     Rhino.Geometry.Brep _brep = null;
                     GH_Convert.ToBrep(brep, ref _brep, GH_Conversion.Both);
-                    var x = Convert.ToHost(_brep);
-                    foreach (var s in x)
-                    {
-                        //TODO
-                        TopSolid.Kernel.DB.D3.Shapes.ShapeEntity shapeentity = new TopSolid.Kernel.DB.D3.Shapes.ShapeEntity(doc, 0);
-                        shapeentity.Geometry = s;
-                        if (shapeentity.Display.Items.Count != 0)
-                        {
-                            for (int i = 0; i < shapeentity.Display.Items.Count; i++)
-                            { gd.Add(shapeentity.Display.Items.ElementAt(i)); }
-                        }
 
+                    Mesh[] meshes = Mesh.CreateFromBrep(_brep, MeshingParameters.Default);
+
+                    foreach (Mesh mesh in meshes)
+                    {
+                        mesh.Faces.ConvertQuadsToTriangles();
+                        int faceind = 0;
+                        foreach (var f in mesh.Faces)
+                        {
+                            List<TopSolid.Kernel.G.S.D3.Point> vertList = new List<TopSolid.Kernel.G.S.D3.Point>();
+
+                            FaceItemMaker maker = new FaceItemMaker();
+                            //maker.Color = Color.Green;
+                            maker.Color = tsColor;
+
+
+                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.A].X, mesh.Vertices[f.A].Y, mesh.Vertices[f.A].Z));
+                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.B].X, mesh.Vertices[f.B].Y, mesh.Vertices[f.B].Z));
+                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.C].X, mesh.Vertices[f.C].Y, mesh.Vertices[f.C].Z));
+                            if (f.D != f.C)
+                            {
+                                vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.D].X, mesh.Vertices[f.D].Y, mesh.Vertices[f.D].Z));
+                            }
+
+
+
+                            mesh.FaceNormals.ComputeFaceNormals();
+                            mesh.FaceNormals[faceind].Unitize();
+                            FaceItem faceitem = maker.Make(vertList, ItemLabel.Empty, 0, new TopSolid.Kernel.G.S.D3.UnitVector(mesh.FaceNormals[faceind].X, mesh.FaceNormals[faceind].Y, mesh.FaceNormals[faceind].Z));
+                            faceitem.LineStyle = LineStyle.SolidMedium;
+                            faceitem.Transparency = Transparency.PreviewTransparency;
+                            gd.Add(faceitem);
+                            faceind++;
+                        }
                     }
+
+                    //var x = Convert.ToHost(_brep);
+                    //foreach (var s in x)
+                    //{
+                    //    //TODO
+                    //    TopSolid.Kernel.DB.D3.Shapes.ShapeEntity shapeentity = new TopSolid.Kernel.DB.D3.Shapes.ShapeEntity(doc, 0);
+                    //    shapeentity.Geometry = s;
+                    //    if (shapeentity.Display.Items.Count != 0)
+                    //    {
+                    //        for (int i = 0; i < shapeentity.Display.Items.Count; i++)
+                    //        { gd.Add(shapeentity.Display.Items.ElementAt(i)); }
+                    //    }
+
+                    //}
 
 
 
@@ -150,6 +284,12 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// Provides an Icon for the component.
         /// </summary>
         protected override System.Drawing.Bitmap Icon => Properties.Resources.Geometrie_Old;
+
+        protected override void AfterSolveInstance()
+        {
+            gd.Clear();
+            base.AfterSolveInstance();
+        }
 
         /// <summary>
         /// Gets the unique ID for this component. Do not change this ID after release.
