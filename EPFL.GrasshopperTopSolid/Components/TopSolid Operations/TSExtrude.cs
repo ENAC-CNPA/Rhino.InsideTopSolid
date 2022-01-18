@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 using TopSolid.Kernel.DB.D3.Directions;
 using TopSolid.Kernel.DB.D3.Modeling.Documents;
@@ -14,6 +15,7 @@ using TopSolid.Kernel.DB.Operations;
 using TopSolid.Kernel.DB.Parameters;
 using TopSolid.Kernel.G.D3.Curves;
 using TopSolid.Kernel.G.D3.Shapes.Extruded;
+using TopSolid.Kernel.SX.Drawing;
 using TopSolid.Kernel.TX.Items;
 using TopSolid.Kernel.TX.Undo;
 
@@ -38,6 +40,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
         {
             pManager.AddGenericParameter("Sketch", "Sk", "Sketches to extrude", GH_ParamAccess.item);
             pManager.AddNumberParameter("Extrusion Length", "H", "Length for extrusion", GH_ParamAccess.item);
+            pManager.AddColourParameter("Colour", "C", "Preview Colour in TopSolid", GH_ParamAccess.item);
+            pManager[2].Optional = true;
         }
 
         /// <summary>
@@ -84,6 +88,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
                 if (op != null)
                 {
                     op.FirstSide.Length = new BasicSmartReal(null, length, TopSolid.Kernel.TX.Units.UnitType.Length, doc);
+
+                    TopSolid.Kernel.UI.Application.Update();
                     return;
                 }
 
@@ -97,7 +103,6 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
             ////Parameters are given to the operation
             //Section
             extruded.Section = new ProvidedSmartSection(null, sketchEntity, ItemLabel.Empty, true);
-            extruded.Section = new ProvidedSmartSection(null, sketchEntity, ItemLabel.Empty, true);
 
             //Direction
             extruded.Direction = new BasicSmartDirection(null, sketchEntity.Geometry.Plane.Vz, sketchEntity.Geometry.Plane.Po);
@@ -108,11 +113,21 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
             extruded.FirstSide.Length = new BasicSmartReal(null, length, TopSolid.Kernel.TX.Units.UnitType.Length, doc);
 
+            GH_Colour color = null;
+            DA.GetData("Colour", ref color);
+
+            if (color == null) return;
+            float h = color.Value.GetHue();
+            float s = color.Value.GetSaturation();
+            float l = color.Value.GetBrightness();
+
+
+            Color tsColor = Color.FromHLS(h, l, s);
 
 
             //The operation is created
             extruded.Create();
-
+            extruded.ChildEntity.SetDisplayColor(tsColor, true, false);
             UndoSequence.End();
         }
 

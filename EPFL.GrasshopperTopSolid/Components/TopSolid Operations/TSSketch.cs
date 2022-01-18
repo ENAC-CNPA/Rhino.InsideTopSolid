@@ -83,10 +83,20 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
                 Double tol = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
 
+                //var skent = doc.SketchesFolderEntity.SearchDeepEntity(name);
+                //if (doc.SketchesFolderEntity.SearchDeepEntity(name) != null)
+                //{
+
+                //}
+
                 PlanarSketchOperationMaker maker = new PlanarSketchOperationMaker(TopSolid.Kernel.SX.Version.Current);
                 maker.Plane = new BasicSmartPlane(null, new BoundedPlane(rhPlane.ToHost(), TopSolid.Kernel.G.D2.Extent.UnitCentered));
                 //maker.Origin = new BasicSmartPoint(null, r);
                 maker.Document = doc;
+
+
+
+
 
 
                 maker.Make();
@@ -97,6 +107,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
                 else
                 {
+
                     maker.NewSolvingOperation.ChildEntity.Name = name + SKNumber.ToString();
                 }
                 SKNumber++;
@@ -117,6 +128,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
                 if (rc.IsPolyline())
                 {
+
                     TopSolid.Kernel.G.D3.Sketches.Planar.PlanarSketch plSketch = maker.NewSolvingOperation.ChildEntity.Geometry;
                     ItemOperationKey key = new ItemOperationKey(maker.NewSolvingOperation.Id);
                     var svex = plSketch.AddVertex(key, rc.PointAtStart.ToHost2d());

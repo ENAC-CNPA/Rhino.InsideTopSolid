@@ -32,7 +32,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGeometryParameter("Geometries", "G", "Geometries to display", GH_ParamAccess.list);
+            pManager.AddGeometryParameter("Geometries", "G", "Geometries to display", GH_ParamAccess.item);
             pManager.AddColourParameter("Colour", "C", "Preview Colour in TopSolid", GH_ParamAccess.item);
             pManager[1].Optional = true;
 
@@ -60,12 +60,12 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            List<IGH_GeometricGoo> geo = new List<IGH_GeometricGoo>();
+            IGH_GeometricGoo geo = null;
 
-            if (!DA.GetDataList(0, geo)) { return; }
+            if (!DA.GetData(0, ref geo)) { return; }
 
             if (geo == null) { return; }
-            if (geo.Count == 0) { return; }
+            //if (geo.Count == 0) { return; }
 
 
             if (!doc.Display.ContainsDisplay(gd))
@@ -86,198 +86,199 @@ namespace EPFL.GrasshopperTopSolid.Components
 
             Color tsColor = Color.FromHLS(h, l, s);
 
-            foreach (var g in geo)
+            //foreach (var g in geo)
+            //{
+            var g = geo;
+
+            if (g is GH_Point gp)
+            {
+                var rp = new Point3d();
+                GH_Convert.ToPoint3d(gp, ref rp, 0);
+                var tp = rp.ToHost();
+                MarkerItem mi = new MarkerItem(tp);
+                //mi.Color = Color.Green;
+                mi.Color = tsColor;
+                mi.MarkerStyle = MarkerStyle.ExtraLargePlus;
+                gd.Add(mi);
+            }
+            else if (g is GH_Line gl)
+            {
+                var rl = new Line();
+                GH_Convert.ToLine(gl, ref rl, 0);
+                var tl = rl.ToHost();
+                LineItem li = new LineItem(tl.Ps, tl.Pe);
+                //li.Color = Color.Green;
+                li.Color = tsColor;
+                li.LineStyle = LineStyle.SolidMedium;
+                gd.Add(li);
+            }
+            else if (g is GH_Curve gc)
             {
 
-                if (g is GH_Point gp)
+
+                Curve rc = null;
+                GH_Convert.ToCurve(gc, ref rc, 0);
+                Rhino.Geometry.Point3d[] points;
+
+                //if (rc.IsLinear() || rc.Degree == 1)
+                //{
+                //    LineItem li = new LineItem(rc.PointAtStart.ToHost(), rc.PointAtEnd.ToHost());
+                //    li.Color = Color.Green;
+                //    li.LineStyle = LineStyle.SolidMedium;
+                //    gd.Add(li);
+                //}
+
+                if (rc.IsPolyline())
                 {
-                    var rp = new Point3d();
-                    GH_Convert.ToPoint3d(gp, ref rp, 0);
-                    var tp = rp.ToHost();
-                    MarkerItem mi = new MarkerItem(tp);
-                    //mi.Color = Color.Green;
-                    mi.Color = tsColor;
-                    mi.MarkerStyle = MarkerStyle.ExtraLargePlus;
-                    gd.Add(mi);
-                }
-                else if (g is GH_Line gl)
-                {
-                    var rl = new Line();
-                    GH_Convert.ToLine(gl, ref rl, 0);
-                    var tl = rl.ToHost();
-                    LineItem li = new LineItem(tl.Ps, tl.Pe);
-                    //li.Color = Color.Green;
-                    li.Color = tsColor;
-                    li.LineStyle = LineStyle.SolidMedium;
-                    gd.Add(li);
-                }
-                else if (g is GH_Curve gc)
-                {
-
-
-                    Curve rc = null;
-                    GH_Convert.ToCurve(gc, ref rc, 0);
-                    Rhino.Geometry.Point3d[] points;
-
-                    //if (rc.IsLinear() || rc.Degree == 1)
-                    //{
-                    //    LineItem li = new LineItem(rc.PointAtStart.ToHost(), rc.PointAtEnd.ToHost());
-                    //    li.Color = Color.Green;
-                    //    li.LineStyle = LineStyle.SolidMedium;
-                    //    gd.Add(li);
-                    //}
-
-                    if (rc.IsPolyline())
+                    var pline = rc.DuplicateSegments();
+                    foreach (var seg in pline)
                     {
-                        var pline = rc.DuplicateSegments();
-                        foreach (var seg in pline)
+                        LineItem li = new LineItem(seg.PointAtStart.ToHost(), seg.PointAtEnd.ToHost());
+                        li.Color = tsColor;
+                        li.LineStyle = LineStyle.SolidMedium;
+                        gd.Add(li);
+                    }
+                }
+
+                else
+                {
+                    var crvs = rc.DivideByLength(tol * 10, true, out points);
+                    if (points == null)
+                        return;
+                    for (int i = 0; i < points.Length; i++)
+                    {
+                        if (i < points.Length - 1)
                         {
-                            LineItem li = new LineItem(seg.PointAtStart.ToHost(), seg.PointAtEnd.ToHost());
+                            LineItem li = new LineItem(points[i].ToHost(), points[i + 1].ToHost());
+                            //li.Color = Color.Green;
+                            li.Color = tsColor;
+                            li.LineStyle = LineStyle.SolidMedium;
+                            gd.Add(li);
+                        }
+                        else if (i == points.Length - 1 && rc.IsClosed)
+                        {
+                            LineItem li = new LineItem(points[i].ToHost(), points[0].ToHost());
+                            //li.Color = Color.Green;
                             li.Color = tsColor;
                             li.LineStyle = LineStyle.SolidMedium;
                             gd.Add(li);
                         }
                     }
-
-                    else
-                    {
-                        var crvs = rc.DivideByLength(tol * 10, true, out points);
-                        if (points == null)
-                            return;
-                        for (int i = 0; i < points.Length; i++)
-                        {
-                            if (i < points.Length - 1)
-                            {
-                                LineItem li = new LineItem(points[i].ToHost(), points[i + 1].ToHost());
-                                //li.Color = Color.Green;
-                                li.Color = tsColor;
-                                li.LineStyle = LineStyle.SolidMedium;
-                                gd.Add(li);
-                            }
-                            else if (i == points.Length - 1 && rc.IsClosed)
-                            {
-                                LineItem li = new LineItem(points[i].ToHost(), points[0].ToHost());
-                                //li.Color = Color.Green;
-                                li.Color = tsColor;
-                                li.LineStyle = LineStyle.SolidMedium;
-                                gd.Add(li);
-                            }
-                        }
-                    }
-
                 }
 
-                else if (g is GH_Surface srf)
-                {
-                    Rhino.Geometry.Surface _srf = null;
-                    GH_Convert.ToSurface(srf, ref _srf, GH_Conversion.Both);
-
-                    Mesh[] meshes = Mesh.CreateFromBrep(_srf.ToBrep(), MeshingParameters.Default);
-
-                    foreach (Mesh mesh in meshes)
-                    {
-                        mesh.Faces.ConvertQuadsToTriangles();
-                        int faceind = 0;
-                        foreach (var f in mesh.Faces)
-                        {
-                            List<TopSolid.Kernel.G.S.D3.Point> vertList = new List<TopSolid.Kernel.G.S.D3.Point>();
-
-                            FaceItemMaker maker = new FaceItemMaker();
-                            //maker.Color = Color.Green;
-                            maker.Color = tsColor;
-
-
-                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.A].X, mesh.Vertices[f.A].Y, mesh.Vertices[f.A].Z));
-                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.B].X, mesh.Vertices[f.B].Y, mesh.Vertices[f.B].Z));
-                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.C].X, mesh.Vertices[f.C].Y, mesh.Vertices[f.C].Z));
-                            if (f.D != f.C)
-                            {
-                                vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.D].X, mesh.Vertices[f.D].Y, mesh.Vertices[f.D].Z));
-                            }
-
-
-                            mesh.FaceNormals.ComputeFaceNormals();
-                            mesh.FaceNormals[faceind].Unitize();
-                            FaceItem faceitem = maker.Make(vertList, ItemLabel.Empty, 0, new TopSolid.Kernel.G.S.D3.UnitVector(mesh.FaceNormals[faceind].X, mesh.FaceNormals[faceind].Y, mesh.FaceNormals[faceind].Z));
-                            faceitem.LineStyle = LineStyle.SolidMedium;
-                            faceitem.Transparency = Transparency.PreviewTransparency;
-                            gd.Add(faceitem);
-                            faceind++;
-                        }
-                    }
-
-
-
-
-                    //var x = Convert.ToHost(_srf.ToNurbsSurface());
-
-                    //TopSolid.Kernel.DB.D3.Surfaces.SurfaceEntity srfentity = new TopSolid.Kernel.DB.D3.Surfaces.SurfaceEntity(doc, 0);
-                    //srfentity.Geometry = x;
-                    //if (srfentity.Display.Items.Count != 0)
-                    //{
-                    //    for (int i = 0; i < srfentity.Display.Items.Count; i++)
-                    //    { gd.Add(srfentity.Display.Items.ElementAt(i)); }
-                    //}
-                }
-
-                else if (g is GH_Brep brep)
-                {
-                    Rhino.Geometry.Brep _brep = null;
-                    GH_Convert.ToBrep(brep, ref _brep, GH_Conversion.Both);
-
-                    Mesh[] meshes = Mesh.CreateFromBrep(_brep, MeshingParameters.Default);
-
-                    foreach (Mesh mesh in meshes)
-                    {
-                        mesh.Faces.ConvertQuadsToTriangles();
-                        int faceind = 0;
-                        foreach (var f in mesh.Faces)
-                        {
-                            List<TopSolid.Kernel.G.S.D3.Point> vertList = new List<TopSolid.Kernel.G.S.D3.Point>();
-
-                            FaceItemMaker maker = new FaceItemMaker();
-                            //maker.Color = Color.Green;
-                            maker.Color = tsColor;
-
-
-                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.A].X, mesh.Vertices[f.A].Y, mesh.Vertices[f.A].Z));
-                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.B].X, mesh.Vertices[f.B].Y, mesh.Vertices[f.B].Z));
-                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.C].X, mesh.Vertices[f.C].Y, mesh.Vertices[f.C].Z));
-                            if (f.D != f.C)
-                            {
-                                vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.D].X, mesh.Vertices[f.D].Y, mesh.Vertices[f.D].Z));
-                            }
-
-
-
-                            mesh.FaceNormals.ComputeFaceNormals();
-                            mesh.FaceNormals[faceind].Unitize();
-                            FaceItem faceitem = maker.Make(vertList, ItemLabel.Empty, 0, new TopSolid.Kernel.G.S.D3.UnitVector(mesh.FaceNormals[faceind].X, mesh.FaceNormals[faceind].Y, mesh.FaceNormals[faceind].Z));
-                            faceitem.LineStyle = LineStyle.SolidMedium;
-                            faceitem.Transparency = Transparency.PreviewTransparency;
-                            gd.Add(faceitem);
-                            faceind++;
-                        }
-                    }
-
-                    //var x = Convert.ToHost(_brep);
-                    //foreach (var s in x)
-                    //{
-                    //    //TODO
-                    //    TopSolid.Kernel.DB.D3.Shapes.ShapeEntity shapeentity = new TopSolid.Kernel.DB.D3.Shapes.ShapeEntity(doc, 0);
-                    //    shapeentity.Geometry = s;
-                    //    if (shapeentity.Display.Items.Count != 0)
-                    //    {
-                    //        for (int i = 0; i < shapeentity.Display.Items.Count; i++)
-                    //        { gd.Add(shapeentity.Display.Items.ElementAt(i)); }
-                    //    }
-
-                    //}
-
-
-
-                }
             }
+
+            else if (g is GH_Surface srf)
+            {
+                Rhino.Geometry.Surface _srf = null;
+                GH_Convert.ToSurface(srf, ref _srf, GH_Conversion.Both);
+
+                Mesh[] meshes = Mesh.CreateFromBrep(_srf.ToBrep(), MeshingParameters.Default);
+
+                foreach (Mesh mesh in meshes)
+                {
+                    mesh.Faces.ConvertQuadsToTriangles();
+                    int faceind = 0;
+                    foreach (var f in mesh.Faces)
+                    {
+                        List<TopSolid.Kernel.G.S.D3.Point> vertList = new List<TopSolid.Kernel.G.S.D3.Point>();
+
+                        FaceItemMaker maker = new FaceItemMaker();
+                        //maker.Color = Color.Green;
+                        maker.Color = tsColor;
+
+
+                        vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.A].X, mesh.Vertices[f.A].Y, mesh.Vertices[f.A].Z));
+                        vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.B].X, mesh.Vertices[f.B].Y, mesh.Vertices[f.B].Z));
+                        vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.C].X, mesh.Vertices[f.C].Y, mesh.Vertices[f.C].Z));
+                        if (f.D != f.C)
+                        {
+                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.D].X, mesh.Vertices[f.D].Y, mesh.Vertices[f.D].Z));
+                        }
+
+
+                        mesh.FaceNormals.ComputeFaceNormals();
+                        mesh.FaceNormals[faceind].Unitize();
+                        FaceItem faceitem = maker.Make(vertList, ItemLabel.Empty, 0, new TopSolid.Kernel.G.S.D3.UnitVector(mesh.FaceNormals[faceind].X, mesh.FaceNormals[faceind].Y, mesh.FaceNormals[faceind].Z));
+                        faceitem.LineStyle = LineStyle.SolidMedium;
+                        faceitem.Transparency = Transparency.PreviewTransparency;
+                        gd.Add(faceitem);
+                        faceind++;
+                    }
+                }
+
+
+
+
+                //var x = Convert.ToHost(_srf.ToNurbsSurface());
+
+                //TopSolid.Kernel.DB.D3.Surfaces.SurfaceEntity srfentity = new TopSolid.Kernel.DB.D3.Surfaces.SurfaceEntity(doc, 0);
+                //srfentity.Geometry = x;
+                //if (srfentity.Display.Items.Count != 0)
+                //{
+                //    for (int i = 0; i < srfentity.Display.Items.Count; i++)
+                //    { gd.Add(srfentity.Display.Items.ElementAt(i)); }
+                //}
+            }
+
+            else if (g is GH_Brep brep)
+            {
+                Rhino.Geometry.Brep _brep = null;
+                GH_Convert.ToBrep(brep, ref _brep, GH_Conversion.Both);
+
+                Mesh[] meshes = Mesh.CreateFromBrep(_brep, MeshingParameters.Default);
+
+                foreach (Mesh mesh in meshes)
+                {
+                    mesh.Faces.ConvertQuadsToTriangles();
+                    int faceind = 0;
+                    foreach (var f in mesh.Faces)
+                    {
+                        List<TopSolid.Kernel.G.S.D3.Point> vertList = new List<TopSolid.Kernel.G.S.D3.Point>();
+
+                        FaceItemMaker maker = new FaceItemMaker();
+                        //maker.Color = Color.Green;
+                        maker.Color = tsColor;
+
+
+                        vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.A].X, mesh.Vertices[f.A].Y, mesh.Vertices[f.A].Z));
+                        vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.B].X, mesh.Vertices[f.B].Y, mesh.Vertices[f.B].Z));
+                        vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.C].X, mesh.Vertices[f.C].Y, mesh.Vertices[f.C].Z));
+                        if (f.D != f.C)
+                        {
+                            vertList.Add(new TopSolid.Kernel.G.S.D3.Point(mesh.Vertices[f.D].X, mesh.Vertices[f.D].Y, mesh.Vertices[f.D].Z));
+                        }
+
+
+
+                        mesh.FaceNormals.ComputeFaceNormals();
+                        mesh.FaceNormals[faceind].Unitize();
+                        FaceItem faceitem = maker.Make(vertList, ItemLabel.Empty, 0, new TopSolid.Kernel.G.S.D3.UnitVector(mesh.FaceNormals[faceind].X, mesh.FaceNormals[faceind].Y, mesh.FaceNormals[faceind].Z));
+                        faceitem.LineStyle = LineStyle.SolidMedium;
+                        faceitem.Transparency = Transparency.PreviewTransparency;
+                        gd.Add(faceitem);
+                        faceind++;
+                    }
+                }
+
+                //var x = Convert.ToHost(_brep);
+                //foreach (var s in x)
+                //{
+                //    //TODO
+                //    TopSolid.Kernel.DB.D3.Shapes.ShapeEntity shapeentity = new TopSolid.Kernel.DB.D3.Shapes.ShapeEntity(doc, 0);
+                //    shapeentity.Geometry = s;
+                //    if (shapeentity.Display.Items.Count != 0)
+                //    {
+                //        for (int i = 0; i < shapeentity.Display.Items.Count; i++)
+                //        { gd.Add(shapeentity.Display.Items.ElementAt(i)); }
+                //    }
+
+                //}
+
+
+
+            }
+            //}
         }
 
         /// <summary>
