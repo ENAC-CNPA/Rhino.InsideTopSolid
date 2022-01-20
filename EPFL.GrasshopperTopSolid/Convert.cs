@@ -852,10 +852,10 @@ namespace EPFL.GrasshopperTopSolid
 
         }
 
-        static public ShapeList ToHost(this Brep brep)
+        static public ShapeList ToHost(this Brep brep, double tol = TopSolid.Kernel.G.Precision.ModelingLinearTolerance)
         {
 
-            double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
+            double tol_TS = tol;
 
             brep.Trims.MatchEnds();
             brep.Repair(tol_TS);

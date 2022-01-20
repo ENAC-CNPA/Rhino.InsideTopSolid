@@ -20,6 +20,7 @@ using System.Linq;
 using TopSolid.Kernel.TX.Units;
 using TopSolid.Kernel.DB.Operations;
 using TopSolid.Kernel.DB.D3.Planes;
+using TopSolid.Kernel.G.D3.Shapes;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -122,8 +123,21 @@ namespace EPFL.GrasshopperTopSolid.Components
                     {
                         Brep rs = null;
                         GH_Convert.ToBrep(gbrep, ref rs, 0);
+                        double tol = 0;
+                        ShapeList shape;
+                        if (Params.Input.Count == 3)
+                        {
+                            if (DA.GetData(2, ref tol))
+                            {
+                                shape = rs.ToHost(tol);
+                            }
+                            else return;
+                        }
+                        else
+                        {
+                            shape = rs.ToHost();
+                        }
 
-                        var shape = rs.ToHost();
                         EntitiesCreation shapesCreation = new EntitiesCreation(doc, 0);
 
 
@@ -149,7 +163,12 @@ namespace EPFL.GrasshopperTopSolid.Components
                                 //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;
                                 sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
                             }
-                            sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
+
+                            if (tol != 0)
+                                sewOperation.GapWidth = new BasicSmartReal(sewOperation, tol, UnitType.Length, doc);
+                            else
+                                sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
+
                             sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
                             sewOperation.Create();
 
@@ -159,7 +178,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                             {
                                 for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
                                 {
-                                    shapesCreation.ChildrenEntities.ElementAt(i).Hide();
+                                    //shapesCreation.ChildrenEntities.ElementAt(i).Hide();
+                                    shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;
                                 }
                             }
 
@@ -183,8 +203,9 @@ namespace EPFL.GrasshopperTopSolid.Components
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)
         {
-            if (side == GH_ParameterSide.Input && index == 2)
+            if (side == GH_ParameterSide.Input && index == 2 && Params.Input.Count == 2)
                 return true;
+
             return false;
         }
 
