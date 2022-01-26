@@ -13,6 +13,7 @@ using TopSolid.Kernel.DB.D3.Points;
 using TopSolid.Kernel.DB.D3.Sketches;
 using TopSolid.Kernel.DB.D3.Sketches.Operations;
 using TopSolid.Kernel.DB.D3.Sketches.Planar.Operations;
+using TopSolid.Kernel.DB.Operations;
 using TopSolid.Kernel.G.D2.Curves;
 using TopSolid.Kernel.G.D3;
 using TopSolid.Kernel.G.D3.Sketches;
@@ -52,6 +53,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
         {
             pManager.AddGenericParameter("Sketch", "SK", "TopSolid Planar Sketch", GH_ParamAccess.item);
         }
+
+        List<int> ops = new List<int>();
 
         /// <summary>
         /// This is the method that actually does the work.
@@ -153,9 +156,12 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
                     }
 
                     plSketch.AddProfile(key, seglist);
+
                 }
 
                 maker.NewSolvingOperation.Update();
+                ops.Add(maker.NewSolvingOperation.Id);
+
 
 
                 maker.NewSolvingOperation.ChildEntity.AddRollbackMarks();

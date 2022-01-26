@@ -8,6 +8,7 @@ using TopSolid.Kernel.DB.D3.Directions;
 using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using TopSolid.Kernel.DB.D3.Profiles;
 using TopSolid.Kernel.DB.D3.Sections;
+using TopSolid.Kernel.DB.D3.Shapes;
 using TopSolid.Kernel.DB.D3.Shapes.Extruded;
 using TopSolid.Kernel.DB.D3.Sketches.Planar;
 using TopSolid.Kernel.DB.D3.Sketches.Planar.Operations;
@@ -77,7 +78,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
 
 
-
+            /*
+             //TODO find a way to edit an operation afterwards instead of creating new
             OperationList list = new OperationList();
             doc.RootOperation.GetDeepOperations(list);
             ExtrudedCreation op = null;
@@ -89,13 +91,13 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
                 {
                     op.FirstSide.Length = new BasicSmartReal(null, length, TopSolid.Kernel.TX.Units.UnitType.Length, doc);
 
-                    TopSolid.Kernel.UI.Application.Update();
+                    TopSolid.Kernel.UI.Application.Update(); //TODO Ask about a lighter method, only update the operation
                     return;
                 }
 
 
             }
-
+            */
 
             //Creation of the extruded operation
             ExtrudedCreation extruded = new ExtrudedCreation(doc, 0);
@@ -116,18 +118,25 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
             GH_Colour color = null;
             DA.GetData("Colour", ref color);
 
-            if (color == null) return;
-            float h = color.Value.GetHue();
-            float s = color.Value.GetSaturation();
-            float l = color.Value.GetBrightness();
 
+            if (color != null)
+            {
+                float h = color.Value.GetHue();
+                float s = color.Value.GetSaturation();
+                float l = color.Value.GetBrightness();
 
-            Color tsColor = Color.FromHLS(h, l, s);
-
+                Color tsColor = Color.FromHLS(h, l, s);
+                extruded.ChildEntity.SetDisplayColor(tsColor, true, false);
+                var ent = extruded.ChildEntity as ShapeEntity;
+                ent.IsColorModifiable = true;
+                ent.ExplicitColor = tsColor;
+            }
 
             //The operation is created
             extruded.Create();
-            extruded.ChildEntity.SetDisplayColor(tsColor, true, false);
+
+            //foreach (var item in extruded.ChildEntity.Geometry.Display.Items)
+            //    item.Color = tsColor;
             UndoSequence.End();
         }
 

@@ -76,15 +76,22 @@ namespace EPFL.GrasshopperTopSolid.Components
             var tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
 
             GH_Colour color = null;
+            Color tsColor = Color.Empty;
+            Transparency trnsp = Transparency.Empty;
+
             DA.GetData("Colour", ref color);
 
-            if (color == null) return;
-            float h = color.Value.GetHue();
-            float s = color.Value.GetSaturation();
-            float l = color.Value.GetBrightness();
+            if (color != null)
+            {
+                float h = color.Value.GetHue();
+                float s = color.Value.GetSaturation();
+                float l = color.Value.GetBrightness();
 
 
-            Color tsColor = Color.FromHLS(h, l, s);
+                tsColor = Color.FromHLS(h, l, s);
+                trnsp = Transparency.FromByte((byte)(byte.MaxValue - color.Value.A));
+
+            }
 
             //foreach (var g in geo)
             //{
@@ -98,7 +105,9 @@ namespace EPFL.GrasshopperTopSolid.Components
                 MarkerItem mi = new MarkerItem(tp);
                 //mi.Color = Color.Green;
                 mi.Color = tsColor;
+                mi.Transparency = trnsp;
                 mi.MarkerStyle = MarkerStyle.ExtraLargePlus;
+
                 gd.Add(mi);
             }
             else if (g is GH_Line gl)
@@ -110,6 +119,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                 //li.Color = Color.Green;
                 li.Color = tsColor;
                 li.LineStyle = LineStyle.SolidMedium;
+                li.Transparency = trnsp;
                 gd.Add(li);
             }
             else if (g is GH_Curve gc)
@@ -136,6 +146,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         LineItem li = new LineItem(seg.PointAtStart.ToHost(), seg.PointAtEnd.ToHost());
                         li.Color = tsColor;
                         li.LineStyle = LineStyle.SolidMedium;
+                        li.Transparency = trnsp;
                         gd.Add(li);
                     }
                 }
@@ -153,6 +164,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                             //li.Color = Color.Green;
                             li.Color = tsColor;
                             li.LineStyle = LineStyle.SolidMedium;
+                            li.Transparency = trnsp;
+
                             gd.Add(li);
                         }
                         else if (i == points.Length - 1 && rc.IsClosed)
@@ -161,6 +174,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                             //li.Color = Color.Green;
                             li.Color = tsColor;
                             li.LineStyle = LineStyle.SolidMedium;
+                            li.Transparency = trnsp;
                             gd.Add(li);
                         }
                     }
@@ -201,7 +215,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         mesh.FaceNormals[faceind].Unitize();
                         FaceItem faceitem = maker.Make(vertList, ItemLabel.Empty, 0, new TopSolid.Kernel.G.S.D3.UnitVector(mesh.FaceNormals[faceind].X, mesh.FaceNormals[faceind].Y, mesh.FaceNormals[faceind].Z));
                         faceitem.LineStyle = LineStyle.SolidMedium;
-                        faceitem.Transparency = Transparency.PreviewTransparency;
+                        faceitem.Transparency = trnsp;
                         gd.Add(faceitem);
                         faceind++;
                     }
@@ -255,7 +269,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         mesh.FaceNormals[faceind].Unitize();
                         FaceItem faceitem = maker.Make(vertList, ItemLabel.Empty, 0, new TopSolid.Kernel.G.S.D3.UnitVector(mesh.FaceNormals[faceind].X, mesh.FaceNormals[faceind].Y, mesh.FaceNormals[faceind].Z));
                         faceitem.LineStyle = LineStyle.SolidMedium;
-                        faceitem.Transparency = Transparency.PreviewTransparency;
+                        faceitem.Transparency = trnsp;
                         gd.Add(faceitem);
                         faceind++;
                     }
