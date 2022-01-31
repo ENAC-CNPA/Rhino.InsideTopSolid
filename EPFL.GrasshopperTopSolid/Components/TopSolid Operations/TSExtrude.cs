@@ -118,6 +118,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
             GH_Colour color = null;
             DA.GetData("Colour", ref color);
 
+            extruded.Create();
 
             if (color != null)
             {
@@ -133,7 +134,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
             }
 
             //The operation is created
-            extruded.Create();
+
 
             //foreach (var item in extruded.ChildEntity.Geometry.Display.Items)
             //    item.Color = tsColor;
