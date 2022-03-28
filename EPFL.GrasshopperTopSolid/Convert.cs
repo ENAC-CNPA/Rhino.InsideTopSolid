@@ -1234,6 +1234,7 @@ namespace EPFL.GrasshopperTopSolid
             }
             catch
             {
+                //TODO Add Exception             
             }
 
             return shape;

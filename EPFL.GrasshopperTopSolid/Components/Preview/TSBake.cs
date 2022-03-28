@@ -178,8 +178,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                             {
                                 for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
                                 {
-                                    //shapesCreation.ChildrenEntities.ElementAt(i).Hide();
-                                    shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;
+                                    shapesCreation.ChildrenEntities.ElementAt(i).Hide();
+                                    //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;
                                 }
                             }
 
