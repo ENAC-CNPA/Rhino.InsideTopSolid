@@ -35,6 +35,7 @@ using TopSolid.Kernel.DB.D3.Sketches.Operations;
 using TopSolid.Kernel.DB.D3.Curves;
 using TopSolid.Kernel.TX.Undo;
 using TX = TopSolid.Kernel.TX;
+using TopSolid.Kernel.SX.Drawing;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -103,12 +104,24 @@ namespace EPFL.GrasshopperTopSolid
         {
             return new TKG.D3.Plane(p.Origin.ToHost(), new UnitVector(p.ZAxis.ToHost()));
         }
+
         static public TKG.D3.Frame ToHost(this Rhino.Geometry.Plane p, Vector xVec, Vector yVec, Vector zVec)
         {
             return new TKG.D3.Frame(p.Origin.ToHost(), new UnitVector(xVec), new UnitVector(yVec), new UnitVector(zVec));
         }
 
+
+        static public Rhino.Geometry.Plane ToRhino(this TKG.D3.Frame p)
+        {
+            return new Rhino.Geometry.Plane(p.Po.ToRhino(), new Vector3d(p.Ax.Vx.X, p.Ax.Vx.Y, p.Ax.Vx.Z));
+        }
+        static public Rhino.Geometry.Plane ToRhino(this TKG.D3.Plane p)
+        {
+            return new Rhino.Geometry.Plane(p.Po.ToRhino(), new Vector3d(p.Ax.Vx.X, p.Ax.Vx.Y, p.Ax.Vx.Z), new Vector3d(p.Ay.Vx.X, p.Ay.Vx.Y, p.Ay.Vx.Z));
+            //return new Rhino.Geometry.Plane(p.Po.ToRhino(), new Vector3d(p.Ax.Vx.X, p.Ax.Vx.Y, p.Ax.Vx.Z));
+        }
         #endregion
+
         #region Polyline
         static public TKG.D3.Curves.PolylineCurve ToHost(this Rhino.Geometry.Polyline p)
         {
@@ -317,6 +330,24 @@ namespace EPFL.GrasshopperTopSolid
         }
 
         static public Rhino.Geometry.NurbsCurve ToRhino(Profile profile)
+        {
+            Rhino.Collections.CurveList rhCurvesList = new Rhino.Collections.CurveList();
+            Rhino.Geometry.NurbsCurve rhCurve = null;
+
+            for (int i = 0; i < (profile.Segments.Count()); i++)
+            {
+                rhCurvesList.Add(ToRhino(profile.Segments.ElementAt(i).Geometry.GetBSplineCurve(false, false, TopSolid.Kernel.G.Precision.LinearPrecision)));
+            }
+
+            if (NurbsCurve.JoinCurves(rhCurvesList).Length != 0)
+            {
+                rhCurve = NurbsCurve.JoinCurves(rhCurvesList)[0].ToNurbsCurve();
+            }
+
+            return rhCurve;
+        }
+
+        static public Rhino.Geometry.NurbsCurve ToRhino(TopSolid.Kernel.G.D2.Sketches.Profile profile)
         {
             Rhino.Collections.CurveList rhCurvesList = new Rhino.Collections.CurveList();
             Rhino.Geometry.NurbsCurve rhCurve = null;

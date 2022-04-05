@@ -21,6 +21,7 @@ using TopSolid.Kernel.TX.Units;
 using TopSolid.Kernel.DB.Operations;
 using TopSolid.Kernel.DB.D3.Planes;
 using TopSolid.Kernel.G.D3.Shapes;
+using TopSolid.Kernel.SX.Drawing;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -124,15 +125,68 @@ namespace EPFL.GrasshopperTopSolid.Components
                         Brep rs = null;
                         GH_Convert.ToBrep(gbrep, ref rs, 0);
                         double tol = 0;
+                        GH_Colour color = null;
+                        Color tsColor = Color.Empty;
+                        Transparency trnsp = Transparency.Empty;
                         ShapeList shape;
-                        if (Params.Input.Count == 3)
+                        if (Params.Input.Count >= 3)
                         {
-                            if (DA.GetData(2, ref tol))
+                            if (DA.GetData(2, ref tol) && DA.GetData(3, ref color))
+                            {
+                                shape = rs.ToHost(tol);
+                                if (color != null)
+                                {
+                                    float h = color.Value.GetHue();
+                                    float s = color.Value.GetSaturation();
+                                    float l = color.Value.GetBrightness();
+
+
+                                    tsColor = Color.FromHLS(h, l, s);
+                                    trnsp = Transparency.FromByte((byte)(byte.MaxValue - color.Value.A));
+
+                                }
+                            }
+
+                            else if (DA.GetData(2, ref tol))
                             {
                                 shape = rs.ToHost(tol);
                             }
+                            else if (DA.GetData(2, ref color))
+                            {
+                                shape = rs.ToHost();
+                                if (color != null)
+                                {
+                                    float h = color.Value.GetHue();
+                                    float s = color.Value.GetSaturation();
+                                    float l = color.Value.GetBrightness();
+
+
+                                    tsColor = Color.FromHLS(h, l, s);
+                                    trnsp = Transparency.FromByte((byte)(byte.MaxValue - color.Value.A));
+
+                                }
+                            }
                             else return;
                         }
+                        //else if (Params.Input.Count == 4)
+                        //{
+                        //    if (DA.GetData(3, ref color) && (DA.GetData(2, ref tol)))
+                        //    {
+                        //        shape = rs.ToHost(tol);
+                        //        if (color != null)
+                        //        {
+                        //            float h = color.Value.GetHue();
+                        //            float s = color.Value.GetSaturation();
+                        //            float l = color.Value.GetBrightness();
+
+
+                        //            tsColor = Color.FromHLS(h, l, s);
+                        //            trnsp = Transparency.FromByte((byte)(byte.MaxValue - color.Value.A));
+
+                        //        }
+                        //    }
+                        //    else return;
+                        //}
                         else
                         {
                             shape = rs.ToHost();
@@ -145,6 +199,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                         {
                             ShapeEntity se = new ShapeEntity(doc, 0);
                             se.Geometry = ts;
+                            se.ExplicitColor = tsColor;
+                            se.ExplicitTransparency = trnsp;
 
                             se.Create(doc.ShapesFolderEntity);
                             shapesCreation.AddChildEntity(se);
@@ -160,7 +216,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                             sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
                             for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
                             {
-                                //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;
+                                shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
                                 sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
                             }
 
@@ -179,7 +235,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                                 for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
                                 {
                                     shapesCreation.ChildrenEntities.ElementAt(i).Hide();
-                                    //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;
+                                    //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
                                 }
                             }
 
@@ -203,7 +259,7 @@ namespace EPFL.GrasshopperTopSolid.Components
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)
         {
-            if (side == GH_ParameterSide.Input && index == 2 && Params.Input.Count == 2)
+            if ((side == GH_ParameterSide.Input) && ((index == 2 && Params.Input.Count == 2) || (Params.Input.Count == 3 && index == 3 && Params.Input[2] is Param_Number) || (index == 2 && Params.Input.Count == 3 && Params.Input[2] is Param_Colour)))
                 return true;
 
             return false;
@@ -218,12 +274,26 @@ namespace EPFL.GrasshopperTopSolid.Components
 
         public IGH_Param CreateParameter(GH_ParameterSide side, int index)
         {
-            var param = new Param_Number();
-            param.Name = "Tolerance";
-            param.Optional = true;
-            param.NickName = "Tol";
-            param.Description = "Tolerance for TopSolid conversion and sewing";
-            return param;
+            if (index == 2 && (Params.Input.Count == 2 || (Params.Input.Count == 3 && Params.Input[2] is Param_Colour)))
+            {
+                var param = new Param_Number();
+                param.Name = "Tolerance";
+                param.Optional = true;
+                param.NickName = "Tol";
+                param.Description = "Tolerance for TopSolid conversion and sewing";
+                return param;
+            }
+
+            else if (index == 3)
+            {
+                var param = new Param_Colour();
+                param.Name = "Colour";
+                param.Optional = true;
+                param.NickName = "Colour";
+                param.Description = "Color for TopSolid Baked Geometry";
+                return param;
+            }
+            return null;
         }
 
         public bool DestroyParameter(GH_ParameterSide side, int index)

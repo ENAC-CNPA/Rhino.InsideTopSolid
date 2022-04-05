@@ -1,8 +1,11 @@
 ﻿using Grasshopper.Kernel;
+using Rhino.Geometry;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using TopSolid.Kernel.DB.D3.Documents;
 using TopSolid.Kernel.DB.D3.Sketches;
+using TopSolid.Kernel.DB.D3.Sketches.Planar;
 
 namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
 {
@@ -46,15 +49,54 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
             GeometricDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
 
             PositionedSketchEntity entity = document.RootEntity.SearchDeepEntity(_name) as PositionedSketchEntity;
+            Rhino.Geometry.Curve crv;
+            List<Rhino.Geometry.Curve> crvs = new List<Rhino.Geometry.Curve>();
 
-            if (entity.Geometry.Profiles.Count() != 1)
+
+            if (entity is null)
             {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"Sketch Contains {entity.Geometry.Profiles.Count()} curves, it must contain 1 curve");
-                return;
+                //AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"could not find sketch {_name}");
+                //return;
+                var ent = document.RootEntity.SearchDeepEntity(_name) as PlanarSketchEntity;
+                if (ent is null) return;
+
+                var plane = Convert.ToRhino(ent.Plane);
+
+                foreach (var tsCrv in ent.Geometry.Profiles)
+                {
+                    crv = Convert.ToRhino(tsCrv);
+                    Plane plane0 = Plane.WorldXY;
+                    Transform xForm;
+                    //crv.TryGetPlane(out plane0);
+                    xForm = Transform.PlaneToPlane(plane0, plane);
+                    crv.Transform(xForm);
+                    crvs.Add(crv);
+                }
+                var profiles = ent.Geometry.Profiles;
+
+                DA.SetData("TopSolidCurve", profiles);
             }
-            Rhino.Geometry.Curve crv = Convert.ToRhino(entity.Geometry.Profiles.First());
-            DA.SetData("RhinoCurve", crv);
-            DA.SetData("TopSolidCurve", entity.Geometry.Profiles.First());
+
+            else
+            {
+                foreach (var tsCrv in entity.Geometry.Profiles)
+                {
+                    crv = Convert.ToRhino(tsCrv);
+                    crvs.Add(crv);
+                }
+                var profiles = entity.Geometry.Profiles;
+                DA.SetData("TopSolidCurve", profiles);
+            }
+
+
+            var joinedcrvs = Rhino.Geometry.Curve.JoinCurves(crvs);
+            PolyCurve polyCrv = new PolyCurve();
+            foreach (Curve lCrv in joinedcrvs)
+            {
+                polyCrv.AppendSegment(lCrv);
+            }
+            DA.SetData("RhinoCurve", polyCrv);
+
         }
 
         /// <summary>
