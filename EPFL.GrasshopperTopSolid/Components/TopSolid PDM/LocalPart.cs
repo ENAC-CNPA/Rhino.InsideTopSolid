@@ -7,6 +7,7 @@ using Rhino.Geometry;
 using TopSolid.Cad.Design.DB;
 using TopSolid.Cad.Design.DB.Documents;
 using TopSolid.Cad.Design.DB.Local.Operations;
+using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using TopSolid.Kernel.DB.D3.Shapes;
 using TopSolid.Kernel.DB.D3.Shapes.Sew;
 using TopSolid.Kernel.DB.Entities;
@@ -68,8 +69,9 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             {
                 var e = o.Value as Entity;
                 if (e == null) return;
-
                 entList.Add(e);
+
+
 
             }
 
@@ -85,10 +87,18 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                 return;
             }
 
-            var part = CreateLocalPart(doc, entList, name);
+            //TODO check this process to transfer Entities from Assembly to LocalPart
+            EntityList list = new EntityList();
+            var part = CreateLocalPart(doc, list, name);
+            var ent = entList.First();
+            ent.Hide();
+            ent.IsGhost = true;
+            doc.Display.RemoveDisplay(ent.Display);
+            part.Geometry = ent.Geometry;
             doc.PartsFolderEntity.AddEntity(part);
 
             UndoSequence.End();
+
         }
 
         /// <summary>
