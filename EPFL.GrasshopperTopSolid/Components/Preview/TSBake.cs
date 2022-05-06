@@ -22,6 +22,7 @@ using TopSolid.Kernel.DB.Operations;
 using TopSolid.Kernel.DB.D3.Planes;
 using TopSolid.Kernel.G.D3.Shapes;
 using TopSolid.Kernel.SX.Drawing;
+using TopSolid.Kernel.DB.Entities;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -45,6 +46,7 @@ namespace EPFL.GrasshopperTopSolid.Components
             pManager.AddGeometryParameter("Geometries", "G", "Geometries to bake", GH_ParamAccess.list);
             pManager.AddBooleanParameter("Bake?", "b?", "Set true to bake", GH_ParamAccess.item);
         }
+        EntityList list = new EntityList();
 
         /// <summary>
         /// Registers all the output parameters for this component.
@@ -77,6 +79,7 @@ namespace EPFL.GrasshopperTopSolid.Components
             {
                 UndoSequence.UndoCurrent();
                 UndoSequence.Start("Bake", true);
+                list.Clear();
 
                 foreach (var g in geo)
                 {
@@ -88,6 +91,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         PointEntity pe = new PointEntity(doc, 0);
                         pe.Geometry = tp;
                         pe.Create(doc.PointsFolderEntity);
+                        list.Add(pe);
                     }
 
                     if (g is GH_Plane ghPlane)
@@ -108,6 +112,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         CurveEntity ce = new CurveEntity(doc, 0);
                         ce.Geometry = tc;
                         ce.Create(doc.PointsFolderEntity);
+                        list.Add(ce);
                     }
                     else if (g is GH_Surface gs)
                     {
@@ -118,6 +123,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         SurfaceEntity se = new SurfaceEntity(doc, 0);
                         se.Geometry = ts;
                         se.Create(doc.PointsFolderEntity);
+                        list.Add(se);
                     }
 
                     else if (g is GH_Brep gbrep)
@@ -199,8 +205,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                         {
                             ShapeEntity se = new ShapeEntity(doc, 0);
                             se.Geometry = ts;
-                            se.ExplicitColor = tsColor;
-                            se.ExplicitTransparency = trnsp;
+                            //se.ExplicitColor = tsColor;
+                            //se.ExplicitTransparency = trnsp;
 
                             se.Create(doc.ShapesFolderEntity);
                             shapesCreation.AddChildEntity(se);
@@ -218,6 +224,9 @@ namespace EPFL.GrasshopperTopSolid.Components
                             {
                                 shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
                                 sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
+
+
+
                             }
 
                             if (tol != 0)
@@ -228,16 +237,18 @@ namespace EPFL.GrasshopperTopSolid.Components
                             sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
                             sewOperation.Create();
 
-                            //Hides other shapes when successfull, otherwise keep them shown
-                            bool isInvalid = sewOperation.IsInvalid;
-                            if (!isInvalid)
-                            {
-                                for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
-                                {
-                                    shapesCreation.ChildrenEntities.ElementAt(i).Hide();
-                                    //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
-                                }
-                            }
+                            list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
+                            ////Hides other shapes when successfull, otherwise keep them shown
+                            //bool isInvalid = sewOperation.IsInvalid;
+                            //if (!isInvalid)
+                            //{
+                            //    for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
+                            //    {
+                            //        shapesCreation.ChildrenEntities.ElementAt(i).Hide();
+                            //        shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
+                            //    }
+                            //}
+
 
                         }
 
@@ -251,15 +262,28 @@ namespace EPFL.GrasshopperTopSolid.Components
                         //se.Geometry = shape;
                         //se.Create(doc.ShapesFolderEntity);
 
+
+
                     }
                 }
                 UndoSequence.End();
+                //if (Params.Output.Count == 1)
+
+
+
+
             }
+            if (Params.Output.Count > 0)
+                DA.SetDataList("TopSolid Entities", list.ToList());
         }
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)
         {
-            if ((side == GH_ParameterSide.Input) && ((index == 2 && Params.Input.Count == 2) || (Params.Input.Count == 3 && index == 3 && Params.Input[2] is Param_Number) || (index == 2 && Params.Input.Count == 3 && Params.Input[2] is Param_Colour)))
+            if ((side == GH_ParameterSide.Input) && ((index == 2 && Params.Input.Count == 2)
+                || (Params.Input.Count == 3 && index == 3 && Params.Input[2] is Param_Number)
+                || (index == 2 && Params.Input.Count == 3 && Params.Input[2] is Param_Colour)))
+                return true;
+            if ((side == GH_ParameterSide.Output) && Params.Output.Count == 0)
                 return true;
 
             return false;
@@ -268,6 +292,8 @@ namespace EPFL.GrasshopperTopSolid.Components
         public bool CanRemoveParameter(GH_ParameterSide side, int index)
         {
             if (side == GH_ParameterSide.Input && index > 1)
+                return true;
+            if (side == GH_ParameterSide.Output)
                 return true;
             return false;
         }
@@ -291,6 +317,16 @@ namespace EPFL.GrasshopperTopSolid.Components
                 param.Optional = true;
                 param.NickName = "Colour";
                 param.Description = "Color for TopSolid Baked Geometry";
+                return param;
+            }
+            else if (side is GH_ParameterSide.Output)
+            {
+                var param = new Param_GenericObject();
+                param.Name = "TopSolid Entities";
+                param.Access = GH_ParamAccess.list;
+
+                param.NickName = "TS Entities";
+                param.Description = "TopSolid Created Entities";
                 return param;
             }
             return null;

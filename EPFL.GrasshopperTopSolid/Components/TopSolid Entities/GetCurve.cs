@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TopSolid.Kernel.DB.D3.Documents;
+using TopSolid.Kernel.DB.D3.Profiles;
 using TopSolid.Kernel.DB.D3.Sketches;
 using TopSolid.Kernel.DB.D3.Sketches.Planar;
 
@@ -36,6 +37,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
         {
             pManager.AddCurveParameter("RhinoCurve", "RhCrv", "Converted Rhino Curve", GH_ParamAccess.item);
             pManager.AddGenericParameter("TopSolidCurve", "TSCrv", "TopSolid Bspline", GH_ParamAccess.item);
+
         }
 
         /// <summary>
@@ -58,23 +60,34 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
                 //AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"could not find sketch {_name}");
                 //return;
                 var ent = document.RootEntity.SearchDeepEntity(_name) as PlanarSketchEntity;
-                if (ent is null) return;
-
-                var plane = Convert.ToRhino(ent.Plane);
-
-                foreach (var tsCrv in ent.Geometry.Profiles)
+                var profil = document.RootEntity.SearchDeepEntity(_name) as ProfileEntity;
+                if ((profil is null) && (ent is null)) return;
+                if (!(ent is null))
                 {
-                    crv = Convert.ToRhino(tsCrv);
-                    Plane plane0 = Plane.WorldXY;
-                    Transform xForm;
-                    //crv.TryGetPlane(out plane0);
-                    xForm = Transform.PlaneToPlane(plane0, plane);
-                    crv.Transform(xForm);
-                    crvs.Add(crv);
-                }
-                var profiles = ent.Geometry.Profiles;
+                    var plane = Convert.ToRhino(ent.Plane);
 
-                DA.SetData("TopSolidCurve", profiles);
+                    foreach (var tsCrv in ent.Geometry.Profiles)
+                    {
+                        crv = Convert.ToRhino(tsCrv);
+                        Plane plane0 = Plane.WorldXY;
+                        Transform xForm;
+                        //crv.TryGetPlane(out plane0);
+                        xForm = Transform.PlaneToPlane(plane0, plane);
+                        crv.Transform(xForm);
+                        crvs.Add(crv);
+                    }
+                    var profiles = ent.Geometry.Profiles;
+
+                    DA.SetData("TopSolidCurve", profiles);
+                }
+
+                else
+                {
+                    if (!(profil is null))
+                    {
+                        crvs.Add(profil.Geometry.ToRhino());
+                    }
+                }
             }
 
             else

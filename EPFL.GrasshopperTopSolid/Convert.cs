@@ -199,7 +199,7 @@ namespace EPFL.GrasshopperTopSolid
         /// </summary>
         /// <param name="curve"></param>
         /// <returns></returns>
-        static public Rhino.Geometry.NurbsCurve ToRhino(BSplineCurve curve)
+        static public Rhino.Geometry.NurbsCurve ToRhino(this BSplineCurve curve)
         {
 
             #region Variables Declaration           
@@ -260,7 +260,16 @@ namespace EPFL.GrasshopperTopSolid
             return rhCurve;
         }
 
+        static public Rhino.Geometry.NurbsCurve ToRhino(this IGeometricProfile profile)
+        {
+            PolyCurve rhCurve = new PolyCurve();
+            foreach (IGeometricSegment seg in profile.Segments)
+            {
+                rhCurve.AppendSegment(seg.GetOrientedCurve().Curve.GetBSplineCurve(false, false).ToRhino());
+            }
 
+            return rhCurve.ToNurbsCurve();
+        }
 
         static public Rhino.Geometry.NurbsCurve ToRhino(TKGD2.Curves.BSplineCurve curve)
         {
