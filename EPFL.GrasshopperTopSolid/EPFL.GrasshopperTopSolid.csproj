@@ -36,6 +36,9 @@
     <Reference Include="TopSolid.Cad.Design.DB">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.16\Debug x64\TopSolid.Cad.Design.DB.dll</HintPath>
     </Reference>
+    <Reference Include="TopSolid.Cad.Design.UI">
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.16\Debug x64\TopSolid.Cad.Design.UI.dll</HintPath>
+    </Reference>
     <Reference Include="TopSolid.Kernel.DB">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.16\Debug x64\TopSolid.Kernel.DB.dll</HintPath>
     </Reference>

@@ -37,8 +37,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("Name", "N", "part name", GH_ParamAccess.item);
-            pManager.AddGeometryParameter("Geometry", "Geo", "Geometry To convert to Part", GH_ParamAccess.item);
-            //pManager.AddGenericParameter("Geometry", "Geo", "Geometry To Convert", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Entity", "Ent", "Entities to add to part", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -57,33 +56,36 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             UndoSequence.UndoCurrent();
             UndoSequence.Start("part", true);
 
-            Grasshopper.Kernel.Types.GH_ObjectWrapper obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
-            IGH_GeometricGoo geo = null;
-            if (!DA.GetData(1, ref geo)) return;
+            List<Grasshopper.Kernel.Types.GH_ObjectWrapper> obj = new List<Grasshopper.Kernel.Types.GH_ObjectWrapper>();
 
-            //if (obj == null) return;
+            if (!DA.GetDataList(1, obj)) return;
 
-            //shape = obj.Value as Shape;
+            if (obj == null) return;
+            EntityList entList = new EntityList();
+
+
+            foreach (var o in obj)
+            {
+                var e = o.Value as Entity;
+                if (e == null) return;
+
+                entList.Add(e);
+
+            }
+
 
             GH_Brep gbrep = null;
             Brep brep = null;
             string name = "";
             DA.GetData(0, ref name);
-            DA.GetData(1, ref gbrep);
             AssemblyDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as AssemblyDocument;
-            if (!GH_Convert.ToBrep(gbrep, ref brep, GH_Conversion.Both)) return;
-            ShapeList shape = brep.ToHost();
-            EntityList list = new EntityList();
-            foreach (var s in shape)
+            if (doc == null)
             {
-                ShapeEntity se = new ShapeEntity(doc, 0);
-                se.Geometry = s;
-                se.Create();
-                list.Add(se);
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Current TopSolid document must be assembly document");
+                return;
             }
 
-
-            var part = CreateLocalPart(doc, list, name);
+            var part = CreateLocalPart(doc, entList, name);
             doc.PartsFolderEntity.AddEntity(part);
 
             UndoSequence.End();
