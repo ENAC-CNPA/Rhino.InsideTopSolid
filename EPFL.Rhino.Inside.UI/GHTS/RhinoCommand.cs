@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Rhino;
+using Rhino.Runtime.InProcess;
+using System;
 using System.Reflection;
 using TK = TopSolid.Kernel;
 
@@ -42,12 +44,40 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
         /// <summary>
         /// Method call when the command button is pressed
         /// </summary>
+
+
+        /// <summary>
+        /// Method call when the command button is pressed
+        /// </summary>
+        /// 
+        static RhinoCore rhinoCore;
+        //private static bool _grasshopperLoaded = false;
+        public static Grasshopper.Plugin.GH_RhinoScriptInterface Script { get; private set; }
+
         protected override void Invoke()
         {
-            //Invoke the base command...
-            base.Invoke();
+            //Method that works !!
+            if (rhinoCore == null)
+                rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Normal);
 
-            //DO SOMETHING..
+
+        }
+
+        internal static bool Shutdown()
+        {
+            if (rhinoCore is object)
+            {
+                try
+                {
+                    rhinoCore.Dispose();
+                    rhinoCore = null;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
     }
