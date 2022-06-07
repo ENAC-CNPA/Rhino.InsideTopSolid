@@ -90,12 +90,17 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             //TODO check this process to transfer Entities from Assembly to LocalPart
             EntityList list = new EntityList();
             var part = CreateLocalPart(doc, list, name);
-            var ent = entList.First();
-            ent.Hide();
-            ent.IsGhost = true;
-            doc.Display.RemoveDisplay(ent.Display);
-            part.Geometry = ent.Geometry;
+            //var ent = entList.First();
+            //ent.Hide();
+            //ent.IsGhost = true;
+            //doc.Display.RemoveDisplay(ent.Display);
+            //part.Geometry = ent.Geometry;
+            //part.AddGeometry(ent);
+            //part.GetSetConstituentSubEntities(true, entList);
+
             doc.PartsFolderEntity.AddEntity(part);
+            
+
 
             UndoSequence.End();
 
@@ -139,7 +144,10 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                 localPart.AddEntityToLocalRepresentation(entity, TopSolid.Cad.Design.DB.Documents.ElementName.DetailedRepresentation);
                 localPart.AddEntityToLocalRepresentation(entity, TopSolid.Cad.Design.DB.Documents.ElementName.DesignRepresentation);
                 localPart.AddEntityToLocalRepresentation(entity, TopSolid.Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
+                localPart.AddGeometry(entity);
             }
+
+
 
             return localPart;
         }

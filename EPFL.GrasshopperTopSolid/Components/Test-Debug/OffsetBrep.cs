@@ -64,6 +64,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
 
                 result = Brep.CreateOffsetBrep(brep, dist, solid, extend, tol, out outBlends, out outWalls);
 
+
+
                 DA.SetDataList("resultBrep", result.ToList());
             }
         }

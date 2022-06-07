@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TopSolidAddInCertificate version="1">
-  <AddInAssemblyName>EPFL.RhinoInsideTopSolid.AddIn</AddInAssemblyName>
-  <AddInClassName>EPFL.RhinoInsideTopSolid.AddIn.AddIn</AddInClassName>
-  <AddInGuid>62b69852-5ad7-4ae1-9470-b7cac5cef940</AddInGuid>
-  <TopSolidVersion>7.16</TopSolidVersion>
-  <Certificate>E9rzZGBLzd1Rw+72U2Y6SnhyZUNGf1WDU8Z6OUHAaXduuz5j1gI2KhQMlzAk3DSqbTtHNRfayDMLi8IDydhN3Nocw3en/+kterJNoVKjW1GmmKtgVCHtK1BQtGY2b1lTaUWGI4JmnO1HcuvbtPPCOS4oJr7fIpWtiyFuwkRk2MxhSG4CQkJNFm9H+fjvvEn49g3UPM2F1QSLefPk5538itlYRJO57aBE140XGEoUU/CMUrlG8pGwAzLRjdEzu109BrbU8iYxFzPt+nWzeJYtTf13BzLiOPmI6Ic+jS3CXJwTiy2+7VZcMhXSh5YnT6dyTfiNn1M3qe80YRETy5YwVw==</Certificate>
+	<AddInAssemblyName>EPFL.RhinoInsideTopSolid.AddIn</AddInAssemblyName>
+	<AddInClassName>EPFL.RhinoInsideTopSolid.AddIn.AddIn</AddInClassName>
+	<AddInGuid>62b69852-5ad7-4ae1-9470-b7cac5cef940</AddInGuid>
+	<TopSolidVersion>7.16</TopSolidVersion>
+	<Certificate>c5nAoKuvtIeCaVzu1xDia6BU2voWOjvIkDQq7XqxO+q9qnJEwfyXUbT6S9lv10NkmHnUY4dSYr4+jl5yBXcEXKVLCgRt/+DyDE69WYYbNqGjn9/g2AQZkoE8iDdpv3MSkbgEcpKG98j2flvpUritkt8FjPtZ7viNWnUt5A3xrB5Zilmy4vC7fVTAVPXhafcFw3Vm8llWMVplBfb9usUQjvWuHY7nXofuSpM8zhChKWMVh7VVxlpZRMFyxTxXHABtGr4p1tpSCPq7acxDeGzgylNyQ74Rouu6wZDbgLhwdsW0wzy6z3PCMHdyyfwE6J1rY3vOQEaw9uTArF+0vIVT5g==</Certificate>
 </TopSolidAddInCertificate>
