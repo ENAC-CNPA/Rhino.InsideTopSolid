@@ -85,7 +85,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="EPFL.RhinoInsideTopSolid.AddIn.xml" />
+    <EmbeddedResource Include="EPFL.RhinoInsideTopSolid.AddIn.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <Content Include="Readme.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -64,15 +64,12 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             if (obj == null) return;
             EntityList entList = new EntityList();
 
-
+            
             foreach (var o in obj)
             {
                 var e = o.Value as Entity;
                 if (e == null) return;
                 entList.Add(e);
-
-
-
             }
 
 
@@ -88,18 +85,30 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             }
 
             //TODO check this process to transfer Entities from Assembly to LocalPart
+
+            PartEntity localPart = new PartEntity(doc, 0);
             EntityList list = new EntityList();
-            var part = CreateLocalPart(doc, list, name);
-            //var ent = entList.First();
+            foreach(var x in entList)
+            {
+                list.Add(DuplicateShape(x as ShapeEntity, doc, localPart));
+            }
+
+            var part = CreateLocalPart(doc, list, name, localPart);
+
+
             //ent.Hide();
             //ent.IsGhost = true;
             //doc.Display.RemoveDisplay(ent.Display);
-            //part.Geometry = ent.Geometry;
-            //part.AddGeometry(ent);
-            //part.GetSetConstituentSubEntities(true, entList);
 
-            doc.PartsFolderEntity.AddEntity(part);
-            
+
+            TK.SX.Collections.Generic.List<PartEntity> localParts = new TK.SX.Collections.Generic.List<PartEntity>();
+            localParts.Add(part);
+            LocalPartsCreation op = new LocalPartsCreation(doc, 0);
+            op.SetChildParts(localParts);
+            op.Create();
+
+            //doc.PartsFolderEntity.AddEntity(part);
+
 
 
             UndoSequence.End();
@@ -127,9 +136,10 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             get { return new Guid("A486E72F-0FF1-47EC-B825-DE499CC3EA6E"); }
         }
 
-        private PartEntity CreateLocalPart(AssemblyDocument inAssemblyDocument, EntityList inEntities, string inName)
+        private PartEntity CreateLocalPart(AssemblyDocument inAssemblyDocument, EntityList inEntities, string inName, PartEntity localPart)
         {
-            PartEntity localPart = new PartEntity(inAssemblyDocument, 0);
+             
+           
             localPart.SetLocalConstituents(inEntities);
 
             // Make default parameters.
@@ -139,17 +149,89 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             if (!string.IsNullOrEmpty(inName))
                 localPart.NameParameterValue = inAssemblyDocument.MakeLocalizableString(inName);
 
+
+
             foreach (Entity entity in inEntities)
             {
                 localPart.AddEntityToLocalRepresentation(entity, TopSolid.Cad.Design.DB.Documents.ElementName.DetailedRepresentation);
                 localPart.AddEntityToLocalRepresentation(entity, TopSolid.Cad.Design.DB.Documents.ElementName.DesignRepresentation);
                 localPart.AddEntityToLocalRepresentation(entity, TopSolid.Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
-                localPart.AddGeometry(entity);
+
             }
 
 
 
             return localPart;
         }
+
+        private static ShapeEntity DuplicateShape(ShapeEntity shape, AssemblyDocument doc, PartEntity part)
+        {
+            ShapeEntity newEntity = new ShapeEntity(doc, 0);
+            var newShape = shape.Geometry.MakeCopy(part);
+            newEntity.Geometry = newShape;
+            return newEntity;
+
+        }
+
+        //private unsafe ShapeEntity CreateShapeEntity(int inPart, Transform inTransf, AssemblyDocument inDocument)
+        //{
+        //    ShapeEntity shapeEntity = new ShapeEntity(inDocument, 0);
+
+        //    PK.ENTITY_t shapeBody;
+        //    PK.ENTITY.copy(inPart, &shapeBody);
+
+        //    this.TransformBody(inTransf, shapeBody);
+
+        //    Shape shape = ParasolidTools.CreateShape(shapeEntity, shapeBody);
+        //    ParasolidTools.SetPartition(shape);
+
+        //    List<EntitiesByColor> coloredFaces = null;
+        //    List<EntitiesByTransparency> transparentFaces = null;
+        //    coloredFaces = ParasolidTools.GetBodyFaceColors(shapeBody);
+        //    transparentFaces = ParasolidTools.GetBodyFaceTransparencies(shapeBody);
+        //    List<EntitiesByName> namedFaces = ParasolidTools.GetBodyFaceNames(shapeBody);
+
+        //    shape.DeleteAttributes();
+
+        //    // Set attributes of the shape.
+
+        //    TK.SX.Drawing.Color maximumReferencedColor;
+        //    bool hasGeneralColor = ParasolidTools.SetGeneralAttributes(shape.FaceCount, coloredFaces, namedFaces, out maximumReferencedColor);
+
+        //    ItemOperationKey opKey = new ItemOperationKey(0, this.opIndex++);
+        //    ItemMonikerKey monikerKey = new ItemMonikerKey(shape.LevelKey, opKey);
+        //    shape.SetDefaultMonikers(monikerKey);
+
+        //    try
+        //    {
+        //        shapeEntity.Geometry = shape;
+        //        shape.Owner = shapeEntity; // JeR 24/01/2011.
+
+        //        // Set the explicit color of the shape entity.
+
+        //        if (hasGeneralColor)
+        //            shapeEntity.ExplicitColor = maximumReferencedColor;
+
+        //        // Restore the transparency of the part.
+
+        //        if (transparentFaces != null && transparentFaces.Count > 0)
+        //        {
+        //            int i;
+
+        //            for (i = 0; i < transparentFaces.Count; i++)
+        //            {
+        //                if (transparentFaces[i].transparency > 0.0)
+        //                    shapeEntity.ExplicitTransparency = TK.SX.Drawing.Transparency.FromFloat(transparentFaces[i].transparency);
+        //            }
+        //        }
+        //    }
+        //    catch
+        //    {
+        //        Entity.Delete(shapeEntity);
+        //        shapeEntity = null;
+        //    }
+
+        //    return shapeEntity;
+        //}
     }
 }
