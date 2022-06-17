@@ -64,7 +64,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             if (obj == null) return;
             EntityList entList = new EntityList();
 
-            
+
             foreach (var o in obj)
             {
                 var e = o.Value as Entity;
@@ -88,7 +88,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
             PartEntity localPart = new PartEntity(doc, 0);
             EntityList list = new EntityList();
-            foreach(var x in entList)
+            foreach (var x in entList)
             {
                 list.Add(DuplicateShape(x as ShapeEntity, doc, localPart));
             }
@@ -138,8 +138,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
         private PartEntity CreateLocalPart(AssemblyDocument inAssemblyDocument, EntityList inEntities, string inName, PartEntity localPart)
         {
-             
-           
+
+
             localPart.SetLocalConstituents(inEntities);
 
             // Make default parameters.
