@@ -19,8 +19,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             SubCategory = "TopSolid PDM";
             NickName = "TSDocs";
             MutableNickName = false;
-            Name = $"{NickName} Categories Picker";
-            Description = $"Provides a {NickName} Category picker";
+            Name = $"{NickName} Project Picker";
+            Description = $"Provides a {NickName} Project picker";
 
             ListMode = GH_ValueListMode.DropDown;
 
@@ -30,9 +30,12 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             foreach (var project in projects)
             {
                 var item = new GH_ValueListItem(project.GetName(), '"' + project.GetName() + '"');
+
                 item.Selected = project.GetName().StartsWith("A");
+
                 ListItems.Add(item);
             }
+
 
 
             base.CollectVolatileData_Custom();
