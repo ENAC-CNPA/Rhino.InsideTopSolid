@@ -6,45 +6,25 @@ using Grasshopper.Kernel.Data;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
+using TopSolid.Kernel.DB.Entities;
+using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Pdm;
 
 namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 {
-    public class TSDocSelector2 : GH_Component, IGH_VariableParameterComponent
+    public class TSEntityExpand : GH_Component, IGH_VariableParameterComponent
     {
-
+        protected override System.Drawing.Bitmap Icon => new System.Drawing.Icon(Properties.Resources.EntitiesView, 24, 24).ToBitmap();
 
         /// <summary>
-        /// Initializes a new instance of the TSDocSelector2 class.
+        /// Initializes a new instance of the TSEntityTree class.
         /// </summary>
-        protected override System.Drawing.Bitmap Icon => new System.Drawing.Icon(Properties.Resources.TSProjectDocument, 24, 24).ToBitmap();
-
-        public TSDocSelector2()
-          : base("TSDocSelector2", "DocSelector",
-              "Gets the documents inside of a TopSolid Project",
+        public TSEntityExpand()
+          : base("TSEntityExpand", "Expand",
+              "Expands a document folder entity",
               "TopSolid", "TopSolid PDM")
         {
-
         }
-
-        /// <summary>
-        /// Registers all the input parameters for this component.
-        /// </summary>
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
-            pManager.AddGenericParameter("TSProject", "proj", "Topsolid Project to get constituents", GH_ParamAccess.item);
-        }
-
-        /// <summary>
-        /// Registers all the output parameters for this component.
-        /// </summary>
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {
-        }
-
-        //List<string> fixedlistofNames = new List<string>();
-        List<string> variablelistofNames = new List<string>();
-        //IGH_Structure structure;
 
         protected override void BeforeSolveInstance()
         {
@@ -61,15 +41,13 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             Console.WriteLine("No iter has run");
             var x = Params.Input[0].VolatileData;
             var tree = x as GH_Structure<IGH_Goo>;
-
-            variablelistofNames = GetOutputList(tree);
-
+            List<string> variablelistofNames = GetOutputList(tree);
             foreach (var docName in variablelistofNames)
             {
                 var newParam = CreateParameter(GH_ParameterSide.Output, Params.Output.Count) as Param_GenericObject;
                 newParam.Name = docName;
                 newParam.NickName = docName;
-                newParam.Description = $"document {docName}";
+                newParam.Description = $" {docName} Entities";
                 newParam.MutableNickName = false;
                 newParam.Access = GH_ParamAccess.list;
                 //newParam.Detachable = isDetached;
@@ -82,6 +60,20 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             //fixedlistofNames = variablelistofNames;
         }
 
+        /// <summary>
+        /// Registers all the input parameters for this component.
+        /// </summary>
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        {
+            pManager.AddGenericParameter("TSEnity", "Ent", "TopSolid's Entity to expand", GH_ParamAccess.item);
+        }
+
+        /// <summary>
+        /// Registers all the output parameters for this component.
+        /// </summary>
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        {
+        }
 
         /// <summary>
         /// This is the method that actually does the work.
@@ -91,13 +83,14 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         {
             Grasshopper.Kernel.Types.GH_ObjectWrapper obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
             DA.GetData(0, ref obj);
-            var projname = obj.Value.ToString();
+            if (obj == null) return;
+            CompositeEntity compEntity = (CompositeEntity)obj.Value;
 
-            var objs = PdmClientStore.CurrentPdmClient.GetAllProjects().Where(x => x.GetName() == projname).First().Objects;
-            foreach (var tsObj in objs)
+            foreach (var tsObj in compEntity.Constituents)
             {
-                DA.SetData(tsObj.GetName(), tsObj);
+                DA.SetData(tsObj.EditingName, tsObj);
             }
+
         }
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)
@@ -123,23 +116,13 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             return myParam;
         }
 
-        public bool DestroyParameter(GH_ParameterSide side, int index) => side == GH_ParameterSide.Output;
-
-        protected override void AfterSolveInstance()
+        public bool DestroyParameter(GH_ParameterSide side, int index)
         {
-            //IGH_DataAccess DA;
-
-            //foreach (var param in Params.Output)
-            //{
-            //    DA.SetData(param.Name, )
-            //}
-
-
+            return true;
         }
 
         public void VariableParameterMaintenance()
         {
-
 
         }
 
@@ -150,16 +133,26 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
             foreach (var ghGoo in tsProj.AllData(true))
             {
-                var proj = PdmClientStore.CurrentPdmClient.GetAllProjects().Where(x => x.GetName() == ghGoo.ToString()).First();
-                var objs = proj.Objects;
-                foreach (var item in objs)
+
+                GH_ObjectWrapper ghObj = new GH_ObjectWrapper();
+                ghObj = (GH_ObjectWrapper)ghGoo;
+                CompositeEntity compEntity = (CompositeEntity)ghObj.Value;
+
+                if (compEntity != null)
                 {
-                    listofDocsNames.Add(item.GetName());
+                    foreach (var item in compEntity.Constituents)
+                    {
+                        listofDocsNames.Add(item.EditingName);
+                    }
                 }
 
             }
             return listofDocsNames;
         }
+
+        /// <summary>
+        /// Provides an Icon for the component.
+        /// </summary>
 
 
         /// <summary>
@@ -167,7 +160,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         /// </summary>
         public override Guid ComponentGuid
         {
-            get { return new Guid("F200AC88-7CE8-4060-B94E-B186B99BBAE9"); }
+            get { return new Guid("d670565f-8ae9-482b-b3e4-a97806fd8352"); }
         }
     }
 }

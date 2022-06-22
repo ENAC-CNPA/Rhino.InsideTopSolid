@@ -12,7 +12,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
     {
         public override Guid ComponentGuid => new Guid("f151bfa4-d60b-4267-9eb0-184edc0ae091");
 
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.TSProjectDocument.ToBitmap();
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.ProjectsManager_OpenProject.ToBitmap();
         public TSProjectsDropDownList()
         {
             Category = "TopSolid";
@@ -26,7 +26,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
 
             ListItems.Clear();
-            var projects = PdmClientStore.CurrentPdmClient.GetAllProjects();
+            var projects = PdmClientStore.CurrentPdmClient.GetAllProjects().Where(x => !x.IsDeleted && !x.IsTemplate && !x.IsLibraryProject);
             foreach (var project in projects)
             {
                 var item = new GH_ValueListItem(project.GetName(), '"' + project.GetName() + '"');

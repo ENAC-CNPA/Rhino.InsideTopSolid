@@ -61,12 +61,42 @@ namespace EPFL.GrasshopperTopSolid.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon Document {
+            get {
+                object obj = ResourceManager.GetObject("Document", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon EntitiesView {
+            get {
+                object obj = ResourceManager.GetObject("EntitiesView", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap Geometrie_Old {
             get {
                 object obj = ResourceManager.GetObject("Geometrie_Old", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon ProjectsManager_OpenProject {
+            get {
+                object obj = ResourceManager.GetObject("ProjectsManager_OpenProject", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
         
