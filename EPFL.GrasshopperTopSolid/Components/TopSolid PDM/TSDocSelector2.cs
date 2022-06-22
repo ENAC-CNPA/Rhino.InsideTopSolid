@@ -38,34 +38,56 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         {
         }
 
-        List<Param_GenericObject> listofparams = new List<Param_GenericObject>();
+        //List<string> fixedlistofNames = new List<string>();
+        List<string> variablelistofNames = new List<string>();
+        //IGH_Structure structure;
 
         protected override void BeforeSolveInstance()
         {
+            //VariableParameterMaintenance();
+
+            //var remove = Params.Output.Select(f=>f);
+            IGH_Param ghParam;
+
+            for (int i = 0; i<Params.Output.Count; i++)
+            {
+                if (Params.Output[i] != null)
+                   
+                
+                { 
+                    ghParam = Params.Output[i];
+                    Params.UnregisterOutputParameter(ghParam);
+                }
+                
+            }
+
+
             //if (RunCount == -1)
             //{
-                Console.WriteLine("No iter has run");
-                var x = Params.Input[0].VolatileData;
-                var tree = x as GH_Structure<IGH_Goo>;
-            
+            Console.WriteLine("No iter has run");
+            var x = Params.Input[0].VolatileData;
+            var tree = x as GH_Structure<IGH_Goo>;
 
-                var listofNames = GetOutputList(tree);
-                foreach (var docName in listofNames)
-                {
-                    var newParam = CreateParameter(GH_ParameterSide.Output, Params.Output.Count) as Param_GenericObject;
-                    newParam.Name = docName;                    
-                    newParam.NickName = docName;
-                    newParam.Description = $"document {docName}";
-                    newParam.MutableNickName = false;
-                    newParam.Access = GH_ParamAccess.list;
-                    //newParam.Detachable = isDetached;
-                    newParam.Optional = false;
-                    Params.RegisterOutputParam(newParam);
+            variablelistofNames = GetOutputList(tree);
 
-                }
+            foreach (var docName in variablelistofNames)
+            {
+                var newParam = CreateParameter(GH_ParameterSide.Output, Params.Output.Count) as Param_GenericObject;
+                newParam.Name = docName;
+                newParam.NickName = docName;
+                newParam.Description = $"document {docName}";
+                newParam.MutableNickName = false;
+                newParam.Access = GH_ParamAccess.list;
+                //newParam.Detachable = isDetached;
+                newParam.Optional = false;
+                Params.RegisterOutputParam(newParam);
+
+            }
 
             //}
             base.BeforeSolveInstance();
+            //fixedlistofNames = variablelistofNames;
+
         }
 
 
