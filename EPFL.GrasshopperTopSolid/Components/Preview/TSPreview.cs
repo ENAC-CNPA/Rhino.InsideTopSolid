@@ -45,6 +45,12 @@ namespace EPFL.GrasshopperTopSolid.Components
         {
         }
 
+        public override void RemovedFromDocument(GH_Document document)
+        {
+            gd.Clear();
+            base.RemovedFromDocument(document);
+        }
+
         private GeometricDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
         private GeneralDisplay gd = new GeneralDisplay(null);
 
@@ -298,7 +304,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// <summary>
         /// Provides an Icon for the component.
         /// </summary>
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.Geometrie_Old;
+        protected override System.Drawing.Bitmap Icon => new System.Drawing.Icon(Properties.Resources.PreviewWindow_Visualize, 24, 24).ToBitmap();
 
 
 

@@ -29,9 +29,9 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         /// new tabs/panels will automatically be created.
         /// </summary>
         public TSProjectsList()
-          : base("DropDownComponent", "DropDown",
-              "A component with dropdown menus",
-              "TopSolid", "TopSolid PDM")
+          : base("DropDownComponent (Deprecated)", "DropDown",
+              "A component with dropdown menus (Deprecated)",
+              "TopSolid", "Test-Debug")
         {
         }
 

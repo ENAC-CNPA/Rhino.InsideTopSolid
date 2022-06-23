@@ -19,7 +19,7 @@ using TopSolid.Kernel.GR.Algorithms;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
-    public class TSPreviewAll : GH_Component
+    public abstract class TSPreviewAll : GH_Component
     {
         /// <summary>
         /// Initializes a new instance of the TSPreview class.
@@ -36,19 +36,19 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddBooleanParameter("Preview?", "P?", "Preview active geometries", GH_ParamAccess.item);            
+            pManager.AddBooleanParameter("Preview?", "P?", "Preview active geometries", GH_ParamAccess.item);
         }
 
         /// <summary>
         /// Registers all the output parameters for this component.
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {            
+        {
         }
-               
+
         private GeometricDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
         private GeneralDisplay gd = new GeneralDisplay(null);
-        private static GH_Document ActiveDefinition => Instances.ActiveCanvas?.Document;        
+        private static GH_Document ActiveDefinition => Instances.ActiveCanvas?.Document;
 
         protected override void BeforeSolveInstance()
         {
@@ -61,16 +61,16 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            
+
             Boolean flag = false;
-            if (!DA.GetData(0, ref flag)) { return; }           
+            if (!DA.GetData(0, ref flag)) { return; }
 
 
             if (!doc.Display.ContainsDisplay(gd))
             {
                 doc.Display.AddDisplay(gd);
-            }           
-            
+            }
+
             if (flag)
             {
                 ActiveDefinition.SolutionEnd += ActiveDefinition_SolutionEnd;
@@ -89,7 +89,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                 if (obj is IGH_PreviewObject previewObject)
                 {
                     if (previewObject.IsPreviewCapable)
-                    {                     
+                    {
                         if (obj is IGH_Component component)
                         {
                             foreach (var param in component.Params.Output)
@@ -124,7 +124,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                                 mi.Color = Color.Green;
                                 mi.MarkerStyle = MarkerStyle.ExtraLargePlus;
                                 gd.Add(mi);
-                                break;                               
+                                break;
                             case Line line:
                                 var tl = line.ToHost();
                                 LineItem li = new LineItem(tl.Ps, tl.Pe);
@@ -132,12 +132,12 @@ namespace EPFL.GrasshopperTopSolid.Components
                                 li.LineStyle = LineStyle.SolidMedium;
                                 gd.Add(li);
                                 break;
-                            //case NurbsSurface srf:
-                            //    var ts = srf.ToHost();
-                            //    ShapeBuilder sb = new ShapeBuilder();
-                            //    ShapeItem si = new ShapeItem();
-                            //    si.Shape = ts;
-                            //    break;                                
+                                //case NurbsSurface srf:
+                                //    var ts = srf.ToHost();
+                                //    ShapeBuilder sb = new ShapeBuilder();
+                                //    ShapeItem si = new ShapeItem();
+                                //    si.Shape = ts;
+                                //    break;                                
                         }
                     }
                 }
