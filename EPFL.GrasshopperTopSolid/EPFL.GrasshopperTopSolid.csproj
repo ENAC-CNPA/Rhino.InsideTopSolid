@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Components\TopSolid PDM\TSDocumentPicker.cs" />
     <Compile Remove="GrasshopperPreview.cs" />
   </ItemGroup>
 
