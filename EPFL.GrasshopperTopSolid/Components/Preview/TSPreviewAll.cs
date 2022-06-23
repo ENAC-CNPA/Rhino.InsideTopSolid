@@ -19,7 +19,7 @@ using TopSolid.Kernel.GR.Algorithms;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
-    public abstract class TSPreviewAll : GH_Component
+    public abstract class TSPreviewAll : GH_Component //made it abstract to not be charged, but kept it for the code in case needed
     {
         /// <summary>
         /// Initializes a new instance of the TSPreview class.
