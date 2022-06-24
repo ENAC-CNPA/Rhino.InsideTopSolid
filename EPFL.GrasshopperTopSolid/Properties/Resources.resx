@@ -124,6 +124,9 @@
   <data name="EntitiesView" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\EntitiesView.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="EntityAttributesCommand" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EntityAttributesCommand.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Geometrie_Old" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Geometrie.Old.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -132,6 +135,9 @@
   </data>
   <data name="ProjectsManager_OpenProject" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ProjectsManager.OpenProject.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ShapeEntity" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ShapeEntity.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="TopSolid" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TopSolid.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
