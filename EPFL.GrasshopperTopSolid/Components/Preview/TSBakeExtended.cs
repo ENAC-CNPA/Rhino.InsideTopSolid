@@ -89,6 +89,8 @@ namespace EPFL.GrasshopperTopSolid.Components
             {
                 if (wrapper.Value is string)
                     doc = TopSolid.Kernel.TX.Documents.DocumentStore.Documents.Where(x => x.FileName == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
+                if (wrapper.Value is IDocumentItem)
+                    doc = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
                 if (doc is null)
                     doc = wrapper.Value as ModelingDocument;
             }
@@ -173,7 +175,17 @@ namespace EPFL.GrasshopperTopSolid.Components
                         shape = rs.ToHost(tol);
 
                         EntitiesCreation shapesCreation = new EntitiesCreation(doc, 0);
-                        Layer layer = Layer.Empty;
+                        Layer layer = new Layer(-1);
+                        LayerEntity layEnt = new LayerEntity(doc, 0, layer);
+
+                        var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
+                        layEnt = layfoldEnt.SearchLayer(layerName);
+
+                        if (layEnt is null)
+                        {
+                            layfoldEnt.AddLayer(layer, layerName);
+                            layEnt = layfoldEnt.SearchLayer(layerName);
+                        }
 
 
                         foreach (var ts in shape)
@@ -182,30 +194,9 @@ namespace EPFL.GrasshopperTopSolid.Components
                             se.Geometry = ts;
                             se.ExplicitColor = tsColor;
                             se.ExplicitTransparency = trnsp;
+                            se.ExplicitLayer = layEnt.Layer;
 
 
-                            if (layer.IsEmpty)
-                            {
-                                layer = new Layer(-1);
-                                LayerEntity layEnt = new LayerEntity(doc, 0, layer);
-                                //if (!(doc.LayersFolderEntity is null))
-                                //{
-                                //    doc.LayersFolderEntity.Constituents.Where(x=>x.Name == layerName).FirstOrDefault();
-                                //}
-                                layEnt.Name = layerName;
-                                layEnt.Create();
-                            }
-                            if (!(doc.LayersFolderEntity is null))
-                            {
-                                foreach (var existingLayer in doc.LayersFolderEntity?.Constituents)
-                                {
-                                    if (existingLayer.Name == layerName)
-                                    {
-                                        layer = (existingLayer as LayerEntity).Layer;
-                                        break;
-                                    }
-                                }
-                            }
                             se.Create(doc.ShapesFolderEntity);
                             shapesCreation.AddChildEntity(se);
                             shapesCreation.CanDeleteFromChild(se);
