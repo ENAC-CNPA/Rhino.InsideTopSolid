@@ -27,6 +27,7 @@ using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.DB.Layers;
 using TopSolid.Kernel.TX.Pdm;
 using TopSolid.Kernel.GR.Attributes;
+using TopSolid.Kernel.DB.D3.Shapes.Creations;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -85,13 +86,17 @@ namespace EPFL.GrasshopperTopSolid.Components
             //Setting target document from input, or else take current document by default
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
             ModelingDocument doc = null;
+            IDocument res = null;
             if (DA.GetData("TSDocument", ref wrapper))
             {
-                if (wrapper.Value is string)
-                    doc = TopSolid.Kernel.TX.Documents.DocumentStore.Documents.Where(x => x.FileName == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
-                if (wrapper.Value is IDocumentItem)
+                if (wrapper.Value is string || wrapper.Value is GH_String)
+                {
+                    res = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault();
+                    doc = res as ModelingDocument;
+                }
+                else if (wrapper.Value is IDocumentItem)
                     doc = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
-                if (doc is null)
+                else if (doc is IDocument)
                     doc = wrapper.Value as ModelingDocument;
             }
 
@@ -188,6 +193,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         }
 
 
+
                         foreach (var ts in shape)
                         {
                             ShapeEntity se = new ShapeEntity(doc, 0);
@@ -200,15 +206,19 @@ namespace EPFL.GrasshopperTopSolid.Components
                             se.Create(doc.ShapesFolderEntity);
                             shapesCreation.AddChildEntity(se);
                             shapesCreation.CanDeleteFromChild(se);
+
                         }
+                        SewOperation sewOperation = new SewOperation(doc, 0);
+                        if (sew)
+                            sewOperation.AddOperation(shapesCreation);
 
                         shapesCreation.Create();
+
 
                         if (sew)
                         {
                             try
                             {
-                                SewOperation sewOperation = new SewOperation(doc, 0);
                                 sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
                                 for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
                                 {
@@ -223,7 +233,13 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                                 sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
                                 sewOperation.ExplicitLayer = layer;
+                                //sewOperation.Parent = shapesCreation;
+                                //sewOperation.AddOperation(shapesCreation);
+                                //shapesCreation.Parent = sewOperation;
                                 sewOperation.Create();
+
+
+
                                 list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
                             }
                             //TODO Handle exception just in case
