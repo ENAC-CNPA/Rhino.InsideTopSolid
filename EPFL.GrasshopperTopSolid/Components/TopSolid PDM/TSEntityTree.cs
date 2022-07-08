@@ -28,21 +28,11 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         protected override void BeforeSolveInstance()
         {
             IGH_Param ghParam;
-            int paramCount = Params.Output.Count;
             while (Params.Output.Count != 0)
             {
                 ghParam = Params.Output[0];
                 Params.UnregisterOutputParameter(ghParam);
             }
-
-            //for (int i = 0; i < paramCount; i++)
-            //{
-            //    if (Params.Output[i] != null)
-            //    {
-            //        ghParam = Params.Output[i];
-            //        Params.UnregisterOutputParameter(ghParam);
-            //    }
-            //}
 
             if (Params.Output.Count == 0)
             {
