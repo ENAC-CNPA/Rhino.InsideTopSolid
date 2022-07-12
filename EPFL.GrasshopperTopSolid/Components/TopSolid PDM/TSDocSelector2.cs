@@ -95,7 +95,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             var objs = PdmClientStore.CurrentPdmClient.GetAllProjects().Where(x => x.GetName() == projname).First().Objects;
             foreach (var tsObj in objs)
             {
-                DA.SetData(tsObj.GetName(), tsObj);
+                DA.SetData($"{tsObj.GetType().Name} : {tsObj.GetName()}", tsObj);
             }
         }
 
@@ -152,8 +152,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                 var proj = PdmClientStore.CurrentPdmClient.GetAllProjects().Where(x => x.GetName() == ghGoo.ToString()).First();
                 var objs = proj.Objects;
                 foreach (var item in objs)
-                {
-                    listofDocsNames.Add(item.GetName());
+                {                    
+                    listofDocsNames.Add($"{item.GetType().Name} : {item.GetName()}");
                 }
 
             }

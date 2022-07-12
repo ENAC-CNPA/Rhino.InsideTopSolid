@@ -22,6 +22,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 {
     public class TSFamilyInstanceMaker : GH_Component
     {
+        protected override System.Drawing.Bitmap Icon => new System.Drawing.Icon(Properties.Resources.FamilyDocument, 24, 24).ToBitmap();
+
         /// <summary>
         /// Initializes a new instance of the TSFamilyInstanceMaker class.
         /// </summary>
@@ -87,7 +89,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                 }
                 else if (wrapper.Value is IDocumentItem)
                     assembly = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as AssemblyDocument;
-                else if (family is IDocument)
+                else if (wrapper.Value is IDocument)
                     assembly = wrapper.Value as AssemblyDocument;
             }
 
@@ -103,6 +105,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
             Document instance = null;
             bool succes = maker.MakeInstanceDocument(assembly, out instance, out msg);
+
             var designDoc = instance as DesignDocument;
             InclusionOperation inclusionOperation = new InclusionOperation(assembly, 0, instance as DesignDocument, maker, (instance as DesignDocument).CurrentRepresentationEntity, false, new ConfigurationEntity(assembly, 0), null);
             inclusionOperation.Create();
@@ -118,18 +121,6 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
         }
 
-        /// <summary>
-        /// Provides an Icon for the component.
-        /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                //You can add image files to your project resources and access them like this:
-                // return Resources.IconForThisComponent;
-                return null;
-            }
-        }
 
         /// <summary>
         /// Gets the unique ID for this component. Do not change this ID after release.
