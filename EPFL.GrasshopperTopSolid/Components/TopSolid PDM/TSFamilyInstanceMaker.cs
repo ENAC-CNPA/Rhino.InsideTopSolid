@@ -96,18 +96,20 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             UndoSequence.UndoCurrent();
             UndoSequence.Start("fam", true);
 
-
+            assembly.EnsureIsDirty();
 
 
             DocumentInstanceSignature sig = new DocumentInstanceSignature(null, null);
             string msg = "";
             InstanceMaker maker = InstanceMaker.Make(family, sig, out msg);
 
+            var values = maker.DriverValues;
             Document instance = null;
             bool succes = maker.MakeInstanceDocument(assembly, out instance, out msg);
-
+            values = maker.DriverValues;
             var designDoc = instance as DesignDocument;
             InclusionOperation inclusionOperation = new InclusionOperation(assembly, 0, instance as DesignDocument, maker, (instance as DesignDocument).CurrentRepresentationEntity, false, new ConfigurationEntity(assembly, 0), null);
+
             inclusionOperation.Create();
 
             //TopSolid.Cad.Design.DB.RigidGroups.RigidGroupDefinitionEntity rgde = null;

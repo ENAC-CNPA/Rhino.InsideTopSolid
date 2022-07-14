@@ -95,7 +95,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
             foreach (var tsObj in compEntity.Objects)
             {
-                DA.SetData(tsObj.GetLocalizedName(), tsObj);
+                DA.SetData($"{tsObj.GetType().Name} : {tsObj.GetLocalizedName()}", tsObj);
             }
         }
 
@@ -156,7 +156,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                 {
                     foreach (var item in compEntity.Objects)
                     {
-                        listofDocsNames.Add(item.GetLocalizedName());
+                        listofDocsNames.Add($"{item.GetType().Name} : {item.GetLocalizedName()}");
                     }
                 }
 
