@@ -13,6 +13,7 @@ using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using TopSolid.Kernel.DB.Documents;
 using TopSolid.Kernel.DB.Families;
 using TopSolid.Kernel.DB.Families.Documents;
+using TopSolid.Kernel.DB.Families.Drivers;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Families;
 using TopSolid.Kernel.TX.Pdm;
@@ -106,8 +107,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             var values = maker.DriverValues;
             Document instance = null;
             bool succes = maker.MakeInstanceDocument(assembly, out instance, out msg);
-            values = maker.DriverValues;
-            var designDoc = instance as DesignDocument;
+
             InclusionOperation inclusionOperation = new InclusionOperation(assembly, 0, instance as DesignDocument, maker, (instance as DesignDocument).CurrentRepresentationEntity, false, new ConfigurationEntity(assembly, 0), null);
 
             inclusionOperation.Create();
