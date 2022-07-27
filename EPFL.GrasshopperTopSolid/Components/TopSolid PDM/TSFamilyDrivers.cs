@@ -9,6 +9,7 @@ using Rhino.Geometry;
 using TopSolid.Cad.Design.DB.Configurations;
 using TopSolid.Cad.Design.DB.Documents;
 using TopSolid.Cad.Design.DB.Inclusion;
+using TopSolid.Kernel.DB.D3.Points;
 using TopSolid.Kernel.DB.Documents;
 using TopSolid.Kernel.DB.Elements;
 using TopSolid.Kernel.DB.Entities;
@@ -150,6 +151,17 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                 if (driver.IsGeometricDriver)
                 {
 
+                    switch (driverType)
+                    {
+                        case InstanceDriverType.Point:
+                            val = new BasicSmartPoint(null, (inputValue.Value as PointEntity).Geometry);
+                            if (val == null)
+                            {
+
+                            }
+                            break;
+
+                    }
                 }
                 else
                 {
