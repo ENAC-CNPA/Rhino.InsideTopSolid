@@ -86,9 +86,9 @@ namespace EPFL.GrasshopperTopSolid
         {
             return new TKG.D3.Curves.LineCurve(l.From.ToHost(), l.To.ToHost());
         }
-        static public Rhino.Geometry.Line ToRhino(this TKG.D3.Curves.LineCurve l)
+        static public Rhino.Geometry.LineCurve ToRhino(this TKG.D3.Curves.LineCurve l)
         {
-            return new Rhino.Geometry.Line(l.Ps.ToRhino(), l.Pe.ToRhino());
+            return new Rhino.Geometry.LineCurve(l.Ps.ToRhino(), l.Pe.ToRhino());
         }
 
         static public Rhino.Geometry.Line ToRhino(this TKG.D2.Curves.LineCurve l)
@@ -148,48 +148,72 @@ namespace EPFL.GrasshopperTopSolid
         }
         #endregion
         #region Curve
-        static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve c)
+        static public Rhino.Geometry.Curve ToRhino(this TKGD3.Curves.Curve curve)
         {
-            bool r = c.IsRational;
-            bool p = c.IsPeriodic;
-            int d = c.Degree;
-            DoubleList k = ToDoubleList(c.Knots, d);
-            PointList pts = ToPointList(c.Points);
-            DoubleList w = ToDoubleList(c.Points);
+
+            if (curve is CircleCurve tscircle)
+            {
+                return new Rhino.Geometry.Circle(tscircle.Plane.ToRhino(), tscircle.Radius).ToNurbsCurve();
+            }
+            else if (curve is EllipseCurve tsEllipse)
+            {
+                return new Rhino.Geometry.Ellipse(tsEllipse.Plane.ToRhino(), tsEllipse.RadiusX, tsEllipse.RadiusY).ToNurbsCurve();
+            }
+            else if (curve is TKGD3.Curves.LineCurve tsline)
+            {
+                return tsline.ToRhino();
+            }
+            else  //(curve is TKGD3.Curves.PolylineCurve tspoly)
+            {
+                //return tspoly.ToRhino();
+                return null;
+            }
+
+
+        }
+
+        static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve rhinoCurve)
+        {
+            bool r = rhinoCurve.IsRational;
+            bool p = rhinoCurve.IsPeriodic;
+            int d = rhinoCurve.Degree;
+            DoubleList k = ToDoubleList(rhinoCurve.Knots, d);
+            PointList pts = ToPointList(rhinoCurve.Points);
+            DoubleList w = ToDoubleList(rhinoCurve.Points);
             BSpline b = new BSpline(p, d, k);
             if (r)
             {
                 //var w = c.Points.ConvertAll(x => x.Weight);
-                BSplineCurve bs = new BSplineCurve(b, pts, w);
-                return bs;
+                BSplineCurve bsplineCurve = new BSplineCurve(b, pts, w);
+                return bsplineCurve;
             }
             else
             {
-                BSplineCurve bs = new BSplineCurve(b, pts);
-                return bs;
+                BSplineCurve bsplineCurve = new BSplineCurve(b, pts);
+                return bsplineCurve;
             }
 
         }
 
-        static public TopSolid.Kernel.G.D2.Curves.BSplineCurve ToHost2d(this Rhino.Geometry.NurbsCurve c)
+        static public TopSolid.Kernel.G.D2.Curves.BSplineCurve ToHost2d(this Rhino.Geometry.NurbsCurve rhinoCurve)
         {
-            bool r = c.IsRational;
-            bool p = c.IsPeriodic;
-            int d = c.Degree;
-            DoubleList k = ToDoubleList(c.Knots, d);
-            TKGD2.PointList pts = ToPointList2D(c.Points);
-            DoubleList w = ToDoubleList(c.Points);
+            bool r = rhinoCurve.IsRational;
+            bool p = rhinoCurve.IsPeriodic;
+            int d = rhinoCurve.Degree;
+            DoubleList k = ToDoubleList(rhinoCurve.Knots, d);
+            TKGD2.PointList pts = ToPointList2D(rhinoCurve.Points);
+            DoubleList w = ToDoubleList(rhinoCurve.Points);
             BSpline b = new BSpline(p, d, k);
             if (r)
             {
                 //var w = c.Points.ConvertAll(x => x.Weight);
-                TKGD2.Curves.BSplineCurve bs = new TKGD2.Curves.BSplineCurve(b, pts, w);
-                return bs;
+                TKGD2.Curves.BSplineCurve bsplineCurve = new TKGD2.Curves.BSplineCurve(b, pts, w);
+                return bsplineCurve;
             }
             else
             {
-                TKGD2.Curves.BSplineCurve bs = new TKGD2.Curves.BSplineCurve(b, pts);
-                return bs;
+                TKGD2.Curves.BSplineCurve bsplineCurve = new TKGD2.Curves.BSplineCurve(b, pts);
+                return bsplineCurve;
             }
 
         }
@@ -197,7 +221,7 @@ namespace EPFL.GrasshopperTopSolid
         /// <summary>
         /// Converts a single segment of a TopSolid Profile to a Rhino NurbsCurve
         /// </summary>
-        /// <param name="curve"></param>
+        /// <param name="curve">BSplineCurve to convert</param>
         /// <returns></returns>
         static public Rhino.Geometry.NurbsCurve ToRhino(this BSplineCurve curve)
         {
@@ -260,7 +284,7 @@ namespace EPFL.GrasshopperTopSolid
             return rhCurve;
         }
 
-        static public Rhino.Geometry.NurbsCurve ToRhino(this IGeometricProfile profile)
+        static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD3.Curves.IGeometricProfile profile)
         {
             PolyCurve rhCurve = new PolyCurve();
             foreach (IGeometricSegment seg in profile.Segments)
@@ -271,7 +295,18 @@ namespace EPFL.GrasshopperTopSolid
             return rhCurve.ToNurbsCurve();
         }
 
-        static public Rhino.Geometry.NurbsCurve ToRhino(TKGD2.Curves.BSplineCurve curve)
+        static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD2.Curves.IGeometricProfile profile)
+        {
+            PolyCurve rhCurve = new PolyCurve();
+            foreach (TKGD2.Curves.IGeometricSegment seg in profile.Segments)
+            {
+                rhCurve.AppendSegment(seg.GetOrientedCurve().Curve.GetBSplineCurve(false, false).ToRhino());
+            }
+
+            return rhCurve.ToNurbsCurve();
+        }
+
+        static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD2.Curves.BSplineCurve curve)
         {
 
             #region Variables Declaration           
@@ -338,7 +373,7 @@ namespace EPFL.GrasshopperTopSolid
             return rhCurve;
         }
 
-        static public Rhino.Geometry.NurbsCurve ToRhino(Profile profile)
+        static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD3.Sketches.Profile profile)
         {
             Rhino.Collections.CurveList rhCurvesList = new Rhino.Collections.CurveList();
             Rhino.Geometry.NurbsCurve rhCurve = null;
@@ -356,7 +391,7 @@ namespace EPFL.GrasshopperTopSolid
             return rhCurve;
         }
 
-        static public Rhino.Geometry.NurbsCurve ToRhino(TopSolid.Kernel.G.D2.Sketches.Profile profile)
+        static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD2.Sketches.Profile profile)
         {
             Rhino.Collections.CurveList rhCurvesList = new Rhino.Collections.CurveList();
             Rhino.Geometry.NurbsCurve rhCurve = null;
@@ -374,122 +409,10 @@ namespace EPFL.GrasshopperTopSolid
             return rhCurve;
         }
 
-
-        static bool KnotAlmostEqualTo(double max, double min) =>
-        KnotAlmostEqualTo(max, min, 1.0e-09);
-
-        static bool KnotAlmostEqualTo(double max, double min, double tol)
-        {
-            var length = max - min;
-            if (length <= tol)
-                return true;
-
-            return length <= max * tol;
-        }
-
-
-        static double KnotPrevNotEqual(double max) =>
-          KnotPrevNotEqual(max, 1.0000000E-9 * 1000.0);
-
-        static double KnotPrevNotEqual(double max, double tol)
-        {
-            const double delta2 = 2.0 * 1E-16;
-            var value = max - tol - delta2;
-
-            if (!KnotAlmostEqualTo(max, value, tol))
-                return value;
-
-            return max - (max * (tol + delta2));
-        }
-        static DoubleList ToDoubleList(NurbsCurvePointList list)
-        {
-            var count = list.Count;
-            DoubleList w = new DoubleList(count);
-            foreach (ControlPoint p in list)
-            {
-                var weight = p.Weight;
-                w.Add(weight);
-            }
-            return w;
-        }
-        static DoubleList ToDoubleList(NurbsCurveKnotList list, int degree)
-        {
-            var count = list.Count;
-            var knots = new double[count + 2];
-
-            var min = list[0];
-            var max = list[count - 1];
-            var mid = 0.5 * (min + max);
-            var factor = 1.0 / (max - min); // normalized
-
-            // End knot
-            knots[count + 1] = /*(list[count - 1] - max) * factor +*/ 1.0;
-            for (int k = count - 1; k >= count - degree; --k)
-                knots[k + 1] = /*(list[k] - max) * factor +*/ 1.0;
-
-            // Interior knots (in reverse order)
-            int multiplicity = degree + 1;
-            for (int k = count - degree - 1; k >= degree; --k)
-            {
-                double current = list[k] <= mid ?
-                  (list[k] - min) * factor + 0.0 :
-                  (list[k] - max) * factor + 1.0;
-
-                double next = knots[k + 2];
-                if (KnotAlmostEqualTo(next, current))
-                {
-                    multiplicity++;
-                    if (multiplicity > degree - 2)
-                        current = KnotPrevNotEqual(next);
-                    else
-                        current = next;
-                }
-                else multiplicity = 1;
-
-                knots[k + 1] = current;
-            }
-
-            // Start knot
-            for (int k = degree - 1; k >= 0; --k)
-                knots[k + 1] = /*(list[k] - min) * factor +*/ 0.0;
-            knots[0] = /*(list[0] - min) * factor +*/ 0.0;
-
-            knots.ToList();
-            var kDl = new DoubleList();
-            foreach (double d in knots)
-            {
-                kDl.Add(d);
-            }
-            return kDl;
-        }
-        static PointList ToPointList(NurbsCurvePointList list)
-        {
-            var count = list.Count;
-            PointList points = new PointList();
-            foreach (ControlPoint p in list)
-            {
-                var location = p.Location;
-                var pt = new TKG.D3.Point(location.X, location.Y, location.Z);
-                points.Add(pt);
-            }
-
-            return points;
-        }
-
-        static TKGD2.PointList ToPointList2D(NurbsCurvePointList list)
-        {
-            var count = list.Count;
-            TKGD2.PointList points = new TKGD2.PointList();
-            foreach (ControlPoint p in list)
-            {
-                var location = p.Location;
-                var pt = new TKG.D2.Point(location.X, location.Y);
-                points.Add(pt);
-            }
-
-            return points;
-        }
         #endregion
+
+
+
         #region Surface
         public static TKG.D3.Surfaces.BSplineSurface ToHost(this NurbsSurface s)
         {
@@ -1316,6 +1239,124 @@ namespace EPFL.GrasshopperTopSolid
             }
         }
         //*/
+        #endregion
+
+        //Methods for IEnumerables and other utility converters
+        #region utilities
+        static bool KnotAlmostEqualTo(double max, double min) =>
+        KnotAlmostEqualTo(max, min, 1.0e-09);
+
+        static bool KnotAlmostEqualTo(double max, double min, double tol)
+        {
+            var length = max - min;
+            if (length <= tol)
+                return true;
+
+            return length <= max * tol;
+        }
+
+
+        static double KnotPrevNotEqual(double max) =>
+          KnotPrevNotEqual(max, 1.0000000E-9 * 1000.0);
+
+        static double KnotPrevNotEqual(double max, double tol)
+        {
+            const double delta2 = 2.0 * 1E-16;
+            var value = max - tol - delta2;
+
+            if (!KnotAlmostEqualTo(max, value, tol))
+                return value;
+
+            return max - (max * (tol + delta2));
+        }
+        static DoubleList ToDoubleList(NurbsCurvePointList list)
+        {
+            var count = list.Count;
+            DoubleList w = new DoubleList(count);
+            foreach (ControlPoint p in list)
+            {
+                var weight = p.Weight;
+                w.Add(weight);
+            }
+            return w;
+        }
+        static DoubleList ToDoubleList(NurbsCurveKnotList list, int degree)
+        {
+            var count = list.Count;
+            var knots = new double[count + 2];
+
+            var min = list[0];
+            var max = list[count - 1];
+            var mid = 0.5 * (min + max);
+            var factor = 1.0 / (max - min); // normalized
+
+            // End knot
+            knots[count + 1] = /*(list[count - 1] - max) * factor +*/ 1.0;
+            for (int k = count - 1; k >= count - degree; --k)
+                knots[k + 1] = /*(list[k] - max) * factor +*/ 1.0;
+
+            // Interior knots (in reverse order)
+            int multiplicity = degree + 1;
+            for (int k = count - degree - 1; k >= degree; --k)
+            {
+                double current = list[k] <= mid ?
+                  (list[k] - min) * factor + 0.0 :
+                  (list[k] - max) * factor + 1.0;
+
+                double next = knots[k + 2];
+                if (KnotAlmostEqualTo(next, current))
+                {
+                    multiplicity++;
+                    if (multiplicity > degree - 2)
+                        current = KnotPrevNotEqual(next);
+                    else
+                        current = next;
+                }
+                else multiplicity = 1;
+
+                knots[k + 1] = current;
+            }
+
+            // Start knot
+            for (int k = degree - 1; k >= 0; --k)
+                knots[k + 1] = /*(list[k] - min) * factor +*/ 0.0;
+            knots[0] = /*(list[0] - min) * factor +*/ 0.0;
+
+            knots.ToList();
+            var kDl = new DoubleList();
+            foreach (double d in knots)
+            {
+                kDl.Add(d);
+            }
+            return kDl;
+        }
+        static PointList ToPointList(NurbsCurvePointList list)
+        {
+            var count = list.Count;
+            PointList points = new PointList();
+            foreach (ControlPoint p in list)
+            {
+                var location = p.Location;
+                var pt = new TKG.D3.Point(location.X, location.Y, location.Z);
+                points.Add(pt);
+            }
+
+            return points;
+        }
+
+        static TKGD2.PointList ToPointList2D(NurbsCurvePointList list)
+        {
+            var count = list.Count;
+            TKGD2.PointList points = new TKGD2.PointList();
+            foreach (ControlPoint p in list)
+            {
+                var location = p.Location;
+                var pt = new TKG.D2.Point(location.X, location.Y);
+                points.Add(pt);
+            }
+
+            return points;
+        }
         #endregion
     }
 }
