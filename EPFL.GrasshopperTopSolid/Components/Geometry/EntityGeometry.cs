@@ -57,7 +57,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             {
                 if (wrapper.Value is string || wrapper.Value is GH_String)
                 {
-                    res = currentDocument.RootEntity.Constituents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as Entity;
+                    res = currentDocument.RootEntity.SearchDeepEntity(wrapper.Value.ToString());
                 }
 
                 else if (wrapper.Value is Entity)
@@ -66,12 +66,14 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
                 }
             }
 
+            if (res == null) AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Couldn't find entity");
+
             if (!res.HasGeometry)
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Entity has no Geometry");
             else
             {
                 DA.SetData("TSGeometry", res.Geometry);
-                DA.SetData("RhGeometry", ConvertTSGeometryToRhino.ToRhino(res.Geometry));
+                DA.SetData("RhGeometry", TSGeometryToRhino.ToRhino(res.Geometry));
             }
 
 

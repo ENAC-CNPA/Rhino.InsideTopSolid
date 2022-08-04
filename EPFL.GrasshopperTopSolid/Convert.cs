@@ -163,7 +163,7 @@ namespace EPFL.GrasshopperTopSolid
             {
                 return tsline.ToRhino();
             }
-            else  //(curve is TKGD3.Curves.PolylineCurve tspoly)
+            else  //(curve is TKGD3.Curves.PolylineCurve tspoly) //TODO
             {
                 //return tspoly.ToRhino();
                 return null;
@@ -549,7 +549,7 @@ namespace EPFL.GrasshopperTopSolid
         #region Breps
 
 
-        static public Brep[] ToRhino(Shape shape)
+        static public Brep[] ToRhino(this Shape shape)
         {
             List<Brep> listofBrepsrf = new List<Brep>();
             Brep brep = new Brep();
@@ -1241,10 +1241,36 @@ namespace EPFL.GrasshopperTopSolid
         //*/
         #endregion
 
+        #region Other Solid or surface Geometries
+
+        public static Rhino.Geometry.Box ToRhino(this TKGD3.Box box)
+        {
+            return new Rhino.Geometry.Box(box.Frame.ToRhino(), box.GetExtent().XExtent.ToRhino(), box.GetExtent().YExtent.ToRhino(), box.GetExtent().ZExtent.ToRhino());
+        }
+
+        //public static TKGD3.Box ToHost(this Rhino.Geometry.Box box)
+        //{
+        //    var TsBox = new TKGD3.Box();
+        //    
+        //}
+
+
+        #endregion
+
         //Methods for IEnumerables and other utility converters
         #region utilities
         static bool KnotAlmostEqualTo(double max, double min) =>
         KnotAlmostEqualTo(max, min, 1.0e-09);
+
+        public static Interval ToRhino(this TKG.D1.Extent extent)
+        {
+            return new Interval(extent.Min, extent.Max);
+        }
+
+        public static TKG.S.D3.Point PointToSPoint(this TKGD3.Point point)
+        {
+            return new TKG.S.D3.Point((float)point.X, (float)point.Y, (float)point.Z);
+        }
 
         static bool KnotAlmostEqualTo(double max, double min, double tol)
         {

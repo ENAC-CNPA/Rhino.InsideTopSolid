@@ -5,47 +5,60 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using G = TopSolid.Kernel.G;
+using TKG = TopSolid.Kernel.G;
 using Grasshopper.Kernel;
 using TopSolid.Kernel.G.D3.Curves;
 
 namespace EPFL.GrasshopperTopSolid
 {
-    public static class ConvertTSGeometryToRhino
+    public static class TSGeometryToRhino
     {
-        static public IGH_GeometricGoo ToRhino(G.IGeometry tsGeometry)
+        static public IGH_GeometricGoo ToRhino(TKG.IGeometry tsGeometry)
         {
             IGH_GeometricGoo ghGeometry = null;
 
             switch (tsGeometry)
             {
                 case TopSolid.Kernel.G.D3.Point point:
-                    GH_Point ghPoint = new GH_Point();
-                    GH_Convert.ToGHPoint(point.ToRhino(), GH_Conversion.Both, ref ghPoint);
-                    ghGeometry = ghPoint;
-                    return ghGeometry;
-                    break;
+                    {
+                        GH_Point ghPoint = new GH_Point();
+                        GH_Convert.ToGHPoint(point.ToRhino(), GH_Conversion.Both, ref ghPoint);
+                        ghGeometry = ghPoint;
+                        return ghGeometry;
+                    }
 
                 case IGeometricProfile profile:
-                    GH_Curve ghCurve = new GH_Curve();
-                    GH_Convert.ToGHCurve(profile.ToRhino(), GH_Conversion.Both, ref ghCurve);
-                    ghGeometry = ghCurve;
-                    return ghGeometry;
-                    break;
+                    {
+                        GH_Curve ghCurve = new GH_Curve();
+                        GH_Convert.ToGHCurve(profile.ToRhino(), GH_Conversion.Both, ref ghCurve);
+                        ghGeometry = ghCurve;
+                        return ghGeometry;
+                    }
 
-                case G.D2.Curves.IGeometricProfile profile2d:
-                    GH_Curve ghCurve2d = new GH_Curve();
-                    GH_Convert.ToGHCurve(profile2d.ToRhino(), GH_Conversion.Both, ref ghCurve2d);
-                    ghGeometry = ghCurve2d;
-                    return ghGeometry;
-                    break;
+                case TKG.D2.Curves.IGeometricProfile profile2d:
+                    {
+                        GH_Curve ghCurve = new GH_Curve();
+                        GH_Convert.ToGHCurve(profile2d.ToRhino(), GH_Conversion.Both, ref ghCurve);
+                        ghGeometry = ghCurve;
+                        return ghGeometry;
+                    }
 
-                case G.D3.Curves.Curve curve: //TODO
-                    //GH_Curve ghCurve = new GH_Curve();
-                    //GH_Convert.ToGHCurve(curve.ToRhino(), GH_Conversion.Both, ref gh);
+                case TKG.D3.Curves.Curve curve:
+                    {
+                        GH_Curve ghCurve = new GH_Curve();
+                        GH_Convert.ToGHCurve(curve.ToRhino(), GH_Conversion.Both, ref ghCurve);
+                        ghGeometry = ghCurve;
+                        return ghGeometry;
+                    }
 
-                    //return ghGeometry;
-                    break;
+                case TKG.D3.Shapes.Shape shape:
+                    {
+                        GH_Brep ghBrep = new GH_Brep();
+                        var breppp = shape.ToRhino();
+                        GH_Convert.ToGHBrep(shape.ToRhino().First(), GH_Conversion.Both, ref ghBrep);
+                        ghGeometry = ghBrep;
+                        return ghGeometry;
+                    }
 
             }
             return null;
