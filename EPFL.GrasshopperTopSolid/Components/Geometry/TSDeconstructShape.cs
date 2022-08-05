@@ -74,8 +74,12 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             Shape shape = tsGeometry as Shape;
             if (shape is null) return;
 
-            DA.SetDataList("Vertices", shape.Vertices.Select(x => x.GetGeometry().ToRhino()));
-            DA.SetDataList("Edges", shape.Edges.Select(x => x.GetGeometry(true).ToRhino()));
+            DA.SetDataList("Vertices", shape.Vertices.Select(x => x.GetGeometry()));
+            DA.SetDataList("Edges", shape.Edges.Select(x => x.GetGeometry(true)));
+            DA.SetDataList("Faces", shape.Faces.Select(x => x.GetGeometry(true)));
+
+
+
 
         }
         /// <summary>

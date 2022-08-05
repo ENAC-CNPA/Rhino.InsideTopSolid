@@ -35,6 +35,7 @@ using TopSolid.Kernel.DB.D3.Sketches.Operations;
 using TopSolid.Kernel.DB.D3.Curves;
 using TopSolid.Kernel.TX.Undo;
 using TX = TopSolid.Kernel.TX;
+using TUI = TopSolid.Kernel.UI;
 using TopSolid.Kernel.SX.Drawing;
 
 namespace EPFL.GrasshopperTopSolid
@@ -80,6 +81,18 @@ namespace EPFL.GrasshopperTopSolid
         {
             return new Vector3d(v.X, v.Y, v.Z);
         }
+
+        public static Rhino.Geometry.Vector3d ToRhino(this TKGD3.Axis axis)
+        {
+            return new Vector3d(axis.Vx.X, axis.Vx.Y, axis.Vx.Z);
+        }
+
+        static public Vector3d ToRhino(this TKG.D3.UnitVector v)
+        {
+            return new Vector3d(v.X, v.Y, v.Z);
+        }
+
+
         #endregion
         #region Line
         static public TKG.D3.Curves.LineCurve ToHost(this Rhino.Geometry.Line l)
@@ -398,7 +411,7 @@ namespace EPFL.GrasshopperTopSolid
 
             for (int i = 0; i < (profile.Segments.Count()); i++)
             {
-                rhCurvesList.Add(ToRhino(profile.Segments.ElementAt(i).Geometry.GetBSplineCurve(false, false, TopSolid.Kernel.G.Precision.LinearPrecision)));
+                rhCurvesList.Add(ToRhino(profile.Segments.ElementAt(i).Geometry.GetBSplineCurve(false, false, TKG.Precision.LinearPrecision)));
             }
 
             if (NurbsCurve.JoinCurves(rhCurvesList).Length != 0)
@@ -440,6 +453,37 @@ namespace EPFL.GrasshopperTopSolid
                 return bs;
             }
 
+        }
+
+        public static Rhino.Geometry.Surface ToRhino(this IParametricSurface inTSSurface)
+        {
+            Rhino.Geometry.Surface surf = null;
+            if (inTSSurface is TKGD3.Surfaces.PlaneSurface planarsurf)
+            {
+                surf = new Rhino.Geometry.PlaneSurface(planarsurf.Plane.ToRhino(), planarsurf.Range.XExtent.ToRhino(), planarsurf.Range.YExtent.ToRhino());
+            }
+
+            else if (inTSSurface is RevolvedSurface revSurf)
+            {
+                if (revSurf.Curve.IsLinear())
+                {
+                    TKGD3.Curves.LineCurve line = (TKGD3.Curves.LineCurve)revSurf.Curve;
+                    surf = RevSurface.Create(line.ToRhino().Line, new Line(revSurf.Axis.Po.ToRhino(), revSurf.Axis.Vx.ToRhino()));
+                }
+
+                else
+                {
+                    surf = RevSurface.Create(revSurf.Curve.ToRhino(), new Line(revSurf.Axis.Po.ToRhino(), revSurf.Axis.Vx.ToRhino()));
+                }
+            }
+
+            else if (inTSSurface is TKGD3.Surfaces.Surface surface)
+
+            {
+                surf = surface.GetBsplineGeometry(TKG.Precision.LinearPrecision, false, false, false).ToRhino();
+            }
+            return surf;
+            //return surface.GetBsplineGeometry(TKG.Precision.ModelingLinearTolerance, false, false, false).ToRhino();
         }
 
         public static Rhino.Geometry.Surface ToRhino(this BSplineSurface surface)
