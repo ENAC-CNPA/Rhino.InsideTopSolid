@@ -91,12 +91,28 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             Grasshopper.Kernel.Types.GH_ObjectWrapper obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
             DA.GetData(0, ref obj);
             if (obj == null) return;
-            IFolder compEntity = (IFolder)obj.Value;
-
-            foreach (var tsObj in compEntity.Objects)
+            IFolder compEntity = obj.Value as IFolder;
+            if (compEntity != null)
             {
-                DA.SetData($"{tsObj.GetType().Name} : {tsObj.GetLocalizedName()}", tsObj);
+                foreach (var tsObj in compEntity.Objects)
+                {
+                    DA.SetData($"{tsObj.GetType().Name} : {tsObj.GetLocalizedName()}", tsObj);
+                }
             }
+
+            else
+            {
+                CompositeEntity composite = obj.Value as CompositeEntity;
+                if (composite != null)
+                {
+                    foreach (var item in composite.Constituents)
+                    {
+                        DA.SetData($"{item.GetType().Name} : {item.LocalizedName}", item);
+                    }
+
+                }
+            }
+
         }
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)
@@ -150,7 +166,9 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
                 GH_ObjectWrapper ghObj = new GH_ObjectWrapper();
                 ghObj = (GH_ObjectWrapper)ghGoo;
-                IFolder compEntity = (IFolder)ghObj.Value;
+                IFolder compEntity = ghObj.Value as IFolder;
+
+
 
                 if (compEntity != null)
                 {
@@ -158,6 +176,20 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                     {
                         listofDocsNames.Add($"{item.GetType().Name} : {item.GetLocalizedName()}");
                     }
+                }
+
+                else
+                {
+                    CompositeEntity composite = ghObj.Value as CompositeEntity;
+                    if (composite != null)
+                    {
+                        foreach (var item in composite.Constituents)
+                        {
+                            listofDocsNames.Add($"{item.GetType().Name} : {item.LocalizedName}");
+                        }
+
+                    }
+
                 }
 
             }

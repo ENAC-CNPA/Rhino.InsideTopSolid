@@ -96,7 +96,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                 }
                 else if (wrapper.Value is IDocumentItem)
                     doc = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
-                else if (doc is IDocument)
+                else if (wrapper.Value is IDocument)
                     doc = wrapper.Value as ModelingDocument;
             }
 

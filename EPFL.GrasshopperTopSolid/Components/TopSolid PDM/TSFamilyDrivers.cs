@@ -19,6 +19,7 @@ using TopSolid.Kernel.DB.Families.Drivers;
 using TopSolid.Kernel.DB.Families.Parameters;
 using TopSolid.Kernel.DB.Parameters;
 using TopSolid.Kernel.DB.SmartObjects;
+using TopSolid.Kernel.G;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Families;
 using TopSolid.Kernel.TX.Pdm;
@@ -154,11 +155,10 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                     switch (driverType)
                     {
                         case InstanceDriverType.Point:
-                            val = new BasicSmartPoint(null, (inputValue.Value as PointEntity).Geometry);
-                            if (val == null)
-                            {
-
-                            }
+                            if (inputValue.Value is IGeometry geometry)
+                                val = new BasicSmartPoint(null, geometry);
+                            else if (inputValue.Value is PointEntity pointEntity)
+                                val = new BasicSmartPoint(null, pointEntity.Geometry);
                             break;
 
                     }
@@ -176,6 +176,11 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                         case InstanceDriverType.Integer:
                             val = new BasicSmartInteger(null, (int)((GH_Number)inputValue.Value).Value);
                             break;
+                            //case InstanceDriverType.Point:
+                            //    val = new BasicSmartPoint(null, (inputValue.Value as PointEntity)?.Geometry);
+                            //    if (val is null)
+                            //        val = new BasicSmartPoint(null, (IGeometry)inputValue.Value);
+                            //    break;
                     }
 
                 }
@@ -203,10 +208,11 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             InclusionOperation inclusionOperation = new InclusionOperation(assemblyDocument, 0, instance as DesignDocument, instanceMaker, (instance as DesignDocument).CurrentRepresentationEntity, false, new ConfigurationEntity(assemblyDocument, 0), null);
 
             inclusionOperation.Create();
+            if (inclusionOperation.IsInvalid) inclusionOperation.TryRepairInvalid();
 
 
             DA.SetData(0, instance);
-
+            UndoSequence.End();
         }
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)

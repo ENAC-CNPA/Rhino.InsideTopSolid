@@ -8,6 +8,7 @@ using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using TopSolid.Kernel.DB.Documents;
 using TopSolid.Kernel.DB.Entities;
 using TopSolid.Kernel.TX.Documents;
+using TopSolid.Kernel.TX.Pdm;
 using G = TopSolid.Kernel.G;
 using UI = TopSolid.Kernel.UI;
 
@@ -30,6 +31,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
+            pManager.AddGenericParameter("TSDocument", "Doc", "Document containing entity (optional, if nothing will take active document", GH_ParamAccess.item);
+            pManager[0].Optional = true;
             pManager.AddGenericParameter("TSEntity", "Entity", "TopSolid Entity or Entity Name", GH_ParamAccess.item);
 
         }
@@ -39,6 +42,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
+
             pManager.AddGenericParameter("TSGeometry", "Geometry", "TopSolid Geometry", GH_ParamAccess.item);
             pManager.AddGeometryParameter("RhGeometry", "Geometry", "Geometry converted to Rhino", GH_ParamAccess.item);
         }
@@ -50,9 +54,27 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
-            DA.GetData("TSEntity", ref wrapper);
             Entity res = null;
-            Document currentDocument = UI.Application.CurrentDocument as ModelingDocument;
+            Document currentDocument = null;
+            if (DA.GetData("TSDocument", ref wrapper))
+            {
+                if (wrapper.Value != null)
+                {
+                    if (wrapper.Value is string || wrapper.Value is GH_String)
+                    {
+                        currentDocument = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
+                    }
+                    else if (wrapper.Value is IDocumentItem)
+                        currentDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
+                    else if (wrapper.Value is IDocument)
+                        currentDocument = wrapper.Value as ModelingDocument;
+                }
+            }
+
+            if (currentDocument is null)
+                currentDocument = UI.Application.CurrentDocument as ModelingDocument;
+
+            DA.GetData("TSEntity", ref wrapper);
             if (wrapper != null)
             {
                 if (wrapper.Value is string || wrapper.Value is GH_String)
