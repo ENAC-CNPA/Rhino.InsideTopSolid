@@ -16,6 +16,7 @@ using TopSolid.Kernel.DB.Entities;
 using TopSolid.Kernel.DB.Families;
 using TopSolid.Kernel.DB.Families.Documents;
 using TopSolid.Kernel.DB.Families.Drivers;
+using TopSolid.Kernel.DB.Families.Drivers.Substitutions.Rules;
 using TopSolid.Kernel.DB.Families.Parameters;
 using TopSolid.Kernel.DB.Parameters;
 using TopSolid.Kernel.DB.SmartObjects;
@@ -25,6 +26,7 @@ using TopSolid.Kernel.TX.Families;
 using TopSolid.Kernel.TX.Pdm;
 using TopSolid.Kernel.TX.Properties;
 using TopSolid.Kernel.TX.Undo;
+using TopSolid.Kernel.TX.Units;
 
 namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 {
@@ -142,23 +144,33 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
             InstanceDriverValueList driverValues = new InstanceDriverValueList(null);
 
-            foreach (var driver in familyDocument.DriversFolderEntity.DriverDefinitionEntities)
+            foreach (var driver in smartFamily.FamilyDocument.DriversFolderEntity.DriverDefinitionEntities)
             {
                 GH_ObjectWrapper inputValue = null;
 
                 DA.GetData(driver.EditingName, ref inputValue);
                 InstanceDriverType driverType = driver.DrivenEntity.DriverType;
+
                 SmartObject val = null;
                 if (driver.IsGeometricDriver)
                 {
+
 
                     switch (driverType)
                     {
                         case InstanceDriverType.Point:
                             if (inputValue.Value is IGeometry geometry)
-                                val = new BasicSmartPoint(null, geometry);
+                            {
+                                val = new BasicSmartPoint(driver, (TopSolid.Kernel.G.D3.Point)geometry);
+                                driver.SetGeometry(geometry, false);
+                            }
                             else if (inputValue.Value is PointEntity pointEntity)
-                                val = new BasicSmartPoint(null, pointEntity.Geometry);
+                            {
+                                val = new BasicSmartPoint(driver, pointEntity.Geometry);
+                                driver.SetGeometry(pointEntity.Geometry, false);
+                            }
+
+
                             break;
 
                     }
@@ -171,7 +183,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                             val = new BasicSmartText(null, (inputValue.Value as GH_String).ToString());
                             break;
                         case InstanceDriverType.Real:
-                            val = inputValue.Value as SmartReal;
+                            var real = (GH_Number)inputValue.Value;
+                            val = new BasicSmartReal(null, new Real((double)real.Value, new UnitFormat(UnitType.Length)));
                             break;
                         case InstanceDriverType.Integer:
                             val = new BasicSmartInteger(null, (int)((GH_Number)inputValue.Value).Value);
@@ -188,6 +201,10 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
                 BasisInstanceDriverValue basisdriver = new BasisInstanceDriverValue(null, driver);
                 basisdriver.DriverValue = val;
+
+                var manages = basisdriver.ManagesPositioning;
+                //var drivenval = driver.DrivenEntity.DriverValue;
+                //driver.DrivenEntity.SetDriverValue(val);
                 driverValues.Add(basisdriver);
             }
 
@@ -196,16 +213,27 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             InstanceMaker instanceMaker = new InstanceMaker(null, smartFamily);
             instanceMaker.SmartCode = null;
             instanceMaker.SubstitutionRules = null;
+
+
+
             instanceMaker.DriverValues = driverValues;
+
+
             instanceMaker.IsSignatureCheckStrict = true;
+            instanceMaker.ManagesPositioning = true;
+
+
+            var driveposition = instanceMaker.ContainsDriversManagingPositioning;
 
 
 
             instance = instanceMaker.MakeInstanceDocument(false, out minorCreated);
 
+
             assemblyDocument.EnsureIsDirty();
 
-            InclusionOperation inclusionOperation = new InclusionOperation(assemblyDocument, 0, instance as DesignDocument, instanceMaker, (instance as DesignDocument).CurrentRepresentationEntity, false, new ConfigurationEntity(assemblyDocument, 0), null);
+            InclusionOperation inclusionOperation = new InclusionOperation(assemblyDocument, 0, instance as DesignDocument, instanceMaker, (instance as DesignDocument).CurrentRepresentationEntity, false, null, null);
+            assemblyDocument.PositionInclusion(inclusionOperation, true, false, TopSolid.Cad.Design.DB.Constraints.FixedAddingMode.FirstInclusion, -1, null);
 
             inclusionOperation.Create();
             if (inclusionOperation.IsInvalid) inclusionOperation.TryRepairInvalid();
