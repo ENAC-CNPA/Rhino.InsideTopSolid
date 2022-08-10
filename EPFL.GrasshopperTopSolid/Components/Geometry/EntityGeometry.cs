@@ -4,13 +4,17 @@ using System.Linq;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
+using TopSolid.Kernel.DB.D2.Sketches;
 using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using TopSolid.Kernel.DB.Documents;
 using TopSolid.Kernel.DB.Entities;
+using TopSolid.Kernel.G;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Pdm;
-using G = TopSolid.Kernel.G;
-using UI = TopSolid.Kernel.UI;
+using TKG = TopSolid.Kernel.G;
+using TKUI = TopSolid.Kernel.UI;
+using SK2D = TopSolid.Kernel.G.D2.Sketches;
+using SK3D = TopSolid.Kernel.G.D3.Sketches;
 
 namespace EPFL.GrasshopperTopSolid.Components.Geometry
 {
@@ -34,7 +38,6 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             pManager.AddGenericParameter("TSDocument", "Doc", "Document containing entity (optional, if nothing will take active document", GH_ParamAccess.item);
             pManager[0].Optional = true;
             pManager.AddGenericParameter("TSEntity", "Entity", "TopSolid Entity or Entity Name", GH_ParamAccess.item);
-
         }
 
         /// <summary>
@@ -54,6 +57,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
+            TKG.IGeometry geometry = null;
             Entity res = null;
             Document currentDocument = null;
             if (DA.GetData("TSDocument", ref wrapper))
@@ -72,7 +76,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             }
 
             if (currentDocument is null)
-                currentDocument = UI.Application.CurrentDocument as ModelingDocument;
+                currentDocument = TKUI.Application.CurrentDocument as ModelingDocument;
 
             DA.GetData("TSEntity", ref wrapper);
             if (wrapper != null)
@@ -80,25 +84,51 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
                 if (wrapper.Value is string || wrapper.Value is GH_String)
                 {
                     res = currentDocument.RootEntity.SearchDeepEntity(wrapper.Value.ToString());
+                    if (res != null)
+                    {
+                        if (!res.HasGeometry)
+                        {
+                            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Entity has no Geometry");
+                            return;
+                        }
+                        else geometry = res.Geometry;
+                    }
                 }
 
                 else if (wrapper.Value is Entity)
                 {
                     res = wrapper.Value as Entity;
+                    if (res != null)
+                    {
+                        if (!res.HasGeometry)
+                        {
+                            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Entity has no Geometry");
+                            return;
+                        }
+                        else geometry = res.Geometry;
+                    }
                 }
+
+                else if (wrapper.Value is IGeometry geo)
+                    geometry = geo;
+
+                //Sketch profiles are structs, not IGeometries, Maybe write a GetIGeomtry method? TODO
+                else if (wrapper.Value is SK2D.Profile profile)
+                {
+                    geometry = profile.MakeGeometricProfile();
+                }
+
+                var type = wrapper.Value.GetType();
             }
 
-            if (res == null) AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Couldn't find entity");
+            if (geometry is null)
+                return;
 
-            if (!res.HasGeometry)
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Entity has no Geometry");
             else
             {
-                DA.SetData("TSGeometry", res.Geometry);
-                DA.SetData("RhGeometry", TSGeometryToRhino.ToRhino(res.Geometry));
+                DA.SetData("TSGeometry", geometry);
+                DA.SetData("RhGeometry", geometry.ToRhino());
             }
-
-
         }
 
         /// <summary>

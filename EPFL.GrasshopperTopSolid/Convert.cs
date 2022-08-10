@@ -128,6 +128,13 @@ namespace EPFL.GrasshopperTopSolid
         {
             return new Rhino.Geometry.Plane(p.Po.ToRhino(), new Vector3d(p.Ax.Vx.X, p.Ax.Vx.Y, p.Ax.Vx.Z));
         }
+
+        static public Rhino.Geometry.Plane ToRhino(this TKG.D2.Frame p)
+        {
+            Point3d origin = new Point3d(p.Po.X, p.Po.Y, 0);
+            return new Rhino.Geometry.Plane(origin, new Vector3d(p.Vx.X, p.Vx.Y, 0), new Vector3d(p.Vy.X, p.Vy.Y, 0));
+
+        }
         static public Rhino.Geometry.Plane ToRhino(this TKG.D3.Plane p)
         {
             return new Rhino.Geometry.Plane(p.Po.ToRhino(), new Vector3d(p.Ax.Vx.X, p.Ax.Vx.Y, p.Ax.Vx.Z), new Vector3d(p.Ay.Vx.X, p.Ay.Vx.Y, p.Ay.Vx.Z));

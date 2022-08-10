@@ -42,6 +42,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         {
             pManager.AddGenericParameter("Profiles", "Profiles", "Profiles as List", GH_ParamAccess.list);
             pManager.AddGenericParameter("Points", "Pts", "Points as List", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Frame", "Frame", "Sketch Frame", GH_ParamAccess.item);
+
         }
 
         /// <summary>
@@ -86,7 +88,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
                 return;
 
             DA.SetDataList("Profiles", sketch.Profiles);
-            DA.SetDataList("Profiles", sketch.Vertices.Select(x => x.Geometry));
+            DA.SetDataList("Points", sketch.Vertices.Select(x => x.Geometry));
+            DA.SetData("Frame", sketch.Frame);
 
         }
 

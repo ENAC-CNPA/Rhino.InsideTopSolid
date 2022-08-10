@@ -13,13 +13,21 @@ namespace EPFL.GrasshopperTopSolid
 {
     public static class TSGeometryToRhino
     {
-        static public IGH_GeometricGoo ToRhino(TKG.IGeometry tsGeometry)
+        static public IGH_GeometricGoo ToRhino(this TKG.IGeometry tsGeometry)
         {
             IGH_GeometricGoo ghGeometry = null;
 
             switch (tsGeometry)
             {
                 case TopSolid.Kernel.G.D3.Point point:
+                    {
+                        GH_Point ghPoint = new GH_Point();
+                        GH_Convert.ToGHPoint(point.ToRhino(), GH_Conversion.Both, ref ghPoint);
+                        ghGeometry = ghPoint;
+                        return ghGeometry;
+                    }
+
+                case TopSolid.Kernel.G.D2.Point point:
                     {
                         GH_Point ghPoint = new GH_Point();
                         GH_Convert.ToGHPoint(point.ToRhino(), GH_Conversion.Both, ref ghPoint);
@@ -54,11 +62,28 @@ namespace EPFL.GrasshopperTopSolid
                 case TKG.D3.Shapes.Shape shape:
                     {
                         GH_Brep ghBrep = new GH_Brep();
-                        var breppp = shape.ToRhino();
                         GH_Convert.ToGHBrep(shape.ToRhino().First(), GH_Conversion.Both, ref ghBrep);
                         ghGeometry = ghBrep;
                         return ghGeometry;
                     }
+                //TopSolid Frame converted to Rhino Planes
+                #region Frames
+                case TKG.D3.Frame frame:
+                    {
+                        GH_Plane ghPlan = new GH_Plane();
+                        GH_Convert.ToGHPlane(frame.ToRhino(), GH_Conversion.Both, ref ghPlan);
+                        ghGeometry = ghPlan;
+                        return ghGeometry;
+                    }
+
+                case TKG.D2.Frame frame:
+                    {
+                        GH_Plane ghPlan = new GH_Plane();
+                        GH_Convert.ToGHPlane(frame.ToRhino(), GH_Conversion.Both, ref ghPlan);
+                        ghGeometry = ghPlan;
+                        return ghGeometry;
+                    }
+                    #endregion
 
             }
             return null;
