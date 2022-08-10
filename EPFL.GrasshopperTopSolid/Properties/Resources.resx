@@ -118,6 +118,12 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="CoolingSketchBuildingOperation" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\CoolingSketchBuildingOperation.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CoolingSketchSolvingOperation" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\CoolingSketchSolvingOperation.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Document" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Document.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -141,6 +147,9 @@
   </data>
   <data name="PlanarSketchEntity" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\PlanarSketchEntity.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PlanarSketchToRollUpBuildingOperation" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PlanarSketchToRollUpBuildingOperation.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PreviewWindow_Visualize" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\PreviewWindow.Visualize.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

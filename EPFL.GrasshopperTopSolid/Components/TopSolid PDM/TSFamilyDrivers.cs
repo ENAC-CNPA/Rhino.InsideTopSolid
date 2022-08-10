@@ -50,10 +50,10 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         {
 
             IGH_Param ghParam;
-            while (Params.Input.Count > 2)
+            while (Params.Input.Count > 3)
             {
                 if (!Params.Input[0].VolatileData.IsEmpty) break;
-                ghParam = Params.Input[2];
+                ghParam = Params.Input[3];
                 //if (ghParam.VolatileData != null) continue;
                 Params.UnregisterInputParameter(ghParam);
             }
@@ -85,7 +85,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         {
             pManager.AddGenericParameter("TSFamily", "Family", "TopSolid Family Document or Family Name", GH_ParamAccess.item);
             pManager.AddGenericParameter("TSAssembly", "Assembly", "TopSolid Assembly document or Assembly Name", GH_ParamAccess.item);
-
+            pManager.AddBooleanParameter("Run", "Run", "Run Family inclusion and occurence creation", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -102,6 +102,10 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            bool run = false;
+            if (!DA.GetData("Run", ref run)) return;
+            if (!run) return;
+
             //Setting target document from input, or else take current document by default
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
             familyDocument = null;
@@ -154,25 +158,20 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                 SmartObject val = null;
                 if (driver.IsGeometricDriver)
                 {
-
-
                     switch (driverType)
                     {
                         case InstanceDriverType.Point:
                             if (inputValue.Value is IGeometry geometry)
                             {
-                                val = new BasicSmartPoint(driver, (TopSolid.Kernel.G.D3.Point)geometry);
-                                driver.SetGeometry(geometry, false);
+                                val = new BasicSmartPoint(null, (TopSolid.Kernel.G.D3.Point)geometry);
+                                //driver.SetGeometry(geometry, false);
                             }
                             else if (inputValue.Value is PointEntity pointEntity)
                             {
-                                val = new BasicSmartPoint(driver, pointEntity.Geometry);
-                                driver.SetGeometry(pointEntity.Geometry, false);
+                                val = new BasicSmartPoint(null, pointEntity.Geometry);
+                                //driver.SetGeometry(pointEntity.Geometry, false);
                             }
-
-
                             break;
-
                     }
                 }
                 else
@@ -215,20 +214,17 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             instanceMaker.SubstitutionRules = null;
 
 
-
             instanceMaker.DriverValues = driverValues;
 
 
             instanceMaker.IsSignatureCheckStrict = true;
             instanceMaker.ManagesPositioning = true;
 
-
-            var driveposition = instanceMaker.ContainsDriversManagingPositioning;
-
+            //var driveposition = instanceMaker.ContainsDriversManagingPositioning;
 
 
-            instance = instanceMaker.MakeInstanceDocument(false, out minorCreated);
 
+            instance = instanceMaker.MakePublicOrPrivateInstanceDocument(false, assemblyDocument, out minorCreated);
 
             assemblyDocument.EnsureIsDirty();
 
@@ -236,7 +232,9 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             assemblyDocument.PositionInclusion(inclusionOperation, true, false, TopSolid.Cad.Design.DB.Constraints.FixedAddingMode.FirstInclusion, -1, null);
 
             inclusionOperation.Create();
-            if (inclusionOperation.IsInvalid) inclusionOperation.TryRepairInvalid();
+
+            if (inclusionOperation.IsInvalid)
+                inclusionOperation.TryRepairInvalid();
 
 
             DA.SetData(0, instance);
