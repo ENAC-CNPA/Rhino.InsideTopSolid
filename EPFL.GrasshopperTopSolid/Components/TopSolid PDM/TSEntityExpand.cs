@@ -6,6 +6,7 @@ using Grasshopper.Kernel.Data;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
+using TopSolid.Kernel.DB.BackgroundDocuments;
 using TopSolid.Kernel.DB.Entities;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Pdm;
@@ -97,7 +98,13 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             Grasshopper.Kernel.Types.GH_ObjectWrapper obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
             DA.GetData(0, ref obj);
             if (obj == null) return;
-            CompositeEntity compEntity = (CompositeEntity)obj.Value;
+            CompositeEntity compEntity = null;
+            if (obj.Value is BackgroundDocumentEntity ent)
+            {
+                compEntity = ent.BackgroundDocument.RootEntity;
+            }
+            else
+                compEntity = (CompositeEntity)obj.Value;
 
             foreach (var tsObj in compEntity.Constituents)
             {
@@ -149,7 +156,14 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
                 GH_ObjectWrapper ghObj = new GH_ObjectWrapper();
                 ghObj = (GH_ObjectWrapper)ghGoo;
-                CompositeEntity compEntity = (CompositeEntity)ghObj.Value;
+                CompositeEntity compEntity = null;
+                if (ghObj.Value is BackgroundDocumentEntity ent)
+                {
+                    compEntity = ent.BackgroundDocument.RootEntity;
+                }
+
+                else
+                    compEntity = (CompositeEntity)ghObj.Value;
 
                 if (compEntity != null)
                 {

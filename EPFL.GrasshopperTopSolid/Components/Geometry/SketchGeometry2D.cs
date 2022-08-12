@@ -52,28 +52,27 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            ModelingDocument modellingDocument = null;
+
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
-
-            if (DA.GetData("Document", ref wrapper))
-            {
-                if (wrapper.Value is string || wrapper.Value is GH_String)
-                {
-                    modellingDocument = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
-                }
-                else if (wrapper.Value is IDocumentItem)
-                    modellingDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
-                else if (wrapper.Value is IDocument)
-                    modellingDocument = wrapper.Value as ModelingDocument;
-            }
-
-            if (modellingDocument is null) return;
-
             G.D2.Sketches.Sketch sketch = null;
+
             if (DA.GetData("Sketch", ref wrapper))
             {
                 if (wrapper.Value is string || wrapper.Value is GH_String)
                 {
+                    ModelingDocument modellingDocument = null;
+                    if (DA.GetData("Document", ref wrapper))
+                    {
+                        if (wrapper.Value is string || wrapper.Value is GH_String)
+                        {
+                            modellingDocument = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
+                        }
+                        else if (wrapper.Value is IDocumentItem)
+                            modellingDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
+                        else if (wrapper.Value is IDocument)
+                            modellingDocument = wrapper.Value as ModelingDocument;
+                    }
+                    if (modellingDocument is null) return;
                     sketch = (modellingDocument.SketchesFolderEntity.SearchDeepEntity(wrapper.Value.ToString()) as DB.D2.Sketches.SketchEntity)?.Geometry;
                 }
 

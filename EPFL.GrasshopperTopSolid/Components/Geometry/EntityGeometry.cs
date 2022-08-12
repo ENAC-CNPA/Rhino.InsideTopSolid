@@ -118,6 +118,12 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
                     geometry = profile.MakeGeometricProfile();
                 }
 
+                else if (wrapper.Value is SK2D.Vertex vertex)
+                {
+                    geometry = vertex.Geometry;
+                }
+
+
                 var type = wrapper.Value.GetType();
             }
 

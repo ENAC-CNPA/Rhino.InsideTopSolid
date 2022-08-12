@@ -284,8 +284,34 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             {
 
                 GH_ObjectWrapper ghObj = new GH_ObjectWrapper();
-                ghObj = (GH_ObjectWrapper)ghGoo;
-                familyDocument = ((IFamilyDocumentItem)ghObj.Value).OpenLastValidMinorRevisionDocument() as FamilyDocument;
+
+                //TODO cause not working correctly with string input
+                if (ghGoo is GH_String ghString)
+                {
+                    var docs = PdmClientStore.CurrentPdmClient.GetAllProjects().Select(x => x.DocumentItems).SelectMany(y => y).Where(d => d is IFamilyDocumentItem);
+                    foreach (var doc in docs)
+                    {
+                        familyDocument = doc.OpenLastValidMinorRevisionDocument() as FamilyDocument;
+                        if (familyDocument != null)
+                        {
+                            if (familyDocument.Name.ToString() == ghString.ToString() || ghString.ToString() == familyDocument.LocalizedName) break;
+                            else familyDocument = null;
+                        }
+
+                    }
+
+                }
+
+
+                else if (ghGoo is IDocument iDoc)
+                {
+                    familyDocument = iDoc as FamilyDocument;
+                }
+
+                else if (ghGoo is GH_ObjectWrapper wrapper)
+                {
+                    familyDocument = ((IFamilyDocumentItem)wrapper.Value).OpenLastValidMinorRevisionDocument() as FamilyDocument;
+                }
 
                 if (familyDocument != null)
                 {
