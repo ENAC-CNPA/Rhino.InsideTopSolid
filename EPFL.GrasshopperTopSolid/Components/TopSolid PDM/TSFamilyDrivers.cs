@@ -308,9 +308,39 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                     familyDocument = iDoc as FamilyDocument;
                 }
 
+                else if (ghGoo is GH_String text)
+                {
+                    var docs = PdmClientStore.CurrentPdmClient.GetAllProjects().Select(x => x.DocumentItems).SelectMany(y => y).Where(d => d is IFamilyDocumentItem);
+                    foreach (var doc in docs)
+                    {
+                        familyDocument = doc.OpenLastValidMinorRevisionDocument() as FamilyDocument;
+                        if (familyDocument != null)
+                        {
+                            if (familyDocument.Name.ToString() == text.ToString() || text.ToString() == familyDocument.LocalizedName) break;
+                            else familyDocument = null;
+                        }
+
+                    }
+                }
+
                 else if (ghGoo is GH_ObjectWrapper wrapper)
                 {
-                    familyDocument = ((IFamilyDocumentItem)wrapper.Value).OpenLastValidMinorRevisionDocument() as FamilyDocument;
+                    if (wrapper.Value is GH_String text2)
+                    {
+                        var docs = PdmClientStore.CurrentPdmClient.GetAllProjects().Select(x => x.DocumentItems).SelectMany(y => y).Where(d => d is IFamilyDocumentItem);
+                        foreach (var doc in docs)
+                        {
+                            familyDocument = doc.OpenLastValidMinorRevisionDocument() as FamilyDocument;
+                            if (familyDocument != null)
+                            {
+                                if (familyDocument.Name.ToString() == text2.ToString() || text2.ToString() == familyDocument.LocalizedName) break;
+                                else familyDocument = null;
+                            }
+
+                        }
+                    }
+                    else
+                        familyDocument = ((IFamilyDocumentItem)wrapper.Value).OpenLastValidMinorRevisionDocument() as FamilyDocument;
                 }
 
                 if (familyDocument != null)

@@ -28,6 +28,7 @@ using TopSolid.Kernel.DB.Layers;
 using TopSolid.Kernel.TX.Pdm;
 using TopSolid.Kernel.GR.Attributes;
 using TopSolid.Kernel.DB.D3.Shapes.Creations;
+using Grasshopper.Kernel.Data;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -42,29 +43,44 @@ namespace EPFL.GrasshopperTopSolid.Components
               "TopSolid", "Preview")
         {
         }
+        //Class level variables, to be independent from SolveInstance
+        GH_Structure<IGH_Goo> entities = new GH_Structure<IGH_Goo>();
+        Entity entity;
+        IGH_Structure copyTree;
+        bool run = false;
 
         /// <summary>
         /// Registers all the input parameters for this component.
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGeometryParameter("Geometries", "G", "Geometries to bake", GH_ParamAccess.list);
+            pManager.AddGeometryParameter("Geometries", "G", "Geometries to bake", GH_ParamAccess.item);
             pManager.AddGenericParameter("TSDocument", "TSDoc", "target TopSolid Document to bake-in", GH_ParamAccess.item);
             pManager[1].Optional = true;
+            pManager.AddTextParameter("Name", "Name", "Entity Name to be given", GH_ParamAccess.item);
+            pManager[2].Optional = true;
             pManager.AddGenericParameter("TSAttributes", "attributes", "TopSolid's attributes for the baked entities", GH_ParamAccess.item);
             pManager.AddNumberParameter("Tolerance", "Tol", "Tolerance for bake", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Sew?", "Sew?", "True to Sew Breps, False to keep faces split", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Bake?", "b?", "Set true to bake", GH_ParamAccess.item);
 
         }
-        EntityList list = new EntityList();
+        //EntityList list = new EntityList();
 
         /// <summary>
         /// Registers all the output parameters for this component.
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
+            //pManager.AddGenericParameter("TopSolid Entity", "TSEntity", "TopSolid Created Entity", GH_ParamAccess.item);
         }
+
+        //protected override void BeforeSolveInstance()
+        //{
+        //    var beforeRun = Params.Input.Last().VolatileData.AllData(false) as GH_Boolean;
+        //    if (beforeRun is null || !beforeRun.Value) return;
+        //    base.BeforeSolveInstance();
+        //}
 
         /// <summary>
         /// This is the method that actually does the work.
@@ -72,15 +88,19 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            List<IGH_GeometricGoo> geo = new List<IGH_GeometricGoo>();
-            bool run = false;
+
+            //ent = null;
+            GH_String name = new GH_String();
+            IGH_GeometricGoo geo = null;
+
             bool sew = false;
-            if (!DA.GetDataList(0, geo)) { return; }
-            if (geo == null) { return; }
-            if (geo.Count == 0) { return; }
+            if (!DA.GetData(0, ref geo)) { return; }
+            //if (geo == null) { return; }
+            //if (geo.Count == 0) { return; }
 
             DA.GetData("Bake?", ref run);
             DA.GetData("Sew?", ref sew);
+            DA.GetData("Name", ref name);
 
 
             //Setting target document from input, or else take current document by default
@@ -105,172 +125,206 @@ namespace EPFL.GrasshopperTopSolid.Components
 
             if (run == true)
             {
+
+                doc.EnsureIsDirty();
                 UndoSequence.UndoCurrent();
                 UndoSequence.Start("Bake", true);
-                list.Clear();
+                //list.Clear();
 
-                foreach (var g in geo)
+
+
+                if (geo is GH_Point gp)
                 {
-                    if (g is GH_Point gp)
+                    var rp = new Point3d();
+                    GH_Convert.ToPoint3d(gp, ref rp, 0);
+                    var tp = rp.ToHost();
+                    PointEntity pe = new PointEntity(doc, 0);
+                    if (name != null)
                     {
-                        var rp = new Point3d();
-                        GH_Convert.ToPoint3d(gp, ref rp, 0);
-                        var tp = rp.ToHost();
-                        PointEntity pe = new PointEntity(doc, 0);
-                        pe.Geometry = tp;
-                        pe.Create(doc.PointsFolderEntity);
-                        list.Add(pe);
+                        pe.Name = name.ToString();
                     }
+                    pe.Geometry = tp;
+                    pe.Create(doc.PointsFolderEntity);
+                    entity = pe;
 
-                    if (g is GH_Plane ghPlane)
-                    {
-                        var rhPlane = new Plane();
-                        GH_Convert.ToPlane(ghPlane, ref rhPlane, 0);
-                        var tp = rhPlane.ToHost();
-                        PlaneEntity pe = new PlaneEntity(doc, 0);
-                        pe.Geometry = tp;
-                        pe.Create(doc.PlanesFolderEntity);
-                    }
-                    else if (g is GH_Curve gc)
-                    {
-                        Curve rc = null;
-                        GH_Convert.ToCurve(gc, ref rc, 0);
-                        var rn = rc.ToNurbsCurve();
-                        var tc = rn.ToHost();
-                        CurveEntity ce = new CurveEntity(doc, 0);
-                        ce.Geometry = tc;
-                        ce.Create(doc.PointsFolderEntity);
-                        list.Add(ce);
-                    }
-                    else if (g is GH_Surface gs)
-                    {
-                        Surface rs = null;
-                        GH_Convert.ToSurface(gs, ref rs, 0);
-                        var rn = rs.ToNurbsSurface();
-                        var ts = rn.ToHost();
-                        SurfaceEntity se = new SurfaceEntity(doc, 0);
-                        se.Geometry = ts;
-                        se.Create(doc.PointsFolderEntity);
-                        list.Add(se);
-                    }
-
-                    else if (g is GH_Brep gbrep)
-                    {
-                        Brep rs = null;
-                        GH_Convert.ToBrep(gbrep, ref rs, 0);
-                        double tol = 0.00001;
-                        GH_ObjectWrapper attrWrapper = null;
-                        Color tsColor = Color.Empty;
-                        Transparency trnsp = Transparency.Empty;
-                        ShapeList shape;
-
-                        DA.GetData("Tolerance", ref tol);
-                        DA.GetData("TSAttributes", ref attrWrapper);
-                        string layerName = "";
-                        var tsAttributes = attrWrapper.Value as Tuple<Transparency, Color, string>;
-
-                        if (!(tsAttributes is null))
-                        {
-                            tsColor = tsAttributes.Item2;
-                            trnsp = tsAttributes.Item1;
-                            layerName = tsAttributes.Item3;
-
-                        }
-
-                        shape = rs.ToHost(tol);
-
-                        EntitiesCreation shapesCreation = new EntitiesCreation(doc, 0);
-                        Layer layer = new Layer(-1);
-                        LayerEntity layEnt = new LayerEntity(doc, 0, layer);
-
-                        var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
-                        layEnt = layfoldEnt.SearchLayer(layerName);
-
-                        if (layEnt is null)
-                        {
-                            layfoldEnt.AddLayer(layer, layerName);
-                            layEnt = layfoldEnt.SearchLayer(layerName);
-                        }
-
-
-
-                        foreach (var ts in shape)
-                        {
-                            ShapeEntity se = new ShapeEntity(doc, 0);
-                            se.Geometry = ts;
-                            se.ExplicitColor = tsColor;
-                            se.ExplicitTransparency = trnsp;
-                            se.ExplicitLayer = layEnt.Layer;
-
-
-                            se.Create(doc.ShapesFolderEntity);
-                            shapesCreation.AddChildEntity(se);
-                            shapesCreation.CanDeleteFromChild(se);
-
-                        }
-                        SewOperation sewOperation = new SewOperation(doc, 0);
-                        if (sew)
-                            sewOperation.AddOperation(shapesCreation);
-
-                        shapesCreation.Create();
-
-
-                        if (sew)
-                        {
-                            try
-                            {
-                                sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
-                                for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
-                                {
-                                    shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
-                                    sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
-                                }
-
-                                if (tol != 0)
-                                    sewOperation.GapWidth = new BasicSmartReal(sewOperation, tol, UnitType.Length, doc);
-                                else
-                                    sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
-
-                                sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
-                                sewOperation.ExplicitLayer = layer;
-                                //sewOperation.Parent = shapesCreation;
-                                //sewOperation.AddOperation(shapesCreation);
-                                //shapesCreation.Parent = sewOperation;
-                                sewOperation.Create();
-
-
-
-                                list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
-                            }
-                            //TODO Handle exception just in case
-                            catch
-                            {
-                            }
-                        }
-
-
-                        //TODO
-                        //ShapeEntity se = new ShapeEntity(doc, 0);
-                        //se.Geometry = shape;
-                        //se.Create(doc.ShapesFolderEntity);
-
-
-
-                    }
                 }
+
+                else if (geo is GH_Plane ghPlane)
+                {
+                    var rhPlane = new Plane();
+                    GH_Convert.ToPlane(ghPlane, ref rhPlane, 0);
+                    var tp = rhPlane.ToHost();
+                    PlaneEntity pe = new PlaneEntity(doc, 0);
+                    pe.Geometry = tp;
+                    pe.Create(doc.PlanesFolderEntity);
+                }
+                else if (geo is GH_Curve gc)
+                {
+                    Curve rc = null;
+                    GH_Convert.ToCurve(gc, ref rc, 0);
+                    var rn = rc.ToNurbsCurve();
+                    var tc = rn.ToHost();
+                    CurveEntity ce = new CurveEntity(doc, 0);
+                    ce.Geometry = tc;
+                    ce.Create(doc.SketchesFolderEntity);
+                    //list.Add(ce);
+                }
+                else if (geo is GH_Surface gs)
+                {
+                    Surface rs = null;
+                    GH_Convert.ToSurface(gs, ref rs, 0);
+                    var rn = rs.ToNurbsSurface();
+                    var ts = rn.ToHost();
+                    SurfaceEntity se = new SurfaceEntity(doc, 0);
+                    se.Geometry = ts;
+                    se.Create(doc.PointsFolderEntity);
+                    //list.Add(se);
+                }
+
+                else if (geo is GH_Brep gbrep)
+                {
+                    Brep rs = null;
+                    GH_Convert.ToBrep(gbrep, ref rs, 0);
+                    double tol = 0.00001;
+                    GH_ObjectWrapper attrWrapper = null;
+                    Color tsColor = Color.Empty;
+                    Transparency trnsp = Transparency.Empty;
+                    ShapeList shape;
+
+                    DA.GetData("Tolerance", ref tol);
+                    DA.GetData("TSAttributes", ref attrWrapper);
+                    string layerName = "";
+                    var tsAttributes = attrWrapper.Value as Tuple<Transparency, Color, string>;
+
+                    if (!(tsAttributes is null))
+                    {
+                        tsColor = tsAttributes.Item2;
+                        trnsp = tsAttributes.Item1;
+                        layerName = tsAttributes.Item3;
+
+                    }
+
+                    shape = rs.ToHost(tol);
+
+                    EntitiesCreation shapesCreation = new EntitiesCreation(doc, 0);
+                    Layer layer = new Layer(-1);
+                    LayerEntity layEnt = new LayerEntity(doc, 0, layer);
+
+                    var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
+                    layEnt = layfoldEnt.SearchLayer(layerName);
+
+                    if (layEnt is null)
+                    {
+                        layfoldEnt.AddLayer(layer, layerName);
+                        layEnt = layfoldEnt.SearchLayer(layerName);
+                    }
+
+
+
+                    foreach (var ts in shape)
+                    {
+                        ShapeEntity se = new ShapeEntity(doc, 0);
+                        se.Geometry = ts;
+                        se.ExplicitColor = tsColor;
+                        se.ExplicitTransparency = trnsp;
+                        se.ExplicitLayer = layEnt.Layer;
+
+
+                        se.Create(doc.ShapesFolderEntity);
+                        shapesCreation.AddChildEntity(se);
+                        shapesCreation.CanDeleteFromChild(se);
+
+                    }
+                    SewOperation sewOperation = new SewOperation(doc, 0);
+                    if (sew)
+                        sewOperation.AddOperation(shapesCreation);
+
+                    shapesCreation.Create();
+
+
+                    if (sew)
+                    {
+                        try
+                        {
+                            sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
+                            for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
+                            {
+                                shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
+                                sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
+                            }
+
+                            if (tol != 0)
+                                sewOperation.GapWidth = new BasicSmartReal(sewOperation, tol, UnitType.Length, doc);
+                            else
+                                sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
+
+                            sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
+                            sewOperation.ExplicitLayer = layer;
+                            //sewOperation.Parent = shapesCreation;
+                            //sewOperation.AddOperation(shapesCreation);
+                            //shapesCreation.Parent = sewOperation;
+                            sewOperation.Create();
+                            if (name != null)
+                            {
+                                entity = shapesCreation.ChildrenEntities.ElementAt(0);
+                                entity.Name = name.ToString();
+                            }
+
+                            if (Params.Output.Count > 0)
+                                DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
+                            //list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
+                        }
+                        //TODO Handle exception just in case
+                        catch
+                        {
+                        }
+                    }
+
+
+                    //TODO
+                    //ShapeEntity se = new ShapeEntity(doc, 0);
+                    //se.Geometry = shape;
+                    //se.Create(doc.ShapesFolderEntity);
+
+
+
+                }
+
+
                 UndoSequence.End();
 
+
+if (Params.Output.Count > 0)
+
+                DA.SetData(0, entity); //TODO Generalize
+
             }
-            if (Params.Output.Count > 0)
-                DA.SetDataList("TopSolid Entities", list.ToList());
+
+            
         }
+        
+        
+        //protected override void AfterSolveInstance()
+        //{
+        //    if (Params.Output.Count > 0 && run)
+        //    {
+        //        copyTree = Params.Output[0].VolatileData;
+        //    }
+
+        //    else if (Params.Output.Count > 0 && !run && RunCount!=0 && copyTree != null)
+        //    {
+        //        Params.Output[0].ClearData();
+        //        bool succes = Params.Output[0].AddVolatileDataTree(copyTree);
+
+        //    }
+
+
+        //    base.AfterSolveInstance();
+        //}
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)
         {
-            if ((side == GH_ParameterSide.Input) && ((index == 2 && Params.Input.Count == 2)
-                || (Params.Input.Count == 3 && index == 3 && Params.Input[2] is Param_Number)
-                || (index == 2 && Params.Input.Count == 3 && Params.Input[2] is Param_Colour)))
-                return true;
+
             if ((side == GH_ParameterSide.Output) && Params.Output.Count == 0)
                 return true;
 
@@ -292,10 +346,11 @@ namespace EPFL.GrasshopperTopSolid.Components
             {
                 var param = new Param_GenericObject();
                 param.Name = "TopSolid Entities";
-                param.Access = GH_ParamAccess.list;
+                param.Access = GH_ParamAccess.item;
 
                 param.NickName = "TS Entities";
                 param.Description = "TopSolid Created Entities";
+
                 return param;
             }
             return null;
