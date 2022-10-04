@@ -143,6 +143,42 @@ namespace EPFL.GrasshopperTopSolid.Components
                     {
                         pe.Name = name.ToString();
                     }
+
+                    double tol = 0.00001;
+                    GH_ObjectWrapper attrWrapper = null;
+                    Color tsColor = Color.Empty;
+                    Transparency trnsp = Transparency.Empty;
+                    ShapeList shape;
+
+                    DA.GetData("Tolerance", ref tol);
+                    DA.GetData("TSAttributes", ref attrWrapper);
+                    string layerName = "";
+                    var tsAttributes = attrWrapper.Value as Tuple<Transparency, Color, string>;
+
+                    if (!(tsAttributes is null))
+                    {
+                        tsColor = tsAttributes.Item2;
+                        trnsp = tsAttributes.Item1;
+                        layerName = tsAttributes.Item3;
+
+                    }
+
+
+                    Layer layer = new Layer(-1);
+                    LayerEntity layEnt = new LayerEntity(doc, 0, layer);
+
+                    var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
+                    layEnt = layfoldEnt.SearchLayer(layerName);
+
+                    if (layEnt is null)
+                    {
+                        layfoldEnt.AddLayer(layer, layerName);
+                        layEnt = layfoldEnt.SearchLayer(layerName);
+                    }
+
+                    pe.ExplicitColor = tsColor;
+                    pe.ExplicitTransparency = trnsp;
+                    pe.ExplicitLayer = layer;
                     pe.Geometry = tp;
                     pe.Create(doc.PointsFolderEntity);
                     entity = pe;
@@ -294,16 +330,16 @@ namespace EPFL.GrasshopperTopSolid.Components
                 UndoSequence.End();
 
 
-if (Params.Output.Count > 0)
+                if (Params.Output.Count > 0)
 
-                DA.SetData(0, entity); //TODO Generalize
+                    DA.SetData(0, entity); //TODO Generalize
 
             }
 
-            
+
         }
-        
-        
+
+
         //protected override void AfterSolveInstance()
         //{
         //    if (Params.Output.Count > 0 && run)

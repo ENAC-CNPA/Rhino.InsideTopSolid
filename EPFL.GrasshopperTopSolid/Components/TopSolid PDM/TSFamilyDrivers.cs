@@ -48,7 +48,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
         protected override void BeforeSolveInstance()
         {
-
+            if (RunCount != -1) return;
             IGH_Param ghParam;
             while (Params.Input.Count > 3)
             {
@@ -170,6 +170,10 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                             {
                                 val = new BasicSmartPoint(null, pointEntity.Geometry);
                                 //driver.SetGeometry(pointEntity.Geometry, false);
+                            }
+                            else if (inputValue.Value is SmartPoint smartpoint)
+                            {
+                                val = smartpoint;
                             }
                             break;
                     }

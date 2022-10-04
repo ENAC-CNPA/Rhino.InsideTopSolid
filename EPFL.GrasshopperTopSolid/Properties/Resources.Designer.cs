@@ -83,6 +83,16 @@ namespace EPFL.GrasshopperTopSolid.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
+        internal static System.Drawing.Icon CurveEntity {
+            get {
+                object obj = ResourceManager.GetObject("CurveEntity", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
         internal static System.Drawing.Icon Document {
             get {
                 object obj = ResourceManager.GetObject("Document", resourceCulture);
@@ -166,6 +176,16 @@ namespace EPFL.GrasshopperTopSolid.Properties {
         internal static System.Drawing.Icon PlanarSketchToRollUpBuildingOperation {
             get {
                 object obj = ResourceManager.GetObject("PlanarSketchToRollUpBuildingOperation", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon PointCommand {
+            get {
+                object obj = ResourceManager.GetObject("PointCommand", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }

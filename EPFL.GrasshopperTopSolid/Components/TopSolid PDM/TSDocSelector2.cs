@@ -48,6 +48,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
         protected override void BeforeSolveInstance()
         {
+            
+            if (RunCount != -1) return;
             IGH_Param ghParam;
             while (Params.Output.Count != 0)
 
@@ -60,7 +62,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             Console.WriteLine("No iter has run");
             var x = Params.Input[0].VolatileData;
             var tree = x as GH_Structure<IGH_Goo>;
-
+            
             variablelistofNames = GetOutputList(tree);
 
             foreach (var docName in variablelistofNames)

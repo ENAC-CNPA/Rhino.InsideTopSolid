@@ -124,6 +124,9 @@
   <data name="CoolingSketchSolvingOperation" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\CoolingSketchSolvingOperation.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="CurveEntity" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\CurveEntity.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Document" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Document.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -150,6 +153,9 @@
   </data>
   <data name="PlanarSketchToRollUpBuildingOperation" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\PlanarSketchToRollUpBuildingOperation.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PointCommand" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PointCommand.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PreviewWindow_Visualize" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\PreviewWindow.Visualize.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

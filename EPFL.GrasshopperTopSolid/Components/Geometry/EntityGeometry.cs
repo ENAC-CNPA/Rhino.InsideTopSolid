@@ -47,7 +47,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         {
 
             pManager.AddGenericParameter("TSGeometry", "Geometry", "TopSolid Geometry", GH_ParamAccess.item);
-            pManager.AddGeometryParameter("RhGeometry", "Geometry", "Geometry converted to Rhino", GH_ParamAccess.item);
+            pManager.AddGeometryParameter("RhGeometry", "Geometry", "Geometry converted to Rhino as List", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             else
             {
                 DA.SetData("TSGeometry", geometry);
-                DA.SetData("RhGeometry", geometry.ToRhino());
+                DA.SetDataList("RhGeometry", geometry.ToRhino());
             }
         }
 
