@@ -19,6 +19,14 @@ namespace EPFL.GrasshopperTopSolid
 
             switch (tsGeometry)
             {
+                case TopSolid.Kernel.G.D3.Plane plane:
+                    {
+                        GH_Plane ghPlane = new GH_Plane();
+                        GH_Convert.ToGHPlane(plane.ToRhino(), GH_Conversion.Both, ref ghPlane);
+                        ghGeometry.Add(ghPlane);
+                        break;
+                    }
+
                 case TopSolid.Kernel.G.D3.Point point:
                     {
                         GH_Point ghPoint = new GH_Point();
