@@ -131,4 +131,9 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <OutputPath>C:\Sources\Topsolid 7.16\Debug x64\</OutputPath>
+  </PropertyGroup>
+
 </Project>

@@ -115,7 +115,11 @@ namespace EPFL.GrasshopperTopSolid
         #region Plane
         static public TKG.D3.Plane ToHost(this Rhino.Geometry.Plane p)
         {
-            return new TKG.D3.Plane(p.Origin.ToHost(), new UnitVector(p.ZAxis.ToHost()));
+            var x = p.XAxis;
+            x.Unitize();
+            var y = p.YAxis;
+            y.Unitize();
+            return new TKG.D3.Plane(p.Origin.ToHost(), new UnitVector(x.ToHost()), new UnitVector(y.ToHost()));
         }
 
         static public TKG.D3.Frame ToHost(this Rhino.Geometry.Plane p, Vector xVec, Vector yVec, Vector zVec)
