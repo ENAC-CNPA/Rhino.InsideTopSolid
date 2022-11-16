@@ -123,8 +123,27 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
                     geometry = vertex.Geometry;
                 }
 
+                else if (wrapper.Value is TKG.D3.Curves.GeometricSegment segment)
+                {
+                    geometry = segment.GetOrientedCurve();
+                }
+                else if (wrapper.Value is TKG.D2.Curves.GeometricSegment segment2d)
+                {
+                    geometry = segment2d.GetOrientedCurve();
+                }
+                else if (wrapper.Value is TKG.D3.Sketches.Segment skSegment)
+                {
+                    geometry = skSegment.Geometry;
+                }
+                else if (wrapper.Value is TKG.D3.Sketches.Segment skSegment2d)
+                {
+                    geometry = skSegment2d.Geometry;
+                }
 
-                var type = wrapper.Value.GetType();
+
+                //for Debug
+
+                var type = wrapper.Value?.GetType();
             }
 
             if (geometry is null)

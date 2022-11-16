@@ -50,6 +50,25 @@ namespace EPFL.GrasshopperTopSolid
                         ghGeometry.Add(ghCurve);
                         break;
                     }
+                case TKG.D3.Curves.IGeometricSegment segment:
+                    {
+                        {
+                            GH_Curve ghCurve = new GH_Curve();
+                            GH_Convert.ToGHCurve(segment.GetOrientedCurve().ToRhino(), GH_Conversion.Both, ref ghCurve);
+                            ghGeometry.Add(ghCurve);
+                            break;
+                        }
+                    }
+                case TKG.D2.Curves.IGeometricSegment segment:
+                    {
+                        {
+                            GH_Curve ghCurve = new GH_Curve();
+                            GH_Convert.ToGHCurve(segment.GetOrientedCurve().ToRhino(), GH_Conversion.Both, ref ghCurve);
+                            ghGeometry.Add(ghCurve);
+                            break;
+                        }
+                    }
+
 
                 case TKG.D2.Curves.IGeometricProfile profile2d:
                     {

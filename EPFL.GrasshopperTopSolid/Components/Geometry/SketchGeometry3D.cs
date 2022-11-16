@@ -26,6 +26,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         {
         }
 
+        ModelingDocument modellingDocument = TopSolid.Kernel.UI.Application.CurrentDocument as ModelingDocument;
         /// <summary>
         /// Registers all the input parameters for this component.
         /// </summary>
@@ -41,10 +42,12 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddGenericParameter("Profiles", "Profiles", "Profiles as List", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Segments", "Segs", "Segments as List", GH_ParamAccess.list);
             pManager.AddGenericParameter("Points", "Pts", "Points as List", GH_ParamAccess.list);
             pManager.AddGenericParameter("Frame", "Frame", "Sketch Frame", GH_ParamAccess.item);
 
         }
+
 
         /// <summary>
         /// This is the method that actually does the work.
@@ -56,40 +59,72 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
             G.D3.Sketches.Sketch sketch = null;
 
-            if (DA.GetData("Sketch", ref wrapper))
+            //if (DA.GetData("Sketch", ref wrapper))
+            //{
+            modellingDocument = null;
+
+
+            if (DA.GetData("Document", ref wrapper))
             {
                 if (wrapper.Value is string || wrapper.Value is GH_String)
                 {
-                    ModelingDocument modellingDocument = null;
-                    if (DA.GetData("Document", ref wrapper))
+                    if (wrapper.Value is string || wrapper.Value is GH_String)
                     {
-                        if (wrapper.Value is string || wrapper.Value is GH_String)
-                        {
-                            modellingDocument = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
-                        }
-                        else if (wrapper.Value is IDocumentItem)
-                            modellingDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
-                        else if (wrapper.Value is IDocument)
-                            modellingDocument = wrapper.Value as ModelingDocument;
+                        modellingDocument = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
                     }
-                    if (modellingDocument is null) return;
-                    sketch = (modellingDocument.SketchesFolderEntity.SearchDeepEntity(wrapper.Value.ToString()) as DB.D3.Sketches.SketchEntity)?.Geometry;
+                    else if (wrapper.Value is IDocumentItem)
+                        modellingDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
+                    else if (wrapper.Value is IDocument)
+                        modellingDocument = wrapper.Value as ModelingDocument;
+
+
                 }
+                if (modellingDocument is null) return;
+                if (DA.GetData("Sketch", ref wrapper))
+                {
+                    if (wrapper.Value is string || wrapper.Value is GH_String)
+                    {
+                        string name = wrapper.Value.ToString();
+                        foreach (var deepSketch in modellingDocument.SketchesFolderEntity.DeepPositionedSketches)
+                        {
+                            if (deepSketch.Name == name)
+                            {
+                                sketch = deepSketch.Geometry;
+                                break;
+                            }
+                        }
+                    }
+                    else if (wrapper.Value is DB.D3.Sketches.SketchEntity entity)
+                        sketch = entity.Geometry;
 
-                else if (wrapper.Value is DB.D3.Sketches.SketchEntity entity)
-                    sketch = entity.Geometry;
-
-                else if (wrapper.Value is G.D3.Sketches.Sketch sk)
-                    sketch = sk as G.D3.Sketches.Sketch;
+                    else if (wrapper.Value is G.D3.Sketches.Sketch sk)
+                        sketch = sk as G.D3.Sketches.Sketch;
+                }
             }
+
+            //}
 
             if (sketch == null)
                 return;
 
             DA.SetDataList("Profiles", sketch.Profiles);
+            DA.SetDataList("Segments", sketch.Segments);
+
+            //DA.SetDataList("Profiles", sketch.Segments);
             DA.SetDataList("Points", sketch.Vertices.Select(x => x.Geometry));
             DA.SetData("Frame", sketch.Frame);
 
+        }
+
+        protected override void AfterSolveInstance()
+        {
+            modellingDocument.Updated += ModellingDocument_Updated;
+            base.AfterSolveInstance();
+        }
+
+        private void ModellingDocument_Updated(object sender, EventArgs e)
+        {
+            this.ExpireSolution(true);
         }
 
         /// <summary>

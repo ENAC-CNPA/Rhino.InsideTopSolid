@@ -101,6 +101,12 @@ namespace EPFL.GrasshopperTopSolid
         }
         static public Rhino.Geometry.LineCurve ToRhino(this TKG.D3.Curves.LineCurve l)
         {
+            if (l.Range.IsInfinite)
+                return new Rhino.Geometry.LineCurve(l.Axis.Po.ToRhino(), new Rhino.Geometry.Point3d(l.Axis.Po.X + l.Axis.Vx.X,
+l.Axis.Po.Y + l.Axis.Vx.Y,
+l.Axis.Po.Z + l.Axis.Vx.Z))
+                ;
+
             return new Rhino.Geometry.LineCurve(l.Ps.ToRhino(), l.Pe.ToRhino());
         }
 
