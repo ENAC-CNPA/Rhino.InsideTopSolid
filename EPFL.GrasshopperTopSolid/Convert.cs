@@ -1183,10 +1183,11 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
                     try
                     {
                         shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
+                        //shape.CheckIsValidOccurrence();                        
                     }
-                    catch
+                    catch (System.Exception e)
                     {
-
+                        
                     }
                 }
             }

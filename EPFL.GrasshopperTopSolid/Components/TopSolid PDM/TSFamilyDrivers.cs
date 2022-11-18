@@ -23,6 +23,7 @@ using TopSolid.Kernel.DB.SmartObjects;
 using TopSolid.Kernel.G;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Families;
+using TopSolid.Kernel.TX.Items;
 using TopSolid.Kernel.TX.Pdm;
 using TopSolid.Kernel.TX.Properties;
 using TopSolid.Kernel.TX.Undo;
@@ -164,6 +165,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                             if (inputValue.Value is IGeometry geometry)
                             {
                                 val = new BasicSmartPoint(null, (TopSolid.Kernel.G.D3.Point)geometry);
+                                //var x = new ProvidedSmartPoint(null, geometry.Owner as Element, ItemLabel.Empty); //TODO Verify
                                 //driver.SetGeometry(geometry, false);
                             }
                             else if (inputValue.Value is PointEntity pointEntity)
