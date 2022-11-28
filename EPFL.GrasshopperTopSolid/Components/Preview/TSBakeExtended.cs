@@ -128,7 +128,7 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                 doc.EnsureIsDirty();
                 UndoSequence.UndoCurrent();
-                UndoSequence.Start("Bake", true);
+                UndoSequence.Start("Bake", false);
                 //list.Clear();
 
 
@@ -285,7 +285,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                             sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
                             for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
                             {
-                                shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
+                                //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
                                 sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
                             }
 

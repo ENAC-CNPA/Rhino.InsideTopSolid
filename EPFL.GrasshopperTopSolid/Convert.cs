@@ -35,13 +35,21 @@ using TopSolid.Kernel.DB.D3.Sketches.Operations;
 using TopSolid.Kernel.DB.D3.Curves;
 using TopSolid.Kernel.TX.Undo;
 using TX = TopSolid.Kernel.TX;
+using SX = TopSolid.Kernel.SX;
 using TUI = TopSolid.Kernel.UI;
 using TopSolid.Kernel.SX.Drawing;
+using System;
+using Version = TopSolid.Kernel.SX.Version;
+using Double = TopSolid.Kernel.SX.Double;
 
 namespace EPFL.GrasshopperTopSolid
 {
     public static class Convert
     {
+        static public double topSolidLinear = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
+        static public double topSolidAngular = TopSolid.Kernel.G.Precision.AngularPrecision;
+
+
         #region Point
         static public TKG.D3.Point ToHost(this Point3d p)
         {
@@ -102,30 +110,35 @@ namespace EPFL.GrasshopperTopSolid
         static public Rhino.Geometry.LineCurve ToRhino(this TKG.D3.Curves.LineCurve l)
         {
             if (l.Range.IsInfinite)
-                return new Rhino.Geometry.LineCurve(l.Axis.Po.ToRhino(), new Rhino.Geometry.Point3d(l.Axis.Po.X + l.Axis.Vx.X,
-l.Axis.Po.Y + l.Axis.Vx.Y,
-l.Axis.Po.Z + l.Axis.Vx.Z))
-                ;
+                return new Rhino.Geometry.LineCurve(l.Axis.Po.ToRhino(), new Rhino.Geometry.Point3d(
+                    l.Axis.Po.X + l.Axis.Vx.X,
+                    l.Axis.Po.Y + l.Axis.Vx.Y,
+                    l.Axis.Po.Z + l.Axis.Vx.Z));
 
             return new Rhino.Geometry.LineCurve(l.Ps.ToRhino(), l.Pe.ToRhino());
         }
 
-        static public Rhino.Geometry.Line ToRhino(this TKG.D2.Curves.LineCurve l)
+        static public Rhino.Geometry.LineCurve ToRhino(this TKG.D2.Curves.LineCurve l)
         {
-            return new Rhino.Geometry.Line(new Point3d(l.Ps.X, l.Ps.Y, 0), new Point3d(l.Pe.X, l.Pe.Y, 0));
+            return new Rhino.Geometry.LineCurve(new Point3d(l.Ps.X, l.Ps.Y, 0), new Point3d(l.Pe.X, l.Pe.Y, 0));
         }
 
+        //2D
+        static public TKG.D2.Curves.LineCurve ToHost2d(this Rhino.Geometry.LineCurve lineCurve)
+        {
+            return new TKG.D2.Curves.LineCurve(lineCurve.PointAtStart.ToHost2d(), lineCurve.PointAtEnd.ToHost2d());
+        }
 
         #endregion
 
         #region Plane
-        static public TKG.D3.Plane ToHost(this Rhino.Geometry.Plane p)
+        static public TKG.D3.Plane ToHost(this Rhino.Geometry.Plane plane)
         {
-            var x = p.XAxis;
-            x.Unitize();
-            var y = p.YAxis;
+            var vx = plane.XAxis;
+            vx.Unitize();
+            var y = plane.YAxis;
             y.Unitize();
-            return new TKG.D3.Plane(p.Origin.ToHost(), new UnitVector(x.ToHost()), new UnitVector(y.ToHost()));
+            return new TKG.D3.Plane(plane.Origin.ToHost(), new UnitVector(vx.ToHost()), new UnitVector(y.ToHost()));
         }
 
         static public TKG.D3.Frame ToHost(this Rhino.Geometry.Plane p, Vector xVec, Vector yVec, Vector zVec)
@@ -133,6 +146,17 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
             return new TKG.D3.Frame(p.Origin.ToHost(), new UnitVector(xVec), new UnitVector(yVec), new UnitVector(zVec));
         }
 
+        //2D
+        static public TKG.D2.Frame ToHost2d(this Rhino.Geometry.Plane plane)
+        {
+            Rhino.Geometry.Vector3d x = plane.XAxis;
+            x.Unitize();
+            Rhino.Geometry.Vector3d y = plane.YAxis;
+            y.Unitize();
+            TKG.D2.UnitVector vx = new TKGD2.UnitVector(x.X, x.Y);
+            TKG.D2.UnitVector vy = new TKGD2.UnitVector(x.X, x.Y);
+            return new TKG.D2.Frame(plane.Origin.ToHost2d(), vx, vy);
+        }
 
         static public Rhino.Geometry.Plane ToRhino(this TKG.D3.Frame p)
         {
@@ -202,42 +226,110 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
 
         }
 
-        static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve rhinoCurve)
+        static public TopSolid.Kernel.G.D3.Curves.Curve ToHost(this Rhino.Geometry.Curve rhinoCurve)
         {
-            bool r = rhinoCurve.IsRational;
-            bool p = rhinoCurve.IsPeriodic;
-            int d = rhinoCurve.Degree;
-            DoubleList k = ToDoubleList(rhinoCurve.Knots, d);
-            PointList pts = ToPointList(rhinoCurve.Points);
-            DoubleList w = ToDoubleList(rhinoCurve.Points);
-            BSpline b = new BSpline(p, d, k);
-            if (r)
+            TKGD3.Curves.Curve topSolidCurve;
+
+            if (rhinoCurve is Rhino.Geometry.LineCurve line)
+            {
+                return line.ToHost();
+            }
+
+            if (rhinoCurve is ArcCurve arcCurve)
+            {
+                Arc arc = arcCurve.Arc;
+                CircleCurve circleCurve = new CircleCurve(arc.Plane.ToHost(), arc.Radius);
+                CircleMaker maker = new CircleMaker(SX.Version.Current, topSolidLinear, topSolidAngular);
+                maker.SetByCenterAndTwoPoints(
+                    arc.Center.ToHost(),
+                    arc.StartPoint.ToHost(),
+                    arc.EndPoint.ToHost(),
+                    false,
+                    new UnitVector(arc.Plane.Normal.ToHost()),
+                    circleCurve);
+
+                return circleCurve;
+            }
+
+            if (rhinoCurve is NurbsCurve nurbsCurve)
+            {
+                return nurbsCurve.ToHost();
+            }
+
+            return rhinoCurve.ToNurbsCurve().ToHost();
+
+
+
+        }
+
+
+        static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve nurbsCurve)
+        {
+            bool isRational = nurbsCurve.IsRational;
+            bool isPeriodic = nurbsCurve.IsPeriodic;
+            int degree = nurbsCurve.Degree;
+            DoubleList knotList = ToDoubleList(nurbsCurve.Knots, degree);
+            PointList pts = ToPointList(nurbsCurve.Points);
+            DoubleList weightList = ToDoubleList(nurbsCurve.Points);
+            BSpline bspline = new BSpline(isPeriodic, degree, knotList);
+            if (isRational)
             {
                 //var w = c.Points.ConvertAll(x => x.Weight);
-                BSplineCurve bsplineCurve = new BSplineCurve(b, pts, w);
+                BSplineCurve bsplineCurve = new BSplineCurve(bspline, pts, weightList);
                 return bsplineCurve;
             }
             else
             {
-                BSplineCurve bsplineCurve = new BSplineCurve(b, pts);
+                BSplineCurve bsplineCurve = new BSplineCurve(bspline, pts);
                 return bsplineCurve;
             }
-
         }
 
-        static public TopSolid.Kernel.G.D2.Curves.BSplineCurve ToHost2d(this Rhino.Geometry.NurbsCurve rhinoCurve)
+        static public TopSolid.Kernel.G.D2.Curves.Curve ToHost2d(this Rhino.Geometry.Curve rhinoCurve)
         {
-            bool r = rhinoCurve.IsRational;
-            bool p = rhinoCurve.IsPeriodic;
-            int d = rhinoCurve.Degree;
-            DoubleList k = ToDoubleList(rhinoCurve.Knots, d);
-            TKGD2.PointList pts = ToPointList2D(rhinoCurve.Points);
-            DoubleList w = ToDoubleList(rhinoCurve.Points);
-            BSpline b = new BSpline(p, d, k);
-            if (r)
+            TKGD3.Curves.Curve topSolidCurve;
+
+            if (rhinoCurve is Rhino.Geometry.LineCurve line)
+            {
+                return line.ToHost2d();
+            }
+
+            if (rhinoCurve is ArcCurve arcCurve)
+            {
+                Arc arc = arcCurve.Arc;
+                TKGD2.Frame plane2d = arc.Plane.ToHost2d();
+                TKGD2.Curves.CircleCurve circleCurve = new TKGD2.Curves.CircleCurve(plane2d, arc.Radius);
+                TKGD2.Curves.CircleMaker maker = new TKGD2.Curves.CircleMaker(SX.Version.Current, topSolidLinear, topSolidAngular);
+                maker.SetByCenterAndTwoPoints(
+                    arc.Center.ToHost2d(),
+                    arc.StartPoint.ToHost2d(),
+                    arc.EndPoint.ToHost2d(),
+                    false,
+                    circleCurve);
+                return circleCurve;
+            }
+
+            if (rhinoCurve is NurbsCurve nurbsCurve)
+            {
+                return nurbsCurve.ToHost2d();
+            }
+            return rhinoCurve.ToNurbsCurve().ToHost2d();
+        }
+
+
+        static public TopSolid.Kernel.G.D2.Curves.BSplineCurve ToHost2d(this Rhino.Geometry.NurbsCurve nurbsCurve, TKGD3.Surfaces.Surface surface = null)
+        {
+            bool isRational = nurbsCurve.IsRational;
+            bool isPeriodic = nurbsCurve.IsPeriodic;
+            int degree = nurbsCurve.Degree;
+            DoubleList knotList = ToDoubleList(nurbsCurve.Knots, degree);
+            TKGD2.PointList pts = ToPointList2D(nurbsCurve.Points);
+            DoubleList weightList = ToDoubleList(nurbsCurve.Points);
+            BSpline b = new BSpline(isPeriodic, degree, knotList);
+            if (isRational)
             {
                 //var w = c.Points.ConvertAll(x => x.Weight);
-                TKGD2.Curves.BSplineCurve bsplineCurve = new TKGD2.Curves.BSplineCurve(b, pts, w);
+                TKGD2.Curves.BSplineCurve bsplineCurve = new TKGD2.Curves.BSplineCurve(b, pts, weightList);
                 return bsplineCurve;
             }
             else
@@ -1117,9 +1209,6 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
                 if (bsSurface.IsVPeriodic)
                     bsSurface.MakeVNonPeriodic();
 
-
-
-                //surface = bsSurface;
             }
 
 
@@ -1128,47 +1217,50 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
 
             // Get spatial curves and set to maker.
             TopSolid.Kernel.SX.Collections.Generic.List<TKGD3.Curves.CurveList> loops3d = new TSXGen.List<TKGD3.Curves.CurveList>();
-            loops3d.Add(new TKGD3.Curves.CurveList());
 
 
             TopSolid.Kernel.SX.Collections.Generic.List<ItemMonikerList> listItemMok = new TSXGen.List<ItemMonikerList>();
-            listItemMok.Add(new ItemMonikerList());
             int i = 0;
 
-            List<int> indices = new List<int>();
-
-            foreach (int ind in inFace.AdjacentEdges())
+            //List<int> indices = new List<int>();
+            int loopIndex = 0;
+            foreach (Rhino.Geometry.BrepLoop loop in inFace.Loops)
             {
-                indices.Add(ind);
-            }
-
-            int counter = 0;
-            foreach (int ind in indices)
-            {
-                var rhCurve = inBRep.Edges.ElementAt(ind).EdgeCurve.ToNurbsCurve();
-                if (counter != 0 && rhCurve.PointAtStart.DistanceTo(inBRep.Edges.ElementAt(indices[counter - 1]).PointAtEnd) > inLinearPrecision)
+                loops3d.Add(new TKGD3.Curves.CurveList());
+                listItemMok.Add(new ItemMonikerList());
+                foreach (var trim in loop.Trims)
                 {
-                    rhCurve.Reverse();
+                    if (loops3d.Count < loopIndex - 1 || listItemMok.Count < loopIndex - 1) break;
+                    loops3d[loopIndex].Add(trim.Edge.EdgeCurve.ToHost());
+                    listItemMok[loopIndex].Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
                 }
-                var convertedCrv = ToHost(rhCurve);
-                listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
-                loops3d.First().Add(convertedCrv);
-                counter++;
+                loopIndex++;
             }
 
-
-            //TODO organize using coincidance between start and end point
-            //foreach (BrepEdge edge in inBRep.Edges)
-            ////Where(x => x.AdjacentFaces().Contains(inFace.FaceIndex)).OrderBy(y => y.EdgeIndex))
+            //loops3d.Add(new TKGD3.Curves.CurveList());
+            //listItemMok.Add(new ItemMonikerList());
+            //foreach (int ind in inFace.AdjacentEdges())
             //{
-            //    if (inBRep.Faces[inFace.FaceIndex].AdjacentEdges().Contains(edge.EdgeIndex))
-            //    {
-            //        var convertedCrv = ToHost(edge.EdgeCurve.ToNurbsCurve());
-            //        listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
-            //        loops3d.First().Add(convertedCrv);
-            //    }
-
+            //    indices.Add(ind);
             //}
+
+
+            //int edgesCounter = 0;
+            //foreach (int ind in indices)
+            //{
+            //    var rhCurve = inBRep.Edges.ElementAt(ind).EdgeCurve;
+            //    if (edgesCounter != 0 && rhCurve.PointAtStart.DistanceTo(inBRep.Edges.ElementAt(indices[edgesCounter - 1]).PointAtEnd) > inLinearPrecision)
+            //    {
+            //        rhCurve.Reverse();
+            //    }
+            //    var convertedCrv = ToHost(rhCurve);
+            //    listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
+            //    loops3d.First().Add(convertedCrv);
+            //    edgesCounter++;
+            //}
+
+
+
 
 
             if (loops3d != null && loops3d.Count != 0)
@@ -1184,9 +1276,10 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
                     {
                         shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
                     }
-                    catch
-                    {
+                    catch (Exception e)
 
+                    {
+                        Console.WriteLine(e.Message + "\n" + e.Data.ToString());
                     }
                 }
             }
@@ -1218,30 +1311,52 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
                 //surface = bsSurface;
             }
             TopSolid.Kernel.SX.Collections.Generic.List<TKGD2.Curves.CurveList> loops2d = new TSXGen.List<TKGD2.Curves.CurveList>();
-            loops2d.Add(new TKGD2.Curves.CurveList());
             TopSolid.Kernel.SX.Collections.Generic.List<ItemMonikerList> listItemMok = new TSXGen.List<ItemMonikerList>();
-            listItemMok.Add(new ItemMonikerList());
             ItemMonikerKey key = new ItemMonikerKey(ItemOperationKey.BasicKey);
             int i = 0;
-
-            foreach (var crv in surface.ToBrep().Curves2D)
+            int loopIndex = 0;
+            foreach (Rhino.Geometry.BrepLoop loop in inFace.Loops)
             {
-                var convertedCrv = ToHost2d(crv.ToNurbsCurve());
-
-                listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
-
-
-                loops2d.First().Add(convertedCrv);
+                loops2d.Add(new TKGD2.Curves.CurveList());
+                listItemMok.Add(new ItemMonikerList());
+                foreach (var trim in loop.Trims)
+                {
+                    if (loops2d.Count < loopIndex - 1 || listItemMok.Count < loopIndex - 1) break;
+                    loops2d[loopIndex].Add(trim.TrimCurve.ToHost2d());
+                    listItemMok[loopIndex].Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
+                }
+                loopIndex++;
             }
+
+
+            //loops2d.Add(new TKGD2.Curves.CurveList());
+            //listItemMok.Add(new ItemMonikerList());
+            //foreach (var crv in surface.ToBrep().Curves2D)
+            //{
+            //    var convertedCrv = ToHost2d(crv);
+
+            //    listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
+
+
+            //    loops2d.First().Add(convertedCrv);
+            //}
 
 
             var osurf = new OrientedSurface(bsSurface, inFace.OrientationIsReversed);
             sheetMaker.Surface = osurf;
-            var entity = new TopSolid.Kernel.DB.D2.Sketches.PositionedSketchEntity(TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument, 0);
-            TopSolid.Kernel.G.D2.Sketches.Sketch sk2d = new TKGD2.Sketches.Sketch(entity, null, false);
+            //var entity = new TopSolid.Kernel.DB.D2.Sketches.PositionedSketchEntity(TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument, 0);
+            //TopSolid.Kernel.G.D2.Sketches.Sketch sk2d = new TKGD2.Sketches.Sketch(entity, null, false);
 
             sheetMaker.SetCurves(loops2d, listItemMok);
-            shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
+            try
+            {
+
+                shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
 
             return shape;
         }
