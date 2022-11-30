@@ -272,8 +272,8 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                     }
                     SewOperation sewOperation = new SewOperation(doc, 0);
-                    if (sew)
-                        sewOperation.AddOperation(shapesCreation);
+                    //if (sew)
+                    //    sewOperation.AddOperation(shapesCreation);
 
                     shapesCreation.Create();
 
@@ -285,7 +285,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                             sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
                             for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
                             {
-                                //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
+                                shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
                                 sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
                             }
 
@@ -311,8 +311,9 @@ namespace EPFL.GrasshopperTopSolid.Components
                             //list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
                         }
                         //TODO Handle exception just in case
-                        catch
+                        catch (Exception ex)
                         {
+                            Console.WriteLine(ex);
                         }
                     }
 
