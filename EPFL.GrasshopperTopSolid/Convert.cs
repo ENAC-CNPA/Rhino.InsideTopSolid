@@ -1286,7 +1286,11 @@ namespace EPFL.GrasshopperTopSolid
                 // if (inFace.rev == false || ImporterHelper.MakeReversed(loops3d)) // Useless
                 {
                     sheetMaker.SetCurves(loops3d, listItemMok);
-                    //sheetMaker.UsesBRepMethod = true;//AHW setting to true causes an error
+
+                        bool valid = sheetMaker.IsValid;
+                    //AHW setting to true causes an error
+                    //sheetMaker.UsesBRepMethod = true;
+                    //var x = new ItemMoniker(new CString($"S{op2.Id}"));
                     try
                     {
                         shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);

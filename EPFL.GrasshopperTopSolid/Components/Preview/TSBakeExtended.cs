@@ -269,7 +269,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         GH_ObjectWrapper attrWrapper = null;
                         Color tsColor = Color.Empty;
                         Transparency trnsp = Transparency.Empty;
-                        ShapeList shape;
+                        ShapeList shapeList;
 
                         DA.GetData("Tolerance", ref tol);
                         DA.GetData("TSAttributes", ref attrWrapper);
@@ -284,7 +284,7 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                         }
 
-                        shape = rs.ToHost(tol);
+                        shapeList = rs.ToHost(tol);
 
                         EntitiesCreation shapesCreation = new EntitiesCreation(doc, 0);
                         Layer layer = new Layer(-1);
@@ -327,17 +327,23 @@ namespace EPFL.GrasshopperTopSolid.Components
                         var shapesfolder = doc.ShapesFolderEntity;
 
                         localPart.NodeEntity.IsDeletable = true;
-                        foreach (var ts in shape)
+                        foreach (var ts in shapeList)
                         {
-                            ShapeEntity se = new ShapeEntity(doc, 0);
-                            se.SetGeometry(ts, true);
+                            ShapeEntity shapeEntity = new ShapeEntity(doc, 0);
+#region For Debug
+                            bool valid = ts.CheckGeometry();
+                            string error, error2 = "";
+                            ts.CheckMonikers(true, out error);
+                            ts.CheckShapeAndDisplayMonikers(true, out error2);
+#endregion
+                            shapeEntity.SetGeometry(ts, true);
                             //se.ExplicitColor = tsColor;
                             //se.ExplicitTransparency = trnsp;
                             //se.ExplicitLayer = layEnt.Layer;
 
                             //localPart.NodeEntity.AddGeometry(se);
 
-                            shapesCreation.AddChildEntity(se);
+                            shapesCreation.AddChildEntity(shapeEntity);
                             //shapesCreation.CanDeleteFromChild(se);
                             //shapesfolder.AddEntity(se);
                         }
