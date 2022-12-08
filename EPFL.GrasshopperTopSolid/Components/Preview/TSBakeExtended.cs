@@ -1,4 +1,4 @@
-﻿using Grasshopper.Kernel;
+using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Grasshopper.Kernel.Parameters;
 using Rhino.Geometry;
@@ -147,9 +147,8 @@ namespace EPFL.GrasshopperTopSolid.Components
             {
 
                 doc.EnsureIsDirty();
-
-                //UndoSequence.UndoCurrent();
-
+                UndoSequence.UndoCurrent();
+                UndoSequence.Start("Bake", false);
                 //list.Clear();
 
 
@@ -294,7 +293,32 @@ namespace EPFL.GrasshopperTopSolid.Components
                         var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
                         layEnt = layfoldEnt.SearchLayer(layerName);
 
-                        if (layEnt is null)
+
+
+                    foreach (var ts in shape)
+                    {
+                        ShapeEntity se = new ShapeEntity(doc, 0);
+                        se.Geometry = ts;
+                        se.ExplicitColor = tsColor;
+                        se.ExplicitTransparency = trnsp;
+                        se.ExplicitLayer = layEnt.Layer;
+
+
+                        se.Create(doc.ShapesFolderEntity);
+                        shapesCreation.AddChildEntity(se);
+                        shapesCreation.CanDeleteFromChild(se);
+
+                    }
+                    SewOperation sewOperation = new SewOperation(doc, 0);
+                    //if (sew)
+                    //    sewOperation.AddOperation(shapesCreation);
+
+                    shapesCreation.Create();
+
+
+                    if (sew)
+                    {
+                        try
                         {
                             layfoldEnt.AddLayer(layer, layerName);
                             layEnt = layfoldEnt.SearchLayer(layerName);
@@ -378,6 +402,14 @@ namespace EPFL.GrasshopperTopSolid.Components
                             catch (Exception ex)
                             {
                             }
+                            if (Params.Output.Count > 0)
+                                DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
+                            //list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
+                        }
+                        //TODO Handle exception just in case
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex);
                         }
                     }
                     if (Params.Output.Count > 0)
