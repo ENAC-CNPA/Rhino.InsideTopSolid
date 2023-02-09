@@ -62,7 +62,6 @@ namespace EPFL.GrasshopperTopSolid.Components
         {
 
             pManager.AddGeometryParameter("Geometries", "G", "Geometries to bake", GH_ParamAccess.item);
-
             pManager.AddGenericParameter("TSDocument", "TSDoc", "target TopSolid Document to bake-in", GH_ParamAccess.item);
             pManager[1].Optional = true;
             pManager.AddTextParameter("Name", "Name", "Entity Name to be given", GH_ParamAccess.item);
@@ -71,8 +70,6 @@ namespace EPFL.GrasshopperTopSolid.Components
             pManager.AddNumberParameter("Tolerance", "Tol", "Tolerance for bake", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Sew?", "Sew?", "True to Sew Breps, False to keep faces split", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Bake?", "b?", "Set true to bake", GH_ParamAccess.item);
-
-
         }
         //EntityList list = new EntityList();
 

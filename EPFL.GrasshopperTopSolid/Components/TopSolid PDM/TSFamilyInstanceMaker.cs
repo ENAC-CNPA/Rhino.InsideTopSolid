@@ -21,7 +21,8 @@ using TopSolid.Kernel.TX.Undo;
 
 namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 {
-    public class TSFamilyInstanceMaker : GH_Component
+    //Legacy class, Deprecated !!
+    abstract class TSFamilyInstanceMaker : GH_Component
     {
         protected override System.Drawing.Bitmap Icon => new System.Drawing.Icon(Properties.Resources.FamilyDocument, 24, 24).ToBitmap();
 
@@ -30,7 +31,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         /// </summary>
         public TSFamilyInstanceMaker()
           : base("TSFamilyInstanceMaker", "TSFamily",
-              "Instanciates Family in an Assembly",
+              "Instanciates Family in an Assembly (Deprecated)",
               "TopSolid", "TopSolid PDM")
         {
         }
