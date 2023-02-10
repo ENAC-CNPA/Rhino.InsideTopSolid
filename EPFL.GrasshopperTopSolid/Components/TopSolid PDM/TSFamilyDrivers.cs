@@ -164,14 +164,15 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                         case InstanceDriverType.Point:
                             if (inputValue.Value is IGeometry geometry)
                             {
-                                val = new BasicSmartPoint(null, (TopSolid.Kernel.G.D3.Point)geometry);
-                                //var x = new ProvidedSmartPoint(null, geometry.Owner as Element, ItemLabel.Empty); //TODO Verify
+                                //val = new BasicSmartPoint(null, (TopSolid.Kernel.G.D3.Point)geometry);
+                                val = ProvidedSmartPoint.Make(geometry.Owner as Element, ItemLabel.Empty); //TODO Verify
                                 //driver.SetGeometry(geometry, false);
                             }
                             else if (inputValue.Value is PointEntity pointEntity)
                             {
-                                val = new BasicSmartPoint(null, pointEntity.Geometry);
+                                //val = new BasicSmartPoint(null, pointEntity.Geometry);
                                 //driver.SetGeometry(pointEntity.Geometry, false);
+                                val = ProvidedSmartPoint.Make(pointEntity, ItemLabel.Empty);
                             }
                             else if (inputValue.Value is SmartPoint smartpoint)
                             {

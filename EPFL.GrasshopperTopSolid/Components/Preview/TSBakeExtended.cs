@@ -48,12 +48,14 @@ namespace EPFL.GrasshopperTopSolid.Components
         {
         }
         //Class level variables, to be independent from SolveInstance
-        GH_Structure<IGH_Goo> entities = new GH_Structure<IGH_Goo>();
+        //GH_Structure<IGH_Goo> entities = new GH_Structure<IGH_Goo>();
         Entity entity;
-        IGH_Structure copyTree;
+        EntityList entities = new EntityList();
+        //IGH_Structure copyTree;
         bool run = false;
-        Param_GenericObject param = new Param_GenericObject();
+        //Param_GenericObject param = new Param_GenericObject();
         DesignDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
+        EntitiesCreation entitiesCreation = null;
 
         /// <summary>
         /// Registers all the input parameters for this component.
@@ -86,19 +88,21 @@ namespace EPFL.GrasshopperTopSolid.Components
 
         protected override void BeforeSolveInstance()
         {
-            try
-            {
-                UndoSequence.Start("Grasshopper Bake", false);
+            //try
+            //{
+            //    UndoSequence.Start("Grasshopper Bake", false);
 
-            }
-            catch
-            {
-                UndoSequence.UndoCurrent();
-                UndoSequence.Start("Grasshopper Bake", false);
-            }
+            //}
+            //catch
+            //{
+            //    UndoSequence.UndoCurrent();
+            //    UndoSequence.Start("Grasshopper Bake", false);
+            //}
 
 
-            //base.BeforeSolveInstance();
+            base.BeforeSolveInstance();
+            entities.Clear();
+
         }
 
         /// <summary>
@@ -145,6 +149,8 @@ namespace EPFL.GrasshopperTopSolid.Components
 
             if (run == true)
             {
+                if (entitiesCreation is null)
+                    entitiesCreation = new EntitiesCreation(doc, 0);
 
                 doc.EnsureIsDirty();
                 UndoSequence.UndoCurrent();
@@ -153,24 +159,18 @@ namespace EPFL.GrasshopperTopSolid.Components
 
 
                 #region Simpler Geometries (Not parts)
-                if (geo is GH_Point gp)
+                if (geo is GH_Point ghPoint)
                 {
-                    var rp = new Point3d();
-                    GH_Convert.ToPoint3d(gp, ref rp, 0);
-                    var tp = rp.ToHost();
-                    PointEntity pe = new PointEntity(doc, 0);
-                    if (name != null)
-                    {
-                        pe.Name = name.ToString();
-                    }
+                    Point3d rhinoPoint = new Point3d();
+                    GH_Convert.ToPoint3d(ghPoint, ref rhinoPoint, 0);
+                    TK.G.D3.Point topSolidPoint = rhinoPoint.ToHost();
+                    PointEntity pointEntity = null;
+                    PointsFolderEntity pointsFolderEntity = doc.PointsFolderEntity;
 
-                    double tol = 0.00001;
+
                     GH_ObjectWrapper attrWrapper = null;
                     Color tsColor = Color.Empty;
                     Transparency trnsp = Transparency.Empty;
-                    ShapeList shape;
-
-                    DA.GetData("Tolerance", ref tol);
                     DA.GetData("TSAttributes", ref attrWrapper);
                     string layerName = "";
                     var tsAttributes = attrWrapper.Value as Tuple<Transparency, Color, string>;
@@ -185,23 +185,43 @@ namespace EPFL.GrasshopperTopSolid.Components
 
 
                     Layer layer = new Layer(-1);
-                    LayerEntity layEnt = new LayerEntity(doc, 0, layer);
+                    LayerEntity layerEntity = new LayerEntity(doc, 0, layer);
 
-                    var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
-                    layEnt = layfoldEnt.SearchLayer(layerName);
+                    LayersFolderEntity layersfolderEntity = LayersFolderEntity.GetOrCreateFolder(doc);
+                    layerEntity = layersfolderEntity.SearchLayer(layerName);
 
-                    if (layEnt is null)
+                    if (layerEntity is null)
                     {
-                        layfoldEnt.AddLayer(layer, layerName);
-                        layEnt = layfoldEnt.SearchLayer(layerName);
+                        layersfolderEntity.AddLayer(layer, layerName);
+                        layerEntity = layersfolderEntity.SearchLayer(layerName);
                     }
 
-                    pe.ExplicitColor = tsColor;
-                    pe.ExplicitTransparency = trnsp;
-                    pe.ExplicitLayer = layer;
-                    pe.Geometry = tp;
-                    pe.Create(doc.PointsFolderEntity);
-                    entity = pe;
+
+                    string entityName = null;
+                    if (name != null)
+                    {
+                        entityName = name.ToString();
+                        pointEntity = pointsFolderEntity.SearchDeepEntity(entityName) as PointEntity;
+
+                        if (pointEntity is null)
+                        {
+                            pointEntity = new PointEntity(doc, 0);
+                            pointEntity.Name = entityName;
+                            entitiesCreation.AddChildEntity(pointEntity);
+                            //pointEntity.Create(pointsFolderEntity);
+                        }
+                    }
+
+                    pointEntity.ExplicitColor = tsColor;
+                    pointEntity.ExplicitTransparency = trnsp;
+                    pointEntity.ExplicitLayer = layer;
+                    pointEntity.Geometry = topSolidPoint;
+
+
+
+                    entity = pointEntity;
+
+                    UndoSequence.End();
 
                 }
 
@@ -210,19 +230,18 @@ namespace EPFL.GrasshopperTopSolid.Components
                     var rhPlane = new Plane();
                     GH_Convert.ToPlane(ghPlane, ref rhPlane, 0);
                     var tp = rhPlane.ToHost();
-                    PlaneEntity pe = new PlaneEntity(doc, 0);
-                    pe.Geometry = tp;
-                    pe.Create(doc.PlanesFolderEntity);
+                    PlaneEntity planeEntity = new PlaneEntity(doc, 0);
+                    planeEntity.Geometry = tp;
+                    planeEntity.Create(doc.PlanesFolderEntity);
                 }
                 else if (geo is GH_Curve gc)
                 {
-                    Curve rc = null;
-                    GH_Convert.ToCurve(gc, ref rc, 0);
-                    var rn = rc.ToNurbsCurve();
-                    var tc = rn.ToHost();
-                    CurveEntity ce = new CurveEntity(doc, 0);
-                    ce.Geometry = tc;
-                    ce.Create(doc.SketchesFolderEntity);
+                    Curve rhinoCurve = null;
+                    GH_Convert.ToCurve(gc, ref rhinoCurve, 0);
+                    TK.G.D3.Curves.Curve topSolidCurve = rhinoCurve.ToHost();
+                    CurveEntity curveEntity = new CurveEntity(doc, 0);
+                    curveEntity.Geometry = topSolidCurve;
+                    curveEntity.Create(doc.SketchesFolderEntity);
                     //list.Add(ce);
                 }
                 else if (geo is GH_Surface gs)
@@ -295,67 +314,67 @@ namespace EPFL.GrasshopperTopSolid.Components
 
 
 
-                    foreach (var ts in shape)
-                    {
-                        ShapeEntity se = new ShapeEntity(doc, 0);
-                        se.Geometry = ts;
-                        se.ExplicitColor = tsColor;
-                        se.ExplicitTransparency = trnsp;
-                        se.ExplicitLayer = layEnt.Layer;
-
-
-                        se.Create(doc.ShapesFolderEntity);
-                        shapesCreation.AddChildEntity(se);
-                        shapesCreation.CanDeleteFromChild(se);
-
-                    }
-                    SewOperation sewOperation = new SewOperation(doc, 0);
-                    //if (sew)
-                    //    sewOperation.AddOperation(shapesCreation);
-
-                    shapesCreation.Create();
-
-
-                    if (sew)
-                    {
-                        try
-                        {
-                            layfoldEnt.AddLayer(layer, layerName);
-                            layEnt = layfoldEnt.SearchLayer(layerName);
-                        }
-
-                        var shapesfolder = doc.ShapesFolderEntity;
-
-                        localPart.NodeEntity.IsDeletable = true;
                         foreach (var ts in shapeList)
                         {
-                            ShapeEntity shapeEntity = new ShapeEntity(doc, 0);
-#region For Debug
-                            bool valid = ts.CheckGeometry();
-                            string error, error2 = "";
-                            ts.CheckMonikers(true, out error);
-                            ts.CheckShapeAndDisplayMonikers(true, out error2);
-#endregion
-                            shapeEntity.SetGeometry(ts, true);
-                            //se.ExplicitColor = tsColor;
-                            //se.ExplicitTransparency = trnsp;
-                            //se.ExplicitLayer = layEnt.Layer;
+                            ShapeEntity se = new ShapeEntity(doc, 0);
+                            se.Geometry = ts;
+                            se.ExplicitColor = tsColor;
+                            se.ExplicitTransparency = trnsp;
+                            se.ExplicitLayer = layEnt.Layer;
 
-                            //localPart.NodeEntity.AddGeometry(se);
 
-                            shapesCreation.AddChildEntity(shapeEntity);
-                            //shapesCreation.CanDeleteFromChild(se);
-                            //shapesfolder.AddEntity(se);
+                            se.Create(doc.ShapesFolderEntity);
+                            shapesCreation.AddChildEntity(se);
+                            shapesCreation.CanDeleteFromChild(se);
+
                         }
+                        SewOperation sewOperation = new SewOperation(doc, 0);
                         //if (sew)
                         //    sewOperation.AddOperation(shapesCreation);
 
                         shapesCreation.Create();
 
 
+                        //if (sew)
+                        //{
+                        //    //try
+                        //    //{
+                        //    //    layfoldEnt.AddLayer(layer, layerName);
+                        //    //    layEnt = layfoldEnt.SearchLayer(layerName);
+                        //    //}
+
+                        //    var shapesfolder = doc.ShapesFolderEntity;
+
+                        //    localPart.NodeEntity.IsDeletable = true;
+                        //    foreach (var ts in shapeList)
+                        //    {
+                        //        ShapeEntity shapeEntity = new ShapeEntity(doc, 0);
+                        //        #region For Debug
+                        //        bool valid = ts.CheckGeometry();
+                        //        string error, error2 = "";
+                        //        ts.CheckMonikers(true, out error);
+                        //        ts.CheckShapeAndDisplayMonikers(true, out error2);
+                        //        #endregion
+                        //        shapeEntity.SetGeometry(ts, true);
+                        //        //se.ExplicitColor = tsColor;
+                        //        //se.ExplicitTransparency = trnsp;
+                        //        //se.ExplicitLayer = layEnt.Layer;
+
+                        //        //localPart.NodeEntity.AddGeometry(se);
+
+                        //        shapesCreation.AddChildEntity(shapeEntity);
+                        //        //shapesCreation.CanDeleteFromChild(se);
+                        //        //shapesfolder.AddEntity(se);
+                        //    }
+                        //    //if (sew)
+                        //    //    sewOperation.AddOperation(shapesCreation);
+
+                        //    shapesCreation.Create();
+
+
                         if (sew)
                         {
-                            SewOperation sewOperation = new SewOperation(doc, 0);
+                            //SewOperation sewOperation = new SewOperation(doc, 0);
                             try
                             {
                                 sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
@@ -411,32 +430,63 @@ namespace EPFL.GrasshopperTopSolid.Components
                             if (Params.Output.Count > 0)
                                 DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
                             //list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
-                        }
-                        //TODO Handle exception just in case
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ex);
-                        }
-                    }
-                    if (Params.Output.Count > 0)
 
-                        DA.SetData(0, entity); //TODO Generalize
+                            //TODO Handle exception just in case
+                            //catch (Exception ex)
+                            //        {
+                            //            Console.WriteLine(ex);
+                            //        }
+                        }
+
+                    }
+
 
                 }
-                //*/
+                if (Params.Output.Count > 0)
 
+                    DA.SetData(0, entity); //TODO Generalize
+                                           //*/
 
             }
-
         }
 
 
         protected override void AfterSolveInstance()
         {
 
-            //base.AfterSolveInstance();
-            UndoSequence.End();
-            if (doc != null) doc.Update(true, false);
+            base.AfterSolveInstance();
+            if (entitiesCreation is null)
+                return;
+            if (entitiesCreation.IsCreated)
+
+            {
+                entitiesCreation.Refresh();
+            }
+            else
+            {
+                UndoSequence.Start("grasshopper creation", false);
+                entitiesCreation.Create();
+                //entitiesCreation.add
+                UndoSequence.End();
+            }
+            //UndoSequence.End();
+            try
+            {
+                if (doc != null) doc.Update(true, false);
+            }
+            catch
+            {
+                UndoSequence.UndoCurrent();
+                if (doc != null) doc.Update(true, false);
+            }
+            //finally
+            //{ 
+            //    UndoSequence.UndoCurrent();
+            //    UndoSequence.Start("refresh", false);
+            //    if (doc != null) doc.Update(true, false);
+            //    UndoSequence.End();
+            //} 
+            //if (doc != null) doc.Update(true, false);
         }
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)
