@@ -64,43 +64,42 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             modellingDocument = null;
 
 
-            if (DA.GetData("Document", ref wrapper))
+            if (!DA.GetData("Document", ref wrapper)) return;
+
+
+            if (wrapper.Value is string || wrapper.Value is GH_String)
+            {
+                modellingDocument = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
+            }
+            else if (wrapper.Value is IDocumentItem)
+                modellingDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
+            else if (wrapper.Value is IDocument)
+                modellingDocument = wrapper.Value as ModelingDocument;
+
+
+
+            if (modellingDocument is null) return;
+            if (DA.GetData("Sketch", ref wrapper))
             {
                 if (wrapper.Value is string || wrapper.Value is GH_String)
                 {
-                    if (wrapper.Value is string || wrapper.Value is GH_String)
+                    string name = wrapper.Value.ToString();
+                    foreach (var deepSketch in modellingDocument.SketchesFolderEntity.DeepPositionedSketches)
                     {
-                        modellingDocument = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
-                    }
-                    else if (wrapper.Value is IDocumentItem)
-                        modellingDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
-                    else if (wrapper.Value is IDocument)
-                        modellingDocument = wrapper.Value as ModelingDocument;
-
-
-                }
-                if (modellingDocument is null) return;
-                if (DA.GetData("Sketch", ref wrapper))
-                {
-                    if (wrapper.Value is string || wrapper.Value is GH_String)
-                    {
-                        string name = wrapper.Value.ToString();
-                        foreach (var deepSketch in modellingDocument.SketchesFolderEntity.DeepPositionedSketches)
+                        if (deepSketch.Name == name)
                         {
-                            if (deepSketch.Name == name)
-                            {
-                                sketch = deepSketch.Geometry;
-                                break;
-                            }
+                            sketch = deepSketch.Geometry;
+                            break;
                         }
                     }
-                    else if (wrapper.Value is DB.D3.Sketches.SketchEntity entity)
-                        sketch = entity.Geometry;
-
-                    else if (wrapper.Value is G.D3.Sketches.Sketch sk)
-                        sketch = sk as G.D3.Sketches.Sketch;
                 }
+                else if (wrapper.Value is DB.D3.Sketches.SketchEntity entity)
+                    sketch = entity.Geometry;
+
+                else if (wrapper.Value is G.D3.Sketches.Sketch sk)
+                    sketch = sk as G.D3.Sketches.Sketch;
             }
+
 
             //}
 

@@ -60,20 +60,22 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             {
                 if (wrapper.Value is string || wrapper.Value is GH_String)
                 {
+                    string sktechName = wrapper.Value.ToString();
                     ModelingDocument modellingDocument = null;
-                    if (DA.GetData("Document", ref wrapper))
+                    if (!DA.GetData("Document", ref wrapper)) return;
+
+                    if (wrapper.Value is string || wrapper.Value is GH_String)
                     {
-                        if (wrapper.Value is string || wrapper.Value is GH_String)
-                        {
-                            modellingDocument = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
-                        }
-                        else if (wrapper.Value is IDocumentItem)
-                            modellingDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
-                        else if (wrapper.Value is IDocument)
-                            modellingDocument = wrapper.Value as ModelingDocument;
+                        modellingDocument = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
                     }
+                    else if (wrapper.Value is IDocumentItem)
+                        modellingDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
+                    else if (wrapper.Value is IDocument)
+                        modellingDocument = wrapper.Value as ModelingDocument;
+
                     if (modellingDocument is null) return;
-                    sketch = (modellingDocument.SketchesFolderEntity.SearchDeepEntity(wrapper.Value.ToString()) as DB.D2.Sketches.SketchEntity)?.Geometry;
+
+                    sketch = (modellingDocument.SketchesFolderEntity.SearchDeepEntity(sktechName) as DB.D2.Sketches.SketchEntity)?.Geometry;
                 }
 
                 else if (wrapper.Value is DB.D2.Sketches.SketchEntity entity)
