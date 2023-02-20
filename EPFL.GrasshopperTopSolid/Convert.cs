@@ -210,23 +210,15 @@ namespace EPFL.GrasshopperTopSolid
         {
 
             if (curve is CircleCurve tscircle)
-            {
                 return new Rhino.Geometry.Circle(tscircle.Plane.ToRhino(), tscircle.Radius).ToNurbsCurve();
-            }
-            else if (curve is EllipseCurve tsEllipse)
-            {
-                return new Rhino.Geometry.Ellipse(tsEllipse.Plane.ToRhino(), tsEllipse.RadiusX, tsEllipse.RadiusY).ToNurbsCurve();
-            }
-            else if (curve is TKGD3.Curves.LineCurve tsline)
-            {
-                return tsline.ToRhino();
-            }
-            else  //(curve is TKGD3.Curves.PolylineCurve tspoly) //TODO
-            {
-                //return tspoly.ToRhino();
-                return null;
-            }
 
+            if (curve is EllipseCurve tsEllipse)
+                return new Rhino.Geometry.Ellipse(tsEllipse.Plane.ToRhino(), tsEllipse.RadiusX, tsEllipse.RadiusY).ToNurbsCurve();
+
+            if (curve is TKGD3.Curves.LineCurve tsline)
+                return tsline.ToRhino();
+
+            return curve.GetBSplineCurve(false, false).ToRhino();
 
         }
 
@@ -346,31 +338,27 @@ namespace EPFL.GrasshopperTopSolid
         /// </summary>
         /// <param name="curve">BSplineCurve to convert</param>
         /// <returns></returns>
-        static public Rhino.Geometry.NurbsCurve ToRhino(this BSplineCurve curve)
+        static public Rhino.Geometry.Curve ToRhino(this BSplineCurve curve)
         {
 
             #region Variables Declaration           
             Rhino.Collections.Point3dList Cpts = new Rhino.Collections.Point3dList();
-            Rhino.Geometry.NurbsCurve rhCurve = null;
-            double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
+            //Rhino.Geometry.Curve rhCurve = null;
+            //double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
             #endregion
 
             #region Conversion cases         
             if (curve.IsLinear())
             {
-                rhCurve = ToRhino(new TKG.D3.Curves.LineCurve(curve.Ps, curve.Pe)).ToNurbsCurve();
+                return new Rhino.Geometry.LineCurve(
+                    new Rhino.Geometry.Point3d(curve.Ps.X, curve.Ps.Y, 0), new Rhino.Geometry.Point3d(curve.Pe.X, curve.Pe.Y, 0));
+
             }
 
             //TODO : Case of a complete circle
             //checks if Circular and Converts to Rhino Arc
-            else if (curve.IsCircular())
-            {
-                try
-                {
-                    rhCurve = new Arc(ToRhino(curve.Ps), ToRhino(curve.Pm), ToRhino(curve.Pe)).ToNurbsCurve();
-                }
-                catch { }
-            }
+            if (curve.IsCircular())
+                return new Arc(ToRhino(curve.Ps), ToRhino(curve.Pm), ToRhino(curve.Pe)).ToNurbsCurve();
 
             else
             {
@@ -379,32 +367,33 @@ namespace EPFL.GrasshopperTopSolid
                     Cpts.Add(ToRhino(P));
                 }
 
-                rhCurve = NurbsCurve.Create(false, curve.Degree, Cpts);
+                NurbsCurve nurbsCurve = NurbsCurve.Create(false, curve.Degree, Cpts);
 
                 int k = 0;
                 foreach (Point3d P in Cpts)
                 {
                     try
                     {
-                        rhCurve.Points.SetPoint(k, P, curve.CWts[k]);
+                        nurbsCurve.Points.SetPoint(k, P, curve.CWts[k]);
                     }
                     catch
                     {
-                        rhCurve.Points.SetPoint(k, P, 1);
+                        nurbsCurve.Points.SetPoint(k, P, 1);
                     }
                     k++;
                 }
 
                 for (int i = 1; i < curve.Bs.Count - 1; i++)
                 {
-                    rhCurve.Knots[i - 1] = curve.Bs[i];
+                    nurbsCurve.Knots[i - 1] = curve.Bs[i];
                 }
+                return nurbsCurve;
             }
             #endregion
-            if (curve.IsClosed())
-                rhCurve.MakeClosed(tol_TS);
+            //if (curve.IsClosed())
+            //    rhCurve.MakeClosed(tol_TS);
 
-            return rhCurve;
+            //return rhCurve;
         }
 
         static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD3.Curves.IGeometricProfile profile)
@@ -836,24 +825,14 @@ namespace EPFL.GrasshopperTopSolid
 
                 foreach (TKGD3.Curves.IGeometricSegment ic in c.Segments)
                 {
-                    var crv = ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false);
-
-
-
-                    //var f = listEdges.ElementAt(1);
-
-                    //TODO understand why throws an error here for ind = 1
-
+                    var crv = ic.GetOrientedCurve().Curve.ToRhino();
+                    var crvi = ic.GetOrientedCurve().Curve;
                     if (!listEdges.ElementAt(ind)[indperLoop].IsReversedWithFin(face))
                     {
                         crv.Reverse();
                     }
 
-
-                    //if (!listEdges.ElementAt(ind)[c_index].IsReversedWithFin())
-                    //    rev = brepsrf.Curves3D[c_index].Reverse();
-
-                    c_index = brepsrf.AddEdgeCurve(Convert.ToRhino(crv));
+                    c_index = brepsrf.AddEdgeCurve(crv);
                     indperLoop++;
                 }
                 ind++;
@@ -863,8 +842,6 @@ namespace EPFL.GrasshopperTopSolid
             //Edges
             int i = 0;
             int iperLoop = 0;
-            int listcount = 0;
-            //int j = 0;
             List<BrepEdge> rhEdges = new List<BrepEdge>();
             foreach (EdgeList list in listEdges)
             {
@@ -1287,7 +1264,7 @@ namespace EPFL.GrasshopperTopSolid
                 {
                     sheetMaker.SetCurves(loops3d, listItemMok);
 
-                        bool valid = sheetMaker.IsValid;
+                    bool valid = sheetMaker.IsValid;
                     //AHW setting to true causes an error
                     //sheetMaker.UsesBRepMethod = true;
                     //var x = new ItemMoniker(new CString($"S{op2.Id}"));

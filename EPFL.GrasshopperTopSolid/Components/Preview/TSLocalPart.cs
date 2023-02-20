@@ -29,7 +29,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddGeometryParameter("Geometries", "G", "Rhino Geometries to bake (as list)", GH_ParamAccess.list);
-            pManager.AddGenericParameter("Assembly Document", "A", "target TopSolid Assembly to bake-in", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Assembly Document", "A", "target TopSolid Assembly to bake-in, if none provided will get current assembly", GH_ParamAccess.item);
             pManager[1].Optional = true;
             pManager.AddTextParameter("Name", "Name", "Part Name to be given", GH_ParamAccess.item);
             pManager[2].Optional = true;
@@ -55,7 +55,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            DA.GetData("Bake?", ref run);
+            if (!DA.GetData("Bake?", ref run) || !run) return;
 
             //ent = null;
             GH_String name = new GH_String();
@@ -93,6 +93,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
             //The baking process starts on button
             if (run == true)
             {
+
             }
         }
 

@@ -468,9 +468,9 @@ namespace EPFL.GrasshopperTopSolid.Components
                                 //list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
                             }
                             //TODO Handle exception just in case
-                            catch (Exception ex)
-                            {
-                            }
+                            //catch (Exception ex)
+                            //{
+                            //}
                             if (Params.Output.Count > 0)
                                 DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
                             //list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
