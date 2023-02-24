@@ -35,23 +35,13 @@ using TopSolid.Kernel.DB.D3.Sketches.Operations;
 using TopSolid.Kernel.DB.D3.Curves;
 using TopSolid.Kernel.TX.Undo;
 using TX = TopSolid.Kernel.TX;
-using SX = TopSolid.Kernel.SX;
 using TUI = TopSolid.Kernel.UI;
 using TopSolid.Kernel.SX.Drawing;
-using System;
-using Version = TopSolid.Kernel.SX.Version;
-using Double = TopSolid.Kernel.SX.Double;
-using TopSolid.Kernel.WX;
-using System.Runtime.ConstrainedExecution;
 
 namespace EPFL.GrasshopperTopSolid
 {
     public static class Convert
     {
-        static public double topSolidLinear = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
-        static public double topSolidAngular = TopSolid.Kernel.G.Precision.AngularPrecision;
-
-
         #region Point
         static public TKG.D3.Point ToHost(this Point3d p)
         {
@@ -115,37 +105,30 @@ namespace EPFL.GrasshopperTopSolid
         static public Rhino.Geometry.LineCurve ToRhino(this TKG.D3.Curves.LineCurve l)
         {
             if (l.Range.IsInfinite)
-                return new Rhino.Geometry.LineCurve(l.Axis.Po.ToRhino(), new Rhino.Geometry.Point3d(
-                    l.Axis.Po.X + l.Axis.Vx.X,
-                    l.Axis.Po.Y + l.Axis.Vx.Y,
-                    l.Axis.Po.Z + l.Axis.Vx.Z));
+                return new Rhino.Geometry.LineCurve(l.Axis.Po.ToRhino(), new Rhino.Geometry.Point3d(l.Axis.Po.X + l.Axis.Vx.X,
+l.Axis.Po.Y + l.Axis.Vx.Y,
+l.Axis.Po.Z + l.Axis.Vx.Z))
+                ;
 
             return new Rhino.Geometry.LineCurve(l.Ps.ToRhino(), l.Pe.ToRhino());
         }
 
-        static public Rhino.Geometry.LineCurve ToRhino(this TKG.D2.Curves.LineCurve l)
+        static public Rhino.Geometry.Line ToRhino(this TKG.D2.Curves.LineCurve l)
         {
-            return new Rhino.Geometry.LineCurve(new Point3d(l.Ps.X, l.Ps.Y, 0), new Point3d(l.Pe.X, l.Pe.Y, 0));
+            return new Rhino.Geometry.Line(new Point3d(l.Ps.X, l.Ps.Y, 0), new Point3d(l.Pe.X, l.Pe.Y, 0));
         }
 
-
-
-        //2D
-        static public TKG.D2.Curves.LineCurve ToHost2d(this Rhino.Geometry.LineCurve lineCurve)
-        {
-            return new TKG.D2.Curves.LineCurve(lineCurve.PointAtStart.ToHost2d(), lineCurve.PointAtEnd.ToHost2d());
-        }
 
         #endregion
 
         #region Plane
-        static public TKG.D3.Plane ToHost(this Rhino.Geometry.Plane plane)
+        static public TKG.D3.Plane ToHost(this Rhino.Geometry.Plane p)
         {
-            var vx = plane.XAxis;
-            vx.Unitize();
-            var y = plane.YAxis;
+            var x = p.XAxis;
+            x.Unitize();
+            var y = p.YAxis;
             y.Unitize();
-            return new TKG.D3.Plane(plane.Origin.ToHost(), new UnitVector(vx.ToHost()), new UnitVector(y.ToHost()));
+            return new TKG.D3.Plane(p.Origin.ToHost(), new UnitVector(x.ToHost()), new UnitVector(y.ToHost()));
         }
 
         static public TKG.D3.Frame ToHost(this Rhino.Geometry.Plane p, Vector xVec, Vector yVec, Vector zVec)
@@ -153,17 +136,6 @@ namespace EPFL.GrasshopperTopSolid
             return new TKG.D3.Frame(p.Origin.ToHost(), new UnitVector(xVec), new UnitVector(yVec), new UnitVector(zVec));
         }
 
-        //2D
-        static public TKG.D2.Frame ToHost2d(this Rhino.Geometry.Plane plane)
-        {
-            Rhino.Geometry.Vector3d x = plane.XAxis;
-            x.Unitize();
-            Rhino.Geometry.Vector3d y = plane.YAxis;
-            y.Unitize();
-            TKG.D2.UnitVector vx = new TKGD2.UnitVector(x.X, x.Y);
-            TKG.D2.UnitVector vy = new TKGD2.UnitVector(x.X, x.Y);
-            return new TKG.D2.Frame(plane.Origin.ToHost2d(), vx, vy);
-        }
 
         static public Rhino.Geometry.Plane ToRhino(this TKG.D3.Frame p)
         {
@@ -271,107 +243,42 @@ namespace EPFL.GrasshopperTopSolid
             return new ArcCurve(arc);
         }
 
-        static public TopSolid.Kernel.G.D3.Curves.Curve ToHost(this Rhino.Geometry.Curve rhinoCurve)
+        static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve rhinoCurve)
         {
-
-            if (rhinoCurve is Rhino.Geometry.LineCurve line)
-            {
-                return line.ToHost();
-            }
-
-            if (rhinoCurve is ArcCurve arcCurve)
-            {
-                Arc arc = arcCurve.Arc;
-                CircleCurve circleCurve = new CircleCurve(arc.Plane.ToHost(), arc.Radius);
-                CircleMaker maker = new CircleMaker(SX.Version.Current, topSolidLinear, topSolidAngular);
-                maker.SetByCenterAndTwoPoints(
-                    arc.Center.ToHost(),
-                    arc.StartPoint.ToHost(),
-                    arc.EndPoint.ToHost(),
-                    false,
-                    new UnitVector(arc.Plane.Normal.ToHost()),
-                    circleCurve);
-
-                return circleCurve;
-            }
-
-            if (rhinoCurve is NurbsCurve nurbsCurve)
-            {
-                return nurbsCurve.ToHost();
-            }
-
-            return rhinoCurve.ToNurbsCurve().ToHost();
-
-        }
-
-
-        static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve nurbsCurve)
-        {
-            bool isRational = nurbsCurve.IsRational;
-            bool isPeriodic = nurbsCurve.IsPeriodic;
-            int degree = nurbsCurve.Degree;
-            DoubleList knotList = ToDoubleList(nurbsCurve.Knots);
-            PointList pts = ToPointList(nurbsCurve.Points);
-            DoubleList weightList = ToDoubleList(nurbsCurve.Points);
-            BSpline bspline = new BSpline(isPeriodic, degree, knotList);
-            if (isRational)
+            bool r = rhinoCurve.IsRational;
+            bool p = rhinoCurve.IsPeriodic;
+            int d = rhinoCurve.Degree;
+            DoubleList k = ToDoubleList(rhinoCurve.Knots, d);
+            PointList pts = ToPointList(rhinoCurve.Points);
+            DoubleList w = ToDoubleList(rhinoCurve.Points);
+            BSpline b = new BSpline(p, d, k);
+            if (r)
             {
                 //var w = c.Points.ConvertAll(x => x.Weight);
-                BSplineCurve bsplineCurve = new BSplineCurve(bspline, pts, weightList);
+                BSplineCurve bsplineCurve = new BSplineCurve(b, pts, w);
                 return bsplineCurve;
             }
             else
             {
-                BSplineCurve bsplineCurve = new BSplineCurve(bspline, pts);
+                BSplineCurve bsplineCurve = new BSplineCurve(b, pts);
                 return bsplineCurve;
             }
+
         }
 
-        static public TopSolid.Kernel.G.D2.Curves.Curve ToHost2d(this Rhino.Geometry.Curve rhinoCurve)
+        static public TopSolid.Kernel.G.D2.Curves.BSplineCurve ToHost2d(this Rhino.Geometry.NurbsCurve rhinoCurve)
         {
-            TKGD3.Curves.Curve topSolidCurve;
-
-            if (rhinoCurve is Rhino.Geometry.LineCurve line)
-            {
-                return line.ToHost2d();
-            }
-
-            if (rhinoCurve is ArcCurve arcCurve)
-            {
-                Arc arc = arcCurve.Arc;
-                TKGD2.Frame plane2d = arc.Plane.ToHost2d();
-                TKGD2.Curves.CircleCurve circleCurve = new TKGD2.Curves.CircleCurve(plane2d, arc.Radius);
-                TKGD2.Curves.CircleMaker maker = new TKGD2.Curves.CircleMaker(SX.Version.Current, topSolidLinear, topSolidAngular);
-                maker.SetByCenterAndTwoPoints(
-                    arc.Center.ToHost2d(),
-                    arc.StartPoint.ToHost2d(),
-                    arc.EndPoint.ToHost2d(),
-                    false,
-                    circleCurve);
-                return circleCurve;
-            }
-
-            if (rhinoCurve is NurbsCurve nurbsCurve)
-            {
-                return nurbsCurve.ToHost2d();
-            }
-            return rhinoCurve.ToNurbsCurve().ToHost2d();
-        }
-
-
-        static public TopSolid.Kernel.G.D2.Curves.BSplineCurve ToHost2d(this Rhino.Geometry.NurbsCurve nurbsCurve, TKGD3.Surfaces.Surface surface = null)
-        {
-            bool isRational = nurbsCurve.IsRational;
-            bool isPeriodic = nurbsCurve.IsPeriodic;
-            int degree = nurbsCurve.Degree;
-            DoubleList knotList = ToDoubleList(nurbsCurve.Knots);
-            TKGD2.PointList pts = ToPointList2D(nurbsCurve.Points);
-            DoubleList weightList = ToDoubleList(nurbsCurve.Points);
-            BSpline b = new BSpline(isPeriodic, degree, knotList);
-            if (isRational)
+            bool r = rhinoCurve.IsRational;
+            bool p = rhinoCurve.IsPeriodic;
+            int d = rhinoCurve.Degree;
+            DoubleList k = ToDoubleList(rhinoCurve.Knots, d);
+            TKGD2.PointList pts = ToPointList2D(rhinoCurve.Points);
+            DoubleList w = ToDoubleList(rhinoCurve.Points);
+            BSpline b = new BSpline(p, d, k);
+            if (r)
             {
                 //var w = c.Points.ConvertAll(x => x.Weight);
-                TKGD2.Curves.BSplineCurve bsplineCurve = new TKGD2.Curves.BSplineCurve(b, pts, weightList);
+                TKGD2.Curves.BSplineCurve bsplineCurve = new TKGD2.Curves.BSplineCurve(b, pts, w);
                 return bsplineCurve;
             }
             else
@@ -574,82 +481,32 @@ namespace EPFL.GrasshopperTopSolid
 
 
         #region Surface
-        public static TKG.D3.Surfaces.Surface ToHost(this Rhino.Geometry.Surface rhinoSurface)
+        public static TKG.D3.Surfaces.BSplineSurface ToHost(this NurbsSurface s)
         {
-            //TKG.D3.Surfaces.Surface surface = null;
-            if (rhinoSurface is Rhino.Geometry.PlaneSurface rhinoPlaneSurf)
+            bool r = s.IsRational;
+            bool pU = s.IsPeriodic(0);
+            bool pV = s.IsPeriodic(1);
+            var dU = s.Degree(0);
+            var dV = s.Degree(1);
+            var kU = ToDoubleList(s.KnotsU);
+            var kV = ToDoubleList(s.KnotsV);
+            var cp = ToPointList(s.Points);
+            var w = ToDoubleList(s.Points);
+
+            BSpline bU = new BSpline(pU, dU, kU);
+            BSpline bV = new BSpline(pV, dV, kV);
+
+            if (r)
             {
-                return rhinoPlaneSurf.ToHost();
-            }
-
-            if (rhinoSurface is Rhino.Geometry.RevSurface rhinoSevSurface)
-            {
-                return rhinoSevSurface.ToHost();
-            }
-
-            if (rhinoSurface is Rhino.Geometry.Extrusion rhinoExtrusion)
-            {
-                return rhinoExtrusion.ToHost();
-            }
-
-            if (rhinoSurface is NurbsSurface nurbsSurface)
-            {
-                return nurbsSurface.ToHost();
-            }
-
-            return rhinoSurface.ToNurbsSurface().ToHost();
-        }
-
-        public static TKG.D3.Surfaces.PlaneSurface ToHost(this Rhino.Geometry.PlaneSurface rhinoPlaneSurface)
-        {
-
-            Rhino.Geometry.Plane plane;
-            rhinoPlaneSurface.TryGetPlane(out plane);
-            var extent = new TKGD2.Extent(rhinoPlaneSurface.Domain(0).ToHost(), rhinoPlaneSurface.Domain(1).ToHost());
-            TKGD3.Surfaces.PlaneSurface planeSurface = new TKGD3.Surfaces.PlaneSurface(plane.ToHost(), extent);
-            return planeSurface;
-
-        }
-
-        public static TKG.D3.Surfaces.RevolvedSurface ToHost(this Rhino.Geometry.RevSurface rhinorevSurface)
-        {
-            TKGD2.Extent extent = new TKGD2.Extent(rhinorevSurface.Domain(0).ToHost(), rhinorevSurface.Domain(1).ToHost());
-            RevolvedSurface revolvedSurface = new RevolvedSurface(rhinorevSurface.Curve.ToHost(), rhinorevSurface.Axis.LineToAxis(), extent);
-            return revolvedSurface;
-        }
-
-        public static TKG.D3.Surfaces.ExtrudedSurface ToHost(this Rhino.Geometry.Extrusion rhinoExtrusion)
-        {
-            TKGD2.Extent extent = new TKGD2.Extent(rhinoExtrusion.Domain(0).ToHost(), rhinoExtrusion.Domain(1).ToHost());
-            ExtrudedSurface extrudedSurface = new ExtrudedSurface(rhinoExtrusion.Profile3d(0, 0).ToHost(), ((UnitVector)rhinoExtrusion.PathLineCurve().Line.Direction.ToHost()), extent);
-            return extrudedSurface;
-        }
-
-        public static TKG.D3.Surfaces.BSplineSurface ToHost(this NurbsSurface nurbsSurface)
-        {
-            bool isRational = nurbsSurface.IsRational;
-            bool isUPeriodic = nurbsSurface.IsPeriodic(0);
-            bool isVPeriodic = nurbsSurface.IsPeriodic(1);
-            int degreeU = nurbsSurface.Degree(0);
-            int degreeV = nurbsSurface.Degree(1);
-            DoubleList knotU = ToDoubleList(nurbsSurface.KnotsU);
-            DoubleList knotV = ToDoubleList(nurbsSurface.KnotsV);
-            PointList controlPoints = ToPointList(nurbsSurface.Points);
-            DoubleList weightList = ToDoubleList(nurbsSurface.Points);
-
-            BSpline bsplineU = new BSpline(isUPeriodic, degreeU, knotU);
-            BSpline bsplineV = new BSpline(isVPeriodic, degreeV, knotV);
-
-            if (isRational)
-            {
-                BSplineSurface bsplineSurface = new BSplineSurface(bsplineU, bsplineV, controlPoints, weightList);
-                return bsplineSurface;
+                BSplineSurface bs = new BSplineSurface(bU, bV, cp, w);
+                return bs;
             }
             else
             {
-                BSplineSurface bsplineSurface = new BSplineSurface(bsplineU, bsplineV, controlPoints);
-                return bsplineSurface;
+                BSplineSurface bs = new BSplineSurface(bU, bV, cp);
+                return bs;
             }
+
         }
 
         public static Rhino.Geometry.Surface ToRhino(this IParametricSurface inTSSurface)
@@ -742,17 +599,23 @@ namespace EPFL.GrasshopperTopSolid
         }
 
 
-        public static DoubleList ToDoubleList(NurbsSurfaceKnotList nurbsKnotList)
+        public static DoubleList ToDoubleList(NurbsSurfaceKnotList list)
         {
-            int count = nurbsKnotList.Count;
-            DoubleList knotDoubleList = new DoubleList(count + 2);
-            knotDoubleList.Add(nurbsKnotList[0]);
-            foreach (var knot in nurbsKnotList)
+            var count = list.Count;
+            var knots = new double[count + 2];
+
+            int j = 0, k = 0;
+            while (j < count)
+                knots[++k] = list[j++];
+
+            knots[0] = knots[1];
+            knots[count + 1] = knots[count];
+            var kDl = new DoubleList();
+            foreach (double d in knots)
             {
-                knotDoubleList.Add(knot);
+                kDl.Add(d);
             }
-            knotDoubleList.Add(knotDoubleList.Last());
-            return knotDoubleList;
+            return kDl;
         }
 
         public static PointList ToPointList(NurbsSurfacePointList list)
@@ -1066,6 +929,7 @@ namespace EPFL.GrasshopperTopSolid
             //List<PositionedSketch> list3dSktech = new List<PositionedSketch>();
             //List<TKGD2.Sketches.PositionedSketch> list2dSketch = new List<TKGD2.Sketches.PositionedSketch>();
 
+
             if (brep.IsValid)
             {
                 foreach (BrepFace bface in brep.Faces)
@@ -1083,7 +947,6 @@ namespace EPFL.GrasshopperTopSolid
                     {
                         shape = MakeSheet(brep, bface);
                         //inLog.Report("Face not limited.");
-                        MessageBox.Show("Face not limited.");
                     }
 
                     if (shape == null || shape.IsEmpty)
@@ -1301,6 +1164,7 @@ namespace EPFL.GrasshopperTopSolid
             TX.Items.ItemMonikerKey key = new TX.Items.ItemMonikerKey(TX.Items.ItemOperationKey.BasicKey);
 
             // Get surface and set to maker.
+
             Rhino.Geometry.Surface surface = inBRep.Surfaces[inFace.FaceIndex];
 
             // Reverse surface and curves in 3d mode(according to the drilled cylinder crossed by cube in v5_example.3dm).
@@ -1311,45 +1175,71 @@ namespace EPFL.GrasshopperTopSolid
             // If new problems come, see about the periodicity of the curves.
 
             //TODO check if planar to simplify
-            TKGD3.Surfaces.Surface topSolidSurface = Convert.ToHost(surface);
+            BSplineSurface bsSurface = Convert.ToHost(surface.ToNurbsSurface());
 
-            if (topSolidSurface != null && topSolidSurface is BSplineSurface bsplineSurface && (topSolidSurface.IsUPeriodic || topSolidSurface.IsVPeriodic))
+            if (bsSurface != null && (bsSurface.IsUPeriodic || bsSurface.IsVPeriodic))
             {
-                topSolidSurface = (BSplineSurface)bsplineSurface.Clone();
+                bsSurface = (BSplineSurface)bsSurface.Clone();
 
-                if (topSolidSurface.IsUPeriodic)
-                    bsplineSurface.MakeUNonPeriodic();
+                if (bsSurface.IsUPeriodic)
+                    bsSurface.MakeUNonPeriodic();
 
-                if (topSolidSurface.IsVPeriodic)
-                    bsplineSurface.MakeVNonPeriodic();
+                if (bsSurface.IsVPeriodic)
+                    bsSurface.MakeVNonPeriodic();
 
-                sheetMaker.Surface = new OrientedSurface(bsplineSurface, false);
+
+
+                //surface = bsSurface;
             }
 
-            else
-            {
-                sheetMaker.Surface = new OrientedSurface(topSolidSurface, false);
-            }
 
+            sheetMaker.Surface = new OrientedSurface(bsSurface, false);
             sheetMaker.SurfaceMoniker = new ItemMoniker(false, (byte)ItemType.ShapeFace, key, 1);
 
             // Get spatial curves and set to maker.
             TopSolid.Kernel.SX.Collections.Generic.List<TKGD3.Curves.CurveList> loops3d = new TSXGen.List<TKGD3.Curves.CurveList>();
+            loops3d.Add(new TKGD3.Curves.CurveList());
+
+
             TopSolid.Kernel.SX.Collections.Generic.List<ItemMonikerList> listItemMok = new TSXGen.List<ItemMonikerList>();
+            listItemMok.Add(new ItemMonikerList());
             int i = 0;
-            int loopIndex = 0;
-            foreach (Rhino.Geometry.BrepLoop loop in inFace.Loops)
+
+            List<int> indices = new List<int>();
+
+            foreach (int ind in inFace.AdjacentEdges())
             {
-                loops3d.Add(new TKGD3.Curves.CurveList());
-                listItemMok.Add(new ItemMonikerList());
-                foreach (var trim in loop.Trims)
-                {
-                    if (loops3d.Count < loopIndex - 1 || listItemMok.Count < loopIndex - 1) break;
-                    loops3d[loopIndex].Add(trim.Edge.EdgeCurve.ToHost());
-                    listItemMok[loopIndex].Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
-                }
-                loopIndex++;
+                indices.Add(ind);
             }
+
+            int counter = 0;
+            foreach (int ind in indices)
+            {
+                var rhCurve = inBRep.Edges.ElementAt(ind).EdgeCurve.ToNurbsCurve();
+                if (counter != 0 && rhCurve.PointAtStart.DistanceTo(inBRep.Edges.ElementAt(indices[counter - 1]).PointAtEnd) > inLinearPrecision)
+                {
+                    rhCurve.Reverse();
+                }
+                var convertedCrv = ToHost(rhCurve);
+                listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
+                loops3d.First().Add(convertedCrv);
+                counter++;
+            }
+
+
+            //TODO organize using coincidance between start and end point
+            //foreach (BrepEdge edge in inBRep.Edges)
+            ////Where(x => x.AdjacentFaces().Contains(inFace.FaceIndex)).OrderBy(y => y.EdgeIndex))
+            //{
+            //    if (inBRep.Faces[inFace.FaceIndex].AdjacentEdges().Contains(edge.EdgeIndex))
+            //    {
+            //        var convertedCrv = ToHost(edge.EdgeCurve.ToNurbsCurve());
+            //        listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
+            //        loops3d.First().Add(convertedCrv);
+            //    }
+
+            //}
+
 
             if (loops3d != null && loops3d.Count != 0)
             {
@@ -1366,10 +1256,9 @@ namespace EPFL.GrasshopperTopSolid
                         shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
                         //shape.CheckIsValidOccurrence();                        
                     }
-                    catch (Exception e)
-
+                    catch (System.Exception e)
                     {
-                        Console.WriteLine(e.Message + "\n" + e.Data.ToString());
+                        
                     }
                 }
             }
@@ -1387,59 +1276,44 @@ namespace EPFL.GrasshopperTopSolid
 
             // Closed BSpline surfaces must be made periodic for parasolid with 2d curves (according to torus and sphere in v5_example.3dm).
             // If new problems come, see about the periodicity of the curves.
-            TKGD3.Surfaces.Surface topSolidSurface = Convert.ToHost(surface);
-            if (topSolidSurface != null && topSolidSurface is BSplineSurface bsplineSurface && ((bsplineSurface.IsUClosed && bsplineSurface.IsUPeriodic == false) || (bsplineSurface.IsVClosed && bsplineSurface.IsVPeriodic == false)))
+            BSplineSurface bsSurface = Convert.ToHost(surface.ToNurbsSurface());
+            if (bsSurface != null && ((bsSurface.IsUClosed && bsSurface.IsUPeriodic == false) || (bsSurface.IsVClosed && bsSurface.IsVPeriodic == false)))
             {
-                bsplineSurface = (BSplineSurface)bsplineSurface.Clone();
+                bsSurface = (BSplineSurface)bsSurface.Clone();
 
-                if (bsplineSurface.IsUClosed)
-                    bsplineSurface.MakeUPeriodic();
+                if (bsSurface.IsUClosed)
+                    bsSurface.MakeUPeriodic();
 
-                if (bsplineSurface.IsVClosed)
-                    bsplineSurface.MakeVPeriodic();
+                if (bsSurface.IsVClosed)
+                    bsSurface.MakeVPeriodic();
 
                 //surface = bsSurface;
-
-                OrientedSurface osurf = new OrientedSurface(bsplineSurface, inFace.OrientationIsReversed);
-                sheetMaker.Surface = osurf;
             }
-            else
-            {
-                OrientedSurface osurf = new OrientedSurface(topSolidSurface, inFace.OrientationIsReversed);
-                sheetMaker.Surface = osurf;
-            }
-
             TopSolid.Kernel.SX.Collections.Generic.List<TKGD2.Curves.CurveList> loops2d = new TSXGen.List<TKGD2.Curves.CurveList>();
+            loops2d.Add(new TKGD2.Curves.CurveList());
             TopSolid.Kernel.SX.Collections.Generic.List<ItemMonikerList> listItemMok = new TSXGen.List<ItemMonikerList>();
+            listItemMok.Add(new ItemMonikerList());
             ItemMonikerKey key = new ItemMonikerKey(ItemOperationKey.BasicKey);
             int i = 0;
-            int loopIndex = 0;
-            foreach (Rhino.Geometry.BrepLoop loop in inFace.Loops)
+
+            foreach (var crv in surface.ToBrep().Curves2D)
             {
-                loops2d.Add(new TKGD2.Curves.CurveList());
-                listItemMok.Add(new ItemMonikerList());
-                foreach (var trim in loop.Trims)
-                {
-                    if (loops2d.Count < loopIndex - 1 || listItemMok.Count < loopIndex - 1) break;
-                    loops2d[loopIndex].Add(trim.TrimCurve.ToHost2d());
-                    listItemMok[loopIndex].Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
-                }
-                loopIndex++;
+                var convertedCrv = ToHost2d(crv.ToNurbsCurve());
+
+                listItemMok.First().Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
+
+
+                loops2d.First().Add(convertedCrv);
             }
 
 
-            //var entity = new TopSolid.Kernel.DB.D2.Sketches.PositionedSketchEntity(TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument, 0);
-            //TopSolid.Kernel.G.D2.Sketches.Sketch sk2d = new TKGD2.Sketches.Sketch(entity, null, false);
+            var osurf = new OrientedSurface(bsSurface, inFace.OrientationIsReversed);
+            sheetMaker.Surface = osurf;
+            var entity = new TopSolid.Kernel.DB.D2.Sketches.PositionedSketchEntity(TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument, 0);
+            TopSolid.Kernel.G.D2.Sketches.Sketch sk2d = new TKGD2.Sketches.Sketch(entity, null, false);
 
             sheetMaker.SetCurves(loops2d, listItemMok);
-            try
-            {
-                shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+            shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
 
             return shape;
         }
@@ -1454,9 +1328,9 @@ namespace EPFL.GrasshopperTopSolid
             {
                 shape = sheetMaker.Make(null, null);
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine(e);
+                //TODO Add Exception             
             }
 
             return shape;
@@ -1557,78 +1431,64 @@ namespace EPFL.GrasshopperTopSolid
         static DoubleList ToDoubleList(NurbsCurvePointList list)
         {
             var count = list.Count;
-            DoubleList weightsList = new DoubleList(count);
+            DoubleList w = new DoubleList(count);
             foreach (ControlPoint p in list)
             {
                 var weight = p.Weight;
-                weightsList.Add(weight);
+                w.Add(weight);
             }
-            return weightsList;
+            return w;
         }
-
-        //AHW Obselete
-        //static DoubleList ToDoubleList(NurbsCurveKnotList list, int degree)
-        //{
-        //    var count = list.Count;
-        //    var knots = new double[count + 2];
-
-        //    var min = list[0];
-        //    var max = list[count - 1];
-        //    var mid = 0.5 * (min + max);
-        //    var factor = 1.0 / (max - min); // normalized
-
-        //    // End knot
-        //    knots[count + 1] = /*(list[count - 1] - max) * factor +*/ 1.0;
-        //    for (int k = count - 1; k >= count - degree; --k)
-        //        knots[k + 1] = /*(list[k] - max) * factor +*/ 1.0;
-
-        //    // Interior knots (in reverse order)
-        //    int multiplicity = degree + 1;
-        //    for (int k = count - degree - 1; k >= degree; --k)
-        //    {
-        //        double current = list[k] <= mid ?
-        //          (list[k] - min) * factor + 0.0 :
-        //          (list[k] - max) * factor + 1.0;
-
-        //        double next = knots[k + 2];
-        //        if (KnotAlmostEqualTo(next, current))
-        //        {
-        //            multiplicity++;
-        //            if (multiplicity > degree - 2)
-        //                current = KnotPrevNotEqual(next);
-        //            else
-        //                current = next;
-        //        }
-        //        else multiplicity = 1;
-
-        //        knots[k + 1] = current;
-        //    }
-
-        //    // Start knot
-        //    for (int k = degree - 1; k >= 0; --k)
-        //        knots[k + 1] = /*(list[k] - min) * factor +*/ 0.0;
-        //    knots[0] = /*(list[0] - min) * factor +*/ 0.0;
-
-        //    knots.ToList();
-        //    var knotDoubleList = new DoubleList();
-        //    foreach (double d in knots)
-        //    {
-        //        knotDoubleList.Add(d);
-        //    }
-        //    return knotDoubleList;
-        //}
-        static DoubleList ToDoubleList(NurbsCurveKnotList rhinoKnotlist)
+        static DoubleList ToDoubleList(NurbsCurveKnotList list, int degree)
         {
-            DoubleList knotDoubleList = new DoubleList();
-            knotDoubleList.Add(rhinoKnotlist[0]);
-            foreach (var value in rhinoKnotlist)
-            {
-                knotDoubleList.Add(value);
-            }
-            knotDoubleList.Add(rhinoKnotlist.Last());
-            return knotDoubleList;
-        }
+            var count = list.Count;
+            var knots = new double[count + 2];
 
+            var min = list[0];
+            var max = list[count - 1];
+            var mid = 0.5 * (min + max);
+            var factor = 1.0 / (max - min); // normalized
+
+            // End knot
+            knots[count + 1] = /*(list[count - 1] - max) * factor +*/ 1.0;
+            for (int k = count - 1; k >= count - degree; --k)
+                knots[k + 1] = /*(list[k] - max) * factor +*/ 1.0;
+
+            // Interior knots (in reverse order)
+            int multiplicity = degree + 1;
+            for (int k = count - degree - 1; k >= degree; --k)
+            {
+                double current = list[k] <= mid ?
+                  (list[k] - min) * factor + 0.0 :
+                  (list[k] - max) * factor + 1.0;
+
+                double next = knots[k + 2];
+                if (KnotAlmostEqualTo(next, current))
+                {
+                    multiplicity++;
+                    if (multiplicity > degree - 2)
+                        current = KnotPrevNotEqual(next);
+                    else
+                        current = next;
+                }
+                else multiplicity = 1;
+
+                knots[k + 1] = current;
+            }
+
+            // Start knot
+            for (int k = degree - 1; k >= 0; --k)
+                knots[k + 1] = /*(list[k] - min) * factor +*/ 0.0;
+            knots[0] = /*(list[0] - min) * factor +*/ 0.0;
+
+            knots.ToList();
+            var kDl = new DoubleList();
+            foreach (double d in knots)
+            {
+                kDl.Add(d);
+            }
+            return kDl;
+        }
         static PointList ToPointList(NurbsCurvePointList list)
         {
             var count = list.Count;
@@ -1643,7 +1503,7 @@ namespace EPFL.GrasshopperTopSolid
             return points;
         }
 
-        static TKGD2.PointList ToPointList2D(this NurbsCurvePointList list)
+        static TKGD2.PointList ToPointList2D(NurbsCurvePointList list)
         {
             var count = list.Count;
             TKGD2.PointList points = new TKGD2.PointList();
@@ -1655,17 +1515,6 @@ namespace EPFL.GrasshopperTopSolid
             }
 
             return points;
-        }
-
-        static Axis LineToAxis(this Line line)
-        {
-            return new Axis(line.From.ToHost(), line.To.ToHost());
-        }
-
-        static TKG.D1.Extent ToHost(this Interval interval)
-        {
-            var extent = new TKG.D1.Extent(interval.T0, interval.T1);
-            return extent;
         }
         #endregion
     }

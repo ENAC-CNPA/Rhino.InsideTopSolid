@@ -1,4 +1,4 @@
-using Grasshopper.Kernel;
+﻿using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Grasshopper.Kernel.Parameters;
 using Rhino.Geometry;
@@ -150,8 +150,9 @@ namespace EPFL.GrasshopperTopSolid.Components
                     entitiesCreation = new EntitiesCreation(doc, 0);
 
                 doc.EnsureIsDirty();
-                UndoSequence.UndoCurrent();
-                UndoSequence.Start("Bake", false);
+
+                //UndoSequence.UndoCurrent();
+
                 //list.Clear();
 
 
@@ -309,9 +310,16 @@ namespace EPFL.GrasshopperTopSolid.Components
                         var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
                         layEnt = layfoldEnt.SearchLayer(layerName);
 
+                        if (layEnt is null)
+                        {
+                            layfoldEnt.AddLayer(layer, layerName);
+                            layEnt = layfoldEnt.SearchLayer(layerName);
+                        }
 
+                        var shapesfolder = doc.ShapesFolderEntity;
 
-                        foreach (var ts in shapeList)
+                        localPart.NodeEntity.IsDeletable = true;
+                        foreach (var ts in shape)
                         {
                             ShapeEntity se = new ShapeEntity(doc, 0);
                             se.Geometry = ts;
