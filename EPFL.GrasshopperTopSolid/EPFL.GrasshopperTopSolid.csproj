@@ -101,6 +101,9 @@
     <Reference Include="TopSolid.Kernel.WX">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.16\Debug x64\TopSolid.Kernel.WX.dll</HintPath>
     </Reference>
+    <Reference Include="TopSolid.Kernel.XK.Parasolid">
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.16\Debug x64\TopSolid.Kernel.XK.Parasolid.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
