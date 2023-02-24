@@ -3,6 +3,7 @@ using Rhino.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TopSolid.Cad.Design.DB.Documents;
 using TopSolid.Kernel.DB.D3.Documents;
 using TopSolid.Kernel.DB.D3.Shapes;
 
@@ -44,29 +45,20 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             string _name = "";
-            DA.GetData("Name", ref _name);
-            GeometricDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
-            //Brep brep;
+            if (!DA.GetData("Name", ref _name)) return;
+            DesignDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
             List<Brep> list = new List<Brep>();
 
             ShapeEntity entity = document.RootEntity.SearchDeepEntity(_name) as ShapeEntity;
-            if (entity.Geometry.Faces.Count() == 0)
+            if (entity is null)
             {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"Shape Contains {entity.Geometry.Faces.Count()} Faces");
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"no valid shapes found");
                 return;
             }
             else
             {
                 list = Convert.ToRhino(entity.Geometry).ToList();
-                //for (int i = 0; i < r; i++)
-                //{
-                //    list.Add(brep[i]);
-                //}
-
             }
-
-
-
 
             DA.SetDataList("RhinoBrep", list);
             DA.SetData("TopSolidShape", entity);

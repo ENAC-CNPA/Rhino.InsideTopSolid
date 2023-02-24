@@ -656,89 +656,80 @@ namespace EPFL.GrasshopperTopSolid
         {
             Rhino.Geometry.Surface surf = null;
             if (inTSSurface is TKGD3.Surfaces.PlaneSurface planarsurf)
-            {
-                surf = new Rhino.Geometry.PlaneSurface(planarsurf.Plane.ToRhino(), planarsurf.Range.XExtent.ToRhino(), planarsurf.Range.YExtent.ToRhino());
-            }
+                return new Rhino.Geometry.PlaneSurface(planarsurf.Plane.ToRhino(), planarsurf.Range.XExtent.ToRhino(), planarsurf.Range.YExtent.ToRhino());
 
-            else if (inTSSurface is RevolvedSurface revSurf)
+
+            if (inTSSurface is RevolvedSurface revSurf)
             {
                 if (revSurf.Curve.IsLinear())
                 {
                     TKGD3.Curves.LineCurve line = (TKGD3.Curves.LineCurve)revSurf.Curve;
-                    surf = RevSurface.Create(line.ToRhino().Line, new Line(revSurf.Axis.Po.ToRhino(), revSurf.Axis.Vx.ToRhino()));
+                    return RevSurface.Create(line.ToRhino().Line, new Line(revSurf.Axis.Po.ToRhino(), revSurf.Axis.Vx.ToRhino()));
                 }
-
-                else
-                {
-                    surf = RevSurface.Create(revSurf.Curve.ToRhino(), new Line(revSurf.Axis.Po.ToRhino(), revSurf.Axis.Vx.ToRhino()));
-                }
+                return RevSurface.Create(revSurf.Curve.ToRhino(), new Line(revSurf.Axis.Po.ToRhino(), revSurf.Axis.Vx.ToRhino()));
             }
 
-            else if (inTSSurface is TKGD3.Surfaces.Surface surface)
+            if (inTSSurface is TKGD3.Surfaces.Surface surface)
+                return surface.GetBsplineGeometry(TKG.Precision.LinearPrecision, false, false, false).ToRhino();
 
-            {
-                surf = surface.GetBsplineGeometry(TKG.Precision.LinearPrecision, false, false, false).ToRhino();
-            }
             return surf;
             //return surface.GetBsplineGeometry(TKG.Precision.ModelingLinearTolerance, false, false, false).ToRhino();
         }
 
-        public static Rhino.Geometry.Surface ToRhino(this BSplineSurface surface)
+        public static Rhino.Geometry.NurbsSurface ToRhino(this BSplineSurface bsplineSurface)
         {
-            BSplineSurface _surface = surface;
+            bool is_rational = bsplineSurface.IsRational;
+            int dim = 3;
+            int uDegree = bsplineSurface.UDegree;
+            int vDegree = bsplineSurface.VDegree;
+            int uCount = bsplineSurface.UCptsCount;
+            int vCount = bsplineSurface.VCptsCount;
 
+            var control_points = new Point3d[uCount, vCount];
 
-            bool is_rational = _surface.IsRational;
-            int number_of_dimensions = 3;
-            int u_degree = _surface.UDegree;
-            int v_degree = _surface.VDegree;
-            int u_control_point_count = _surface.UCptsCount;
-            int v_control_point_count = _surface.VCptsCount;
-
-            var control_points = new Point3d[u_control_point_count, v_control_point_count];
-
-            for (int u = 0; u < u_control_point_count; u++)
+            for (int u = 0; u < uCount; u++)
             {
-                for (int v = 0; v < v_control_point_count; v++)
+                for (int v = 0; v < vCount; v++)
                 {
-                    control_points[u, v] = new Point3d(_surface.GetCPt(u, v).X, _surface.GetCPt(u, v).Y, _surface.GetCPt(u, v).Z);
+                    control_points[u, v] = new Point3d(bsplineSurface.GetCPt(u, v).X, bsplineSurface.GetCPt(u, v).Y, bsplineSurface.GetCPt(u, v).Z);
                 }
             }
 
             // creates internal uninitialized arrays for 
             // control points and knots
-            var rhsurface = NurbsSurface.Create(
-              number_of_dimensions,
+            var rhinoSurface = NurbsSurface.Create(
+              dim,
               is_rational,
-              u_degree + 1,
-              v_degree + 1,
-              u_control_point_count,
-              v_control_point_count
+              uDegree + 1,
+              vDegree + 1,
+              uCount,
+              vCount
               );
 
             //add the knots + Adjusting to Rhino removing the 2 extra knots (Superfluous)
-            for (int u = 1; u < (_surface.UBs.Count - 1); u++)
-                rhsurface.KnotsU[u - 1] = _surface.UBs[u];
-            for (int v = 1; v < (_surface.VBs.Count - 1); v++)
-                rhsurface.KnotsV[v - 1] = _surface.VBs[v];
+            for (int u = 1; u < (bsplineSurface.UBs.Count - 1); u++)
+                rhinoSurface.KnotsU[u - 1] = bsplineSurface.UBs[u];
+            for (int v = 1; v < (bsplineSurface.VBs.Count - 1); v++)
+                rhinoSurface.KnotsV[v - 1] = bsplineSurface.VBs[v];
 
             // add the control points
-            for (int u = 0; u < rhsurface.Points.CountU; u++)
+
+            for (int u = 0; u < rhinoSurface.Points.CountU; u++)
             {
-                for (int v = 0; v < rhsurface.Points.CountV; v++)
+                for (int v = 0; v < rhinoSurface.Points.CountV; v++)
                 {
-                    rhsurface.Points.SetPoint(u, v, control_points[u, v]);
-                    try
+                    rhinoSurface.Points.SetPoint(u, v, control_points[u, v]);
+                    if (!bsplineSurface.CWts.IsEmpty && bsplineSurface.CWts.Count == bsplineSurface.CPts.Count && bsplineSurface.CWts.Count != 0)
                     {
-                        rhsurface.Points.SetWeight(u, v, _surface.GetCWt(u, v));
+                        rhinoSurface.Points.SetWeight(u, v, bsplineSurface.GetCWt(u, v));
                     }
-                    catch
+                    else
                     {
-                        rhsurface.Points.SetWeight(u, v, 1);
+                        rhinoSurface.Points.SetWeight(u, v, 1);
                     }
                 }
             }
-            return rhsurface;
+            return rhinoSurface;
         }
 
 
@@ -891,6 +882,7 @@ namespace EPFL.GrasshopperTopSolid
                 {
                     var crv = ic.GetOrientedCurve().Curve.ToRhino();
                     var crvi = ic.GetOrientedCurve().Curve;
+                    //AHW commented to prevent error, check if it affects good conversion
                     if (!listEdges.ElementAt(ind)[indperLoop].IsReversedWithFin(face))
                     {
                         crv.Reverse();
@@ -970,7 +962,7 @@ namespace EPFL.GrasshopperTopSolid
             List<BrepTrim> rhTrim = new List<BrepTrim>();
             brepsrf.AddSurface(ToRhino(osurf.Surface as BSplineSurface));
             BrepFace bface = brepsrf.Faces.Add(0);
-            BrepLoop rh_loop = null;
+            BrepLoop rhinoLoop = null;
 
             //Get the 2D Curves and convert them to Rhino
             int x = 0;
@@ -979,9 +971,9 @@ namespace EPFL.GrasshopperTopSolid
                 var tsloop = face.Loops.ElementAt(loopindex);
 
                 if (tsloop.IsOuter)
-                    rh_loop = brepsrf.Loops.Add(BrepLoopType.Outer, bface);
+                    rhinoLoop = brepsrf.Loops.Add(BrepLoopType.Outer, bface);
                 else
-                    rh_loop = brepsrf.Loops.Add(BrepLoopType.Inner, bface);
+                    rhinoLoop = brepsrf.Loops.Add(BrepLoopType.Inner, bface);
 
 
                 foreach (TKGD2.Curves.IGeometricSegment ic in c.Segments)
@@ -998,17 +990,18 @@ namespace EPFL.GrasshopperTopSolid
 
                         crv = Convert.ToRhino(tcrvv);
                         x = brepsrf.AddTrimCurve(crv);
-                        rhTrim.Add(brepsrf.Trims.Add(rhEdges[x], ic.IsReversed, rh_loop, x));
+                        rhTrim.Add(brepsrf.Trims.Add(rhEdges[x], ic.IsReversed, rhinoLoop, x));
                     }
 
                     else
                     {
+                        //AHW TODO unComment
                         tcrvv.Reverse();
 
 
                         crv = Convert.ToRhino(tcrvv);
                         x = brepsrf.AddTrimCurve(crv);
-                        rhTrim.Add(brepsrf.Trims.Add(rhEdges[x], ic.IsReversed, rh_loop, x));
+                        rhTrim.Add(brepsrf.Trims.Add(rhEdges[x], ic.IsReversed, rhinoLoop, x));
                     }
 
                     rhTrim[x].SetTolerances(tol_Rh, tol_Rh);
@@ -1028,17 +1021,17 @@ namespace EPFL.GrasshopperTopSolid
                 brepsrf.Faces.First().OrientationIsReversed = true;
             }
 
-            //string log = null;
-            //brepsrf.IsValidWithLog(out log);
+            string log = null;
+            brepsrf.IsValidWithLog(out log);
 
 
             bool match = true;
             if (!brepsrf.IsValid)
             {
                 brepsrf.Repair(tol_TS);
-                //brepsrf.IsValidWithLog(out log);
+                brepsrf.IsValidWithLog(out log);
                 match = brepsrf.Trims.MatchEnds();
-                //brepsrf.IsValidWithLog(out log);
+                brepsrf.IsValidWithLog(out log);
 
             }
 
