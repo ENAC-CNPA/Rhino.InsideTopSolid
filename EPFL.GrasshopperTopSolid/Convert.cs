@@ -220,6 +220,8 @@ namespace EPFL.GrasshopperTopSolid
 
             if (curve is TKGD3.Curves.LineCurve tsline)
                 return tsline.ToRhino();
+            if (curve is TKGD3.Curves.BSplineCurve bsCurve)
+                return bsCurve.ToRhino();
 
             return curve.GetBSplineCurve(false, false).ToRhino();
 
@@ -440,6 +442,7 @@ namespace EPFL.GrasshopperTopSolid
                 {
                     nurbsCurve.Knots[i - 1] = curve.Bs[i];
                 }
+                
                 return nurbsCurve;
             }
             #endregion
