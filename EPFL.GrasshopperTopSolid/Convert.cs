@@ -239,11 +239,14 @@ namespace EPFL.GrasshopperTopSolid
             if (curve is TKGD2.Curves.EllipseCurve tsEllipse)
                 return new Rhino.Geometry.Ellipse(tsEllipse.Frame.ToRhino(), tsEllipse.RadiusX, tsEllipse.RadiusY).ToNurbsCurve();
 
+            if (curve is TKGD2.Curves.BSplineCurve bsCurve)
+                return bsCurve.ToRhino();
+
             return curve.GetBSplineCurve(false, false).ToRhino();
 
         }
 
-        static public Rhino.Geometry.ArcCurve ToRhino(this CircleCurve circleCurve)
+        static public Rhino.Geometry.ArcCurve ToRhino(this TKGD3.Curves.CircleCurve circleCurve)
         {
             if (circleCurve.IsClosed())
             {
@@ -389,71 +392,58 @@ namespace EPFL.GrasshopperTopSolid
         /// </summary>
         /// <param name="curve">BSplineCurve to convert</param>
         /// <returns></returns>
-        static public Rhino.Geometry.Curve ToRhino(this BSplineCurve curve)
+        static public Rhino.Geometry.NurbsCurve ToRhino(this BSplineCurve curve)
         {
-
-            #region Variables Declaration           
             Rhino.Collections.Point3dList Cpts = new Rhino.Collections.Point3dList();
-            //Rhino.Geometry.Curve rhCurve = null;
-            //double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
-            #endregion
 
-            #region Conversion cases         
-            if (curve.IsLinear())
+            foreach (TopSolid.Kernel.G.D3.Point P in curve.CPts)
             {
-                return new Rhino.Geometry.LineCurve(
-                    new Rhino.Geometry.Point3d(curve.Ps.X, curve.Ps.Y, 0), new Rhino.Geometry.Point3d(curve.Pe.X, curve.Pe.Y, 0));
-
+                Cpts.Add(ToRhino(P));
             }
 
-            //TODO : Case of a complete circle
-            //checks if Circular and Converts to Rhino Arc
-            if (curve.IsCircular())
-                return new Arc(ToRhino(curve.Ps), ToRhino(curve.Pm), ToRhino(curve.Pe)).ToNurbsCurve();
+            NurbsCurve nurbsCurve = NurbsCurve.Create(false, curve.Degree, Cpts);
 
+
+            int k = 0;
+            if (!curve.CWts.IsEmpty || curve.CWts.Count == curve.CPts.Count)
+            {
+                foreach (Point3d P in Cpts)
+                {
+                    nurbsCurve.Points.SetPoint(k, P, curve.CWts[k]);
+                }
+                k++;
+            }
             else
             {
-                foreach (TopSolid.Kernel.G.D3.Point P in curve.CPts)
+                foreach (Point3d P in Cpts)
                 {
-                    Cpts.Add(ToRhino(P));
-                }
+                    nurbsCurve.Points.SetPoint(k, P, 1);
 
-                NurbsCurve nurbsCurve = NurbsCurve.Create(false, curve.Degree, Cpts);
-
-                int k = 0;
-                if (!curve.CWts.IsEmpty || curve.CWts.Count == curve.CPts.Count)
-                {
-                    foreach (Point3d P in Cpts)
-                    {
-                        nurbsCurve.Points.SetPoint(k, P, curve.CWts[k]);
-                    }
                 }
-                else
-                {
-                    foreach (Point3d P in Cpts)
-                    {
-                        nurbsCurve.Points.SetPoint(k, P, 1);
-
-                    }
-                    k++;
-                }
-
-                for (int i = 1; i < curve.Bs.Count - 1; i++)
-                {
-                    nurbsCurve.Knots[i - 1] = curve.Bs[i];
-                }
-                
-                return nurbsCurve;
+                k++;
             }
-            #endregion
-            //if (curve.IsClosed())
-            //    rhCurve.MakeClosed(tol_TS);
 
-            //return rhCurve;
+            for (int i = 1; i < curve.Bs.Count - 1; i++)
+            {
+                nurbsCurve.Knots.Append(curve.Bs[i]);
+            }
+
+            if (!nurbsCurve.IsValid)
+            {
+                string log = "";
+                nurbsCurve.IsValidWithLog(out log);
+
+            }
+
+            return nurbsCurve;
+
         }
 
-        static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD3.Curves.IGeometricProfile profile)
+        static public Rhino.Geometry.Curve ToRhino(this TKGD3.Curves.IGeometricProfile profile)
         {
+            if (profile.SegmentCount == 1)
+                return profile.Segments.First().GetOrientedCurve().Curve.ToRhino();
+
             PolyCurve rhCurve = new PolyCurve();
             foreach (IGeometricSegment seg in profile.Segments)
             {
@@ -463,8 +453,11 @@ namespace EPFL.GrasshopperTopSolid
             return rhCurve.ToNurbsCurve();
         }
 
-        static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD2.Curves.IGeometricProfile profile)
+        static public Rhino.Geometry.Curve ToRhino(this TKGD2.Curves.IGeometricProfile profile)
         {
+            if (profile.SegmentCount == 1)
+                return profile.Segments.First().Curve.ToRhino();
+
             PolyCurve rhCurve = new PolyCurve();
             foreach (TKGD2.Curves.IGeometricSegment seg in profile.Segments)
             {
