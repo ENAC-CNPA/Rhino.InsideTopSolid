@@ -213,7 +213,7 @@ namespace EPFL.GrasshopperTopSolid
         {
 
             if (curve is CircleCurve tscircle)
-                return new Rhino.Geometry.Circle(tscircle.Plane.ToRhino(), tscircle.Radius).ToNurbsCurve();
+                return tscircle.ToRhino();
 
             if (curve is EllipseCurve tsEllipse)
                 return new Rhino.Geometry.Ellipse(tsEllipse.Plane.ToRhino(), tsEllipse.RadiusX, tsEllipse.RadiusY).ToNurbsCurve();
@@ -396,12 +396,22 @@ namespace EPFL.GrasshopperTopSolid
         {
             Rhino.Collections.Point3dList Cpts = new Rhino.Collections.Point3dList();
 
+            curve = curve.GetBSplineCurve(false, false);
+
+
             foreach (TopSolid.Kernel.G.D3.Point P in curve.CPts)
             {
                 Cpts.Add(ToRhino(P));
             }
 
-            NurbsCurve nurbsCurve = NurbsCurve.Create(false, curve.Degree, Cpts);
+            //int dimension = 3;
+            //bool isRational = curve.IsRational;
+            //int order = curve.Degree + 1;
+            //int pointCount = curve.CPts.Count;
+
+            //NurbsCurve nurbsCurve = new NurbsCurve(dimension, isRational, order, pointCount);
+
+            NurbsCurve nurbsCurve = NurbsCurve.Create(curve.IsPeriodic, curve.Degree, Cpts);
 
 
             int k = 0;
@@ -410,8 +420,8 @@ namespace EPFL.GrasshopperTopSolid
                 foreach (Point3d P in Cpts)
                 {
                     nurbsCurve.Points.SetPoint(k, P, curve.CWts[k]);
+                    k++;
                 }
-                k++;
             }
             else
             {
@@ -419,21 +429,46 @@ namespace EPFL.GrasshopperTopSolid
                 {
                     nurbsCurve.Points.SetPoint(k, P, 1);
 
+                    k++;
                 }
-                k++;
             }
 
-            for (int i = 1; i < curve.Bs.Count - 1; i++)
+            bool periodic = curve.Bs.IsPeriodic;
+
+            if (curve.Bs.Count == curve.Degree + curve.CPts.Count - 1)
             {
-                nurbsCurve.Knots.Append(curve.Bs[i]);
+                for (int i = 0; i < curve.Bs.Count; i++)
+                {
+                    nurbsCurve.Knots.Append(curve.Bs[i]);
+                }
+            }
+
+            else
+            {
+                for (int i = 1; i < curve.Bs.Count - 1; i++)
+                {
+                    nurbsCurve.Knots.Append(curve.Bs[i]);
+                }
             }
 
             if (!nurbsCurve.IsValid)
             {
                 string log = "";
                 nurbsCurve.IsValidWithLog(out log);
-
+                Console.WriteLine(log);
             }
+
+            bool coincide = curve.IsClosed() && !curve.CPts.ExtractFirst().CoincidesWith(curve.CPts.ExtractLast());
+
+            //if (curve.IsClosed() && !curve.CPts.ExtractFirst().CoincidesWith(curve.CPts.ExtractLast()))
+            //{
+            //    //nurbsCurve.Points.Append(curve.Ps.ToRhino());
+            //    //nurbsCurve.MakeClosed(TKG.Precision.LinearPrecision);
+            //}
+
+            //bool closed = false;
+            //if (curve.IsPeriodic)
+            //    closed = nurbsCurve.MakeClosed(TKG.Precision.LinearPrecision);
 
             return nurbsCurve;
 
@@ -514,16 +549,16 @@ namespace EPFL.GrasshopperTopSolid
                     foreach (Point3d P in Cpts)
                     {
                         rhCurve.Points.SetPoint(k, P, 1);
+                        k++;
                     }
-                    k++;
                 }
                 else
                 {
                     foreach (Point3d P in Cpts)
                     {
                         rhCurve.Points.SetPoint(k, P, curve.CWts[k]);
+                        k++;
                     }
-                    k++;
                 }
 
                 for (int i = 1; i < curve.Bs.Count - 1; i++)
