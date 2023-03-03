@@ -319,7 +319,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         var shapesfolder = doc.ShapesFolderEntity;
 
                         localPart.NodeEntity.IsDeletable = true;
-                        foreach (var ts in shape)
+                        foreach (var ts in shapeList)
                         {
                             ShapeEntity se = new ShapeEntity(doc, 0);
                             se.Geometry = ts;
@@ -387,7 +387,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                             }
                             catch { }
 
-                            var shapesfolder = doc.ShapesFolderEntity;
+                            shapesfolder = doc.ShapesFolderEntity;
 
                             localPart.NodeEntity.IsDeletable = true;
                             foreach (var ts in shapeList)

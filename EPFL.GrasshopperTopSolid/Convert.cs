@@ -10,7 +10,7 @@ using TopSolid.Kernel.DB.D3.Shapes;
 using TopSolid.Kernel.DB.D3.Sketches;
 using TopSolid.Kernel.DB.D2.Sketches;
 
-using TopSolid.Kernel.G;
+using G = TopSolid.Kernel.G;
 using TopSolid.Kernel.G.D1;
 using TopSolid.Kernel.G.D3;
 using TopSolid.Kernel.G.D3.Curves;
@@ -37,6 +37,8 @@ using TopSolid.Kernel.TX.Undo;
 using TX = TopSolid.Kernel.TX;
 using TUI = TopSolid.Kernel.UI;
 using TopSolid.Kernel.SX.Drawing;
+using Console = System.Console;
+using TopSolid.Kernel.G;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -113,9 +115,10 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
             return new Rhino.Geometry.LineCurve(l.Ps.ToRhino(), l.Pe.ToRhino());
         }
 
-        static public Rhino.Geometry.Line ToRhino(this TKG.D2.Curves.LineCurve l)
+        static public Rhino.Geometry.LineCurve ToRhino(this TKG.D2.Curves.LineCurve l)
         {
-            return new Rhino.Geometry.Line(new Point3d(l.Ps.X, l.Ps.Y, 0), new Point3d(l.Pe.X, l.Pe.Y, 0));
+            var line = new Rhino.Geometry.Line(new Point3d(l.Ps.X, l.Ps.Y, 0), new Point3d(l.Pe.X, l.Pe.Y, 0));
+            return new Rhino.Geometry.LineCurve(line);
         }
 
 
@@ -248,6 +251,64 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
             return new ArcCurve(arc);
         }
 
+        static public TopSolid.Kernel.G.D3.Curves.Curve ToHost(this Rhino.Geometry.Curve rhinoCurve)
+        {
+            if (rhinoCurve is ArcCurve arcCurve)
+                return arcCurve.ToHost();
+            if (rhinoCurve is Rhino.Geometry.LineCurve lineCurve)
+                return lineCurve.ToHost();
+            if (rhinoCurve is Rhino.Geometry.PolylineCurve polyLineCurve)
+                return polyLineCurve.ToHost();
+            if (rhinoCurve is PolyCurve polyCurve)
+                return polyCurve.ToHost();
+            if (rhinoCurve is NurbsCurve nurbsCurve)
+                return nurbsCurve.ToHost();
+            return rhinoCurve.ToNurbsCurve().ToHost();
+        }
+
+        static public TopSolid.Kernel.G.D3.Curves.Curve ToHost(this Rhino.Geometry.ArcCurve arcCurve)
+        {
+            TKGD3.Point Ps, Pm, Pe;
+            CircleMaker circleMaker = new CircleMaker();
+            Arc arc = arcCurve.Arc;
+
+            if (arc.IsCircle)
+            {
+                Ps = arc.PointAt(0.25).ToHost();
+                Pm = arc.PointAt(0.5).ToHost();
+                Pe = arc.PointAt(0.75).ToHost();
+                return circleMaker.MakeByThreePoints(Ps, Pm, Pe, true);
+            }
+
+            Ps = arc.StartPoint.ToHost();
+            Pm = arc.MidPoint.ToHost();
+            Pe = arc.EndPoint.ToHost();
+
+            return circleMaker.MakeByThreePoints(Ps, Pm, Pe, false);
+        }
+
+        static public TopSolid.Kernel.G.D3.Curves.LineCurve ToHost(this Rhino.Geometry.LineCurve lineCurve)
+        {
+            return new TKGD3.Curves.LineCurve(lineCurve.PointAtStart.ToHost(), lineCurve.PointAtEnd.ToHost());
+        }
+
+        static public TopSolid.Kernel.G.D3.Curves.PolylineCurve ToHost(this Rhino.Geometry.PolylineCurve polylineCurve)
+        {
+            Polyline polyline = polylineCurve.ToPolyline();
+            PointList pointList = new PointList(polyline.Count);
+            var pts = polyline.Select(x => x.ToHost());
+            foreach (TKGD3.Point point in pts)
+            {
+                pointList.Add(point);
+            }
+            return new TKGD3.Curves.PolylineCurve(polyline.IsClosed, pointList);
+        }
+
+        static public TKGD3.Curves.Curve ToHost(this Rhino.Geometry.PolyCurve polyCurve)
+        {
+            return polyCurve.ToNurbsCurve().ToHost();
+        }
+
         static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve rhinoCurve)
         {
             bool r = rhinoCurve.IsRational;
@@ -362,7 +423,7 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
             {
                 string log = "";
                 nurbsCurve.IsValidWithLog(out log);
-                Console.WriteLine(log);
+                System.Console.WriteLine(log);
             }
 
             bool coincide = curve.IsClosed() && !curve.CPts.ExtractFirst().CoincidesWith(curve.CPts.ExtractLast());
@@ -512,42 +573,69 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
 
 
         #region Surface
-        public static TKG.D3.Surfaces.BSplineSurface ToHost(this NurbsSurface s)
+
+        public static TKG.D3.Surfaces.Surface ToHost(this Rhino.Geometry.Surface rhinoSurface)
         {
-            bool r = s.IsRational;
-            bool pU = s.IsPeriodic(0);
-            bool pV = s.IsPeriodic(1);
-            var dU = s.Degree(0);
-            var dV = s.Degree(1);
-            var kU = ToDoubleList(s.KnotsU);
-            var kV = ToDoubleList(s.KnotsV);
-            var cp = ToPointList(s.Points);
-            var w = ToDoubleList(s.Points);
+            if (rhinoSurface is Rhino.Geometry.PlaneSurface planeSurface)
+                return planeSurface.ToHost();
 
-            BSpline bU = new BSpline(pU, dU, kU);
-            BSpline bV = new BSpline(pV, dV, kV);
+            if (rhinoSurface is Extrusion extrusionSurface && extrusionSurface.ProfileCount == 1)
+                return extrusionSurface.ToHost();
 
-            if (r)
-            {
-                BSplineSurface bs = new BSplineSurface(bU, bV, cp, w);
-                return bs;
-            }
-            else
-            {
-                BSplineSurface bs = new BSplineSurface(bU, bV, cp);
-                return bs;
-            }
+            if (rhinoSurface is SumSurface sumSurface)
+                return sumSurface.ToHost();
 
         }
 
-        public static Rhino.Geometry.Surface ToRhino(this IParametricSurface inTSSurface)
+        public static TKGD3.Surfaces.PlaneSurface ToHost(this Rhino.Geometry.PlaneSurface rhinoPlaneSurf)
         {
-            Rhino.Geometry.Surface surf = null;
-            if (inTSSurface is TKGD3.Surfaces.PlaneSurface planarsurf)
+            Rhino.Geometry.Plane plane = Rhino.Geometry.Plane.WorldXY;
+            bool success = rhinoPlaneSurf.TryGetPlane(out plane);
+            return new TKGD3.Surfaces.PlaneSurface(plane.ToHost(), rhinoPlaneSurf.DomainToTopSolidExtent());
+
+        }
+
+
+
+        public static TKG.D3.Surfaces.ExtrudedSurface ToHost(this Rhino.Geometry.Extrusion rhinoExtrusion)
+        {
+            TKGD3.Curves.Curve profile = rhinoExtrusion.Profile3d(0, 0).ToHost();
+            Rhino.Geometry.LineCurve path = rhinoExtrusion.PathLineCurve();
+            G.D3.Axis direction = new Axis(path.PointAtStart.ToHost(), path.PointAtEnd.ToHost());
+            return new ExtrudedSurface(profile, direction.Vx, rhinoExtrusion.DomainToTopSolidExtent());
+        }
+
+        public static TKG.D3.Surfaces.BSplineSurface ToHost(this NurbsSurface nurbsSurface)
+        {
+            bool isRational = nurbsSurface.IsRational;
+            bool isPeriodicU = nurbsSurface.IsPeriodic(0);
+            bool isPeriodicV = nurbsSurface.IsPeriodic(1);
+            var degreeU = nurbsSurface.Degree(0);
+            var degreeV = nurbsSurface.Degree(1);
+            var knotsU = ToDoubleList(nurbsSurface.KnotsU);
+            var knotsV = ToDoubleList(nurbsSurface.KnotsV);
+            var controlPoints = ToPointList(nurbsSurface.Points);
+            var weightDoubleList = ToDoubleList(nurbsSurface.Points);
+
+            BSpline bsplineU = new BSpline(isPeriodicU, degreeU, knotsU);
+            BSpline bsplineV = new BSpline(isPeriodicV, degreeV, knotsV);
+
+            if (isRational)
+                return new BSplineSurface(bsplineU, bsplineV, controlPoints, weightDoubleList);
+
+            return new BSplineSurface(bsplineU, bsplineV, controlPoints);
+        }
+
+
+
+        public static Rhino.Geometry.Surface ToRhino(this IParametricSurface topSolidSurface)
+        {
+            //Rhino.Geometry.Surface surf = null;
+            if (topSolidSurface is TKGD3.Surfaces.PlaneSurface planarsurf)
                 return new Rhino.Geometry.PlaneSurface(planarsurf.Plane.ToRhino(), planarsurf.Range.XExtent.ToRhino(), planarsurf.Range.YExtent.ToRhino());
 
 
-            if (inTSSurface is RevolvedSurface revSurf)
+            if (topSolidSurface is RevolvedSurface revSurf)
             {
                 if (revSurf.Curve.IsLinear())
                 {
@@ -557,11 +645,21 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
                 return RevSurface.Create(revSurf.Curve.ToRhino(), new Line(revSurf.Axis.Po.ToRhino(), revSurf.Axis.Vx.ToRhino()));
             }
 
-            if (inTSSurface is TKGD3.Surfaces.Surface surface)
-                return surface.GetBsplineGeometry(TKG.Precision.LinearPrecision, false, false, false).ToRhino();
+            if (topSolidSurface is BSplineSurface bsplineSurface)
+                return bsplineSurface.ToRhino();
 
-            return surf;
-            //return surface.GetBsplineGeometry(TKG.Precision.ModelingLinearTolerance, false, false, false).ToRhino();
+            if (topSolidSurface is ExtrudedSurface extrudedsurface)
+                return extrudedsurface.ToRhino();
+
+
+            TKGD3.Surfaces.Surface surface = topSolidSurface as TKGD3.Surfaces.Surface;
+            return surface.GetBsplineGeometry(TKG.Precision.LinearPrecision, false, false, false).ToRhino();
+        }
+
+
+        public static Rhino.Geometry.Surface ToRhino(this TKGD3.Surfaces.ExtrudedSurface extrudedSurface)
+        {
+            return Extrusion.CreateExtrusion(extrudedSurface.Curve.ToRhino(), extrudedSurface.Direction.ToRhino());
         }
 
         public static Rhino.Geometry.NurbsSurface ToRhino(this BSplineSurface bsplineSurface)
@@ -1552,7 +1650,7 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
                     }
                     catch (System.Exception e)
                     {
-                        
+
                     }
                 }
             }
@@ -1809,6 +1907,14 @@ l.Axis.Po.Z + l.Axis.Vx.Z))
             }
 
             return points;
+        }
+
+        public static TKGD2.Extent DomainToTopSolidExtent(this Rhino.Geometry.Surface surface)
+        {
+            G.D1.Extent extentX = new G.D1.Extent(surface.Domain(0).T0, surface.Domain(0).T1);
+            G.D1.Extent extentY = new G.D1.Extent(surface.Domain(1).T0, surface.Domain(1).T1);
+
+            return new TKGD2.Extent(extentX, extentY);
         }
         #endregion
     }
