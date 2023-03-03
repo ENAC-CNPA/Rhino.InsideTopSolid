@@ -380,7 +380,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                             }
                             catch { }
 
-                            shapesfolder = doc.ShapesFolderEntity;
+                            var shapesfolder = doc.ShapesFolderEntity;
 
                             localPart.NodeEntity.IsDeletable = true;
                             foreach (var ts in shapeList)

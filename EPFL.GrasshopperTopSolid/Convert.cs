@@ -40,6 +40,8 @@ using TUI = TopSolid.Kernel.UI;
 using TopSolid.Kernel.SX.Drawing;
 using Console = System.Console;
 using TopSolid.Kernel.G;
+using System;
+using TopSolid.Kernel.WX;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -332,38 +334,6 @@ namespace EPFL.GrasshopperTopSolid
             return polyCurve.ToNurbsCurve().ToHost();
         }
 
-        static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve rhinoCurve)
-        {
-
-            if (rhinoCurve is Rhino.Geometry.LineCurve line)
-            {
-                return line.ToHost();
-            }
-
-            if (rhinoCurve is ArcCurve arcCurve)
-            {
-                Arc arc = arcCurve.Arc;
-                CircleCurve circleCurve = new CircleCurve(arc.Plane.ToHost(), arc.Radius);
-                CircleMaker maker = new CircleMaker(SX.Version.Current, topSolidLinear, topSolidAngular);
-                maker.SetByCenterAndTwoPoints(
-                    arc.Center.ToHost(),
-                    arc.StartPoint.ToHost(),
-                    arc.EndPoint.ToHost(),
-                    false,
-                    new UnitVector(arc.Plane.Normal.ToHost()),
-                    circleCurve);
-
-                return circleCurve;
-            }
-
-            if (rhinoCurve is NurbsCurve nurbsCurve)
-            {
-                return nurbsCurve.ToHost();
-            }
-
-            return rhinoCurve.ToNurbsCurve().ToHost();
-
-        }
 
 
         static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve nurbsCurve)
@@ -673,83 +643,58 @@ namespace EPFL.GrasshopperTopSolid
             if (rhinoSurface is SumSurface sumSurface)
                 return sumSurface.ToHost();
 
-        public static TKG.D3.Surfaces.Surface ToHost(this Rhino.Geometry.Surface rhinoSurface)
-        {
-            //TKG.D3.Surfaces.Surface surface = null;
-            if (rhinoSurface is Rhino.Geometry.PlaneSurface rhinoPlaneSurf)
-            {
-                return rhinoPlaneSurf.ToHost();
-            }
+            //public static TKG.D3.Surfaces.Surface ToHost(this Rhino.Geometry.Surface rhinoSurface)
+            //{
+            //    //TKG.D3.Surfaces.Surface surface = null;
+            //    if (rhinoSurface is Rhino.Geometry.PlaneSurface rhinoPlaneSurf)
+            //    {
+            //        return rhinoPlaneSurf.ToHost();
+            //    }
 
-            if (rhinoSurface is Rhino.Geometry.RevSurface rhinoSevSurface)
-            {
-                return rhinoSevSurface.ToHost();
-            }
+            //    if (rhinoSurface is Rhino.Geometry.RevSurface rhinoSevSurface)
+            //    {
+            //        return rhinoSevSurface.ToHost();
+            //    }
 
-            if (rhinoSurface is Rhino.Geometry.Extrusion rhinoExtrusion)
-            {
-                return rhinoExtrusion.ToHost();
-            }
+            //    if (rhinoSurface is Rhino.Geometry.Extrusion rhinoExtrusion)
+            //    {
+            //        return rhinoExtrusion.ToHost();
+            //    }
 
-            if (rhinoSurface is NurbsSurface nurbsSurface)
-            {
-                return nurbsSurface.ToHost();
-            }
+            //    if (rhinoSurface is NurbsSurface nurbsSurface)
+            //    {
+            //        return nurbsSurface.ToHost();
+            //    }
 
             return rhinoSurface.ToNurbsSurface().ToHost();
-        }
-
-        public static TKG.D3.Surfaces.PlaneSurface ToHost(this Rhino.Geometry.PlaneSurface rhinoPlaneSurface)
-        {
-
-            Rhino.Geometry.Plane plane;
-            rhinoPlaneSurface.TryGetPlane(out plane);
-            var extent = new TKGD2.Extent(rhinoPlaneSurface.Domain(0).ToHost(), rhinoPlaneSurface.Domain(1).ToHost());
-            TKGD3.Surfaces.PlaneSurface planeSurface = new TKGD3.Surfaces.PlaneSurface(plane.ToHost(), extent);
-            return planeSurface;
 
         }
 
-        public static TKG.D3.Surfaces.RevolvedSurface ToHost(this Rhino.Geometry.RevSurface rhinorevSurface)
-        {
-            TKGD2.Extent extent = new TKGD2.Extent(rhinorevSurface.Domain(0).ToHost(), rhinorevSurface.Domain(1).ToHost());
-            RevolvedSurface revolvedSurface = new RevolvedSurface(rhinorevSurface.Curve.ToHost(), rhinorevSurface.Axis.LineToAxis(), extent);
-            return revolvedSurface;
-        }
+        //public static TKG.D3.Surfaces.PlaneSurface ToHost(this Rhino.Geometry.PlaneSurface rhinoPlaneSurface)
+        //{
 
-        public static TKG.D3.Surfaces.ExtrudedSurface ToHost(this Rhino.Geometry.Extrusion rhinoExtrusion)
-        {
-            TKGD2.Extent extent = new TKGD2.Extent(rhinoExtrusion.Domain(0).ToHost(), rhinoExtrusion.Domain(1).ToHost());
-            ExtrudedSurface extrudedSurface = new ExtrudedSurface(rhinoExtrusion.Profile3d(0, 0).ToHost(), ((UnitVector)rhinoExtrusion.PathLineCurve().Line.Direction.ToHost()), extent);
-            return extrudedSurface;
-        }
+        //    Rhino.Geometry.Plane plane;
+        //    rhinoPlaneSurface.TryGetPlane(out plane);
+        //    var extent = new TKGD2.Extent(rhinoPlaneSurface.Domain(0).ToHost(), rhinoPlaneSurface.Domain(1).ToHost());
+        //    TKGD3.Surfaces.PlaneSurface planeSurface = new TKGD3.Surfaces.PlaneSurface(plane.ToHost(), extent);
+        //    return planeSurface;
 
-        public static TKG.D3.Surfaces.BSplineSurface ToHost(this NurbsSurface nurbsSurface)
-        {
-            bool isRational = nurbsSurface.IsRational;
-            bool isUPeriodic = nurbsSurface.IsPeriodic(0);
-            bool isVPeriodic = nurbsSurface.IsPeriodic(1);
-            int degreeU = nurbsSurface.Degree(0);
-            int degreeV = nurbsSurface.Degree(1);
-            DoubleList knotU = ToDoubleList(nurbsSurface.KnotsU);
-            DoubleList knotV = ToDoubleList(nurbsSurface.KnotsV);
-            PointList controlPoints = ToPointList(nurbsSurface.Points);
-            DoubleList weightList = ToDoubleList(nurbsSurface.Points);
+        //}
 
-            BSpline bsplineU = new BSpline(isUPeriodic, degreeU, knotU);
-            BSpline bsplineV = new BSpline(isVPeriodic, degreeV, knotV);
+        //public static TKG.D3.Surfaces.RevolvedSurface ToHost(this Rhino.Geometry.RevSurface rhinorevSurface)
+        //{
+        //    TKGD2.Extent extent = new TKGD2.Extent(rhinorevSurface.Domain(0).ToHost(), rhinorevSurface.Domain(1).ToHost());
+        //    RevolvedSurface revolvedSurface = new RevolvedSurface(rhinorevSurface.Curve.ToHost(), rhinorevSurface.Axis.LineToAxis(), extent);
+        //    return revolvedSurface;
+        //}
 
-            if (isRational)
-            {
-                BSplineSurface bsplineSurface = new BSplineSurface(bsplineU, bsplineV, controlPoints, weightList);
-                return bsplineSurface;
-            }
-            else
-            {
-                BSplineSurface bsplineSurface = new BSplineSurface(bsplineU, bsplineV, controlPoints);
-                return bsplineSurface;
-            }
-        }
+        //public static TKG.D3.Surfaces.ExtrudedSurface ToHost(this Rhino.Geometry.Extrusion rhinoExtrusion)
+        //{
+        //    TKGD2.Extent extent = new TKGD2.Extent(rhinoExtrusion.Domain(0).ToHost(), rhinoExtrusion.Domain(1).ToHost());
+        //    ExtrudedSurface extrudedSurface = new ExtrudedSurface(rhinoExtrusion.Profile3d(0, 0).ToHost(), ((UnitVector)rhinoExtrusion.PathLineCurve().Line.Direction.ToHost()), extent);
+        //    return extrudedSurface;
+        //}
+
 
         public static TKGD3.Surfaces.PlaneSurface ToHost(this Rhino.Geometry.PlaneSurface rhinoPlaneSurf)
         {
@@ -1543,7 +1488,7 @@ namespace EPFL.GrasshopperTopSolid
         {
             if (inBrep != null && ioSurfs != null && ioLoops3d != null && ioLoops2d != null)
             {
-                SheetMaker sheetMaker = new SheetMaker(Version.Current);
+                SheetMaker sheetMaker = new SheetMaker(SX.Version.Current);
 
                 foreach (BrepFace f in inBrep.Faces)
                 {
@@ -1551,7 +1496,7 @@ namespace EPFL.GrasshopperTopSolid
                     //Brep face = f.ToBrep();
                     if (inBrep.IsValid)
                     {
-                        sheetMaker.Surface = Convert.ToHost(f.DuplicateSurface().ToNurbsSurface());
+                        sheetMaker.Surface = Convert.ToHost(f.DuplicateSurface());
 
                         Shape shape = null;
                         try
@@ -1577,10 +1522,10 @@ namespace EPFL.GrasshopperTopSolid
                                 double u = sheetMaker.Surface.Us;
                                 double v = sheetMaker.Surface.Vs;
 
-                                if (!Double.IsFinite(u))
+                                if (!SX.Double.IsFinite(u))
                                     u = 0.0;
 
-                                if (!Double.IsFinite(v))
+                                if (!SX.Double.IsFinite(v))
                                     v = 0.0;
 
                                 po = sheetMaker.Surface.GetPoint(u, v);
@@ -1707,7 +1652,7 @@ namespace EPFL.GrasshopperTopSolid
         {
             Shape shape = null;
 
-            TrimmedSheetMaker sheetMaker = new TrimmedSheetMaker(Version.Current);
+            TrimmedSheetMaker sheetMaker = new TrimmedSheetMaker(SX.Version.Current);
             sheetMaker.LinearTolerance = inLinearPrecision;
             sheetMaker.UsesBRepMethod = false;
 
@@ -1794,7 +1739,7 @@ namespace EPFL.GrasshopperTopSolid
         {
             Shape shape = null;
 
-            TrimmedSheetMaker sheetMaker = new TrimmedSheetMaker(Version.Current);
+            TrimmedSheetMaker sheetMaker = new TrimmedSheetMaker(SX.Version.Current);
             sheetMaker.LinearTolerance = inLinearPrecision;
             Rhino.Geometry.Surface surface = inFace.DuplicateSurface();
 
@@ -1860,7 +1805,7 @@ namespace EPFL.GrasshopperTopSolid
         private static Shape MakeSheet(Brep inBRep, BrepFace inFace)
         {
             Shape shape = null;
-            SheetMaker sheetMaker = new SheetMaker(Version.Current);
+            SheetMaker sheetMaker = new SheetMaker(SX.Version.Current);
             sheetMaker.Surface = Convert.ToHost(inFace.ToNurbsSurface());
 
             try
@@ -2076,6 +2021,7 @@ namespace EPFL.GrasshopperTopSolid
             G.D1.Extent extentY = new G.D1.Extent(surface.Domain(1).T0, surface.Domain(1).T1);
 
             return new TKGD2.Extent(extentX, extentY);
+        }
         static Axis LineToAxis(this Line line)
         {
             return new Axis(line.From.ToHost(), line.To.ToHost());
