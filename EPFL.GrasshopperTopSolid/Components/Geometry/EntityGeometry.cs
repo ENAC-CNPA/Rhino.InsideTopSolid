@@ -152,7 +152,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             else
             {
                 DA.SetData("TSGeometry", geometry);
-                DA.SetDataList("RhGeometry", geometry.ToRhino());
+                DA.SetDataList("RhGeometry", TsIGeometryToRhino.ToRhino(geometry));
             }
         }
 

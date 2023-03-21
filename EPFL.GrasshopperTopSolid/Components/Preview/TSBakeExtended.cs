@@ -238,7 +238,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                     TK.G.D3.Curves.Curve topSolidCurve = rhinoCurve.ToHost();
                     CurveEntity curveEntity = new CurveEntity(doc, 0);
                     curveEntity.Geometry = topSolidCurve;
-                    curveEntity.Create(doc.SketchesFolderEntity);
+                    curveEntity.Create(ProfilesFolderEntity.GetOrCreateFolder(doc));
                     //list.Add(ce);
                 }
                 else if (geo is GH_Surface gs)
@@ -249,250 +249,110 @@ namespace EPFL.GrasshopperTopSolid.Components
                     var ts = rn.ToHost();
                     SurfaceEntity se = new SurfaceEntity(doc, 0);
                     se.Geometry = ts;
-                    se.Create(doc.PointsFolderEntity);
+                    se.Create(doc.ShapesFolderEntity);
                     //list.Add(se);
                 }
                 #endregion
                 else if (geo is GH_Brep gbrep)
                 {///*
 
-                    if (doc is AssemblyDocument assemblyDocument)
+                    //if (doc is AssemblyDocument assemblyDocument)
+                    //{
+                    // Creation local part.
+                    //LocalPartsCreation localPartCreation = new LocalPartsCreation(assemblyDocument, 0);
+                    //PartDefinitionPrimitive localPart = new PartDefinitionPrimitive(localPartCreation, assemblyDocument);
+                    //localPart.NodeEntity.IsDeletable = false;
+
+                    // A partir de la forme G.D3.Shape shape.
+                    //ShapeEntity shapeEntity = new ShapeEntity(localPart.OwnerDocument, 0);
+
+                    // si on donne un nom à la forme de la pièce locale, on pourra y accéder plus facilement pour la mise à jour, notamment mettre à jour sa géométrie
+                    //shapeEntity.Name = Documents.ElementName.EnvelopeShape;
+
+                    //Retrouver la ShapeEntity via :
+                    //ShapeEntity shapeEntity = this.envelopePart.NodeEntity.SearchLocalConstituent(Documents.ElementName.EnvelopeShape) as ShapeEntity;
+
+
+
+                    // Ajout de la ChapeEntity à la pièce locale
+                    TK.DB.Entities.EntityList entities = new TK.DB.Entities.EntityList();
+                    //entities.Add(shapeEntity);
+                    //localPartCreation.Create();
+
+                    Brep rs = null;
+                    GH_Convert.ToBrep(gbrep, ref rs, 0);
+                    double tol = 0.00001;
+                    GH_ObjectWrapper attrWrapper = null;
+                    Color tsColor = Color.Empty;
+                    Transparency trnsp = Transparency.Empty;
+                    ShapeList shapeList;
+
+                    DA.GetData("Tolerance", ref tol);
+                    DA.GetData("TSAttributes", ref attrWrapper);
+                    string layerName = "";
+                    var tsAttributes = attrWrapper.Value as Tuple<Transparency, Color, string>;
+
+                    if (!(tsAttributes is null))
                     {
-                        // Creation local part.
-                        LocalPartsCreation localPartCreation = new LocalPartsCreation(assemblyDocument, 0);
-                        PartDefinitionPrimitive localPart = new PartDefinitionPrimitive(localPartCreation, assemblyDocument);
-                        localPart.NodeEntity.IsDeletable = false;
-
-                        // A partir de la forme G.D3.Shape shape.
-                        //ShapeEntity shapeEntity = new ShapeEntity(localPart.OwnerDocument, 0);
-
-                        // si on donne un nom à la forme de la pièce locale, on pourra y accéder plus facilement pour la mise à jour, notamment mettre à jour sa géométrie
-                        //shapeEntity.Name = Documents.ElementName.EnvelopeShape;
-
-                        //Retrouver la ShapeEntity via :
-                        //ShapeEntity shapeEntity = this.envelopePart.NodeEntity.SearchLocalConstituent(Documents.ElementName.EnvelopeShape) as ShapeEntity;
-
-
-
-                        // Ajout de la ChapeEntity à la pièce locale
-                        TK.DB.Entities.EntityList entities = new TK.DB.Entities.EntityList();
-                        //entities.Add(shapeEntity);
-                        //localPartCreation.Create();
-
-                        Brep rs = null;
-                        GH_Convert.ToBrep(gbrep, ref rs, 0);
-                        double tol = 0.00001;
-                        GH_ObjectWrapper attrWrapper = null;
-                        Color tsColor = Color.Empty;
-                        Transparency trnsp = Transparency.Empty;
-                        ShapeList shapeList;
-
-                        DA.GetData("Tolerance", ref tol);
-                        DA.GetData("TSAttributes", ref attrWrapper);
-                        string layerName = "";
-                        var tsAttributes = attrWrapper.Value as Tuple<Transparency, Color, string>;
-
-                        if (!(tsAttributes is null))
-                        {
-                            tsColor = tsAttributes.Item2;
-                            trnsp = tsAttributes.Item1;
-                            layerName = tsAttributes.Item3;
-
-                        }
-
-                        shapeList = rs.ToHost(tol);
-
-                        EntitiesCreation shapesCreation = new EntitiesCreation(doc, 0);
-                        Layer layer = new Layer(-1);
-                        LayerEntity layEnt = new LayerEntity(doc, 0, layer);
-
-                        var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
-                        layEnt = layfoldEnt.SearchLayer(layerName);
-
-
-
-                        localPart.NodeEntity.IsDeletable = true;
-                        foreach (var ts in shapeList)
-                        {
-                            ShapeEntity se = new ShapeEntity(doc, 0);
-                            se.Geometry = ts;
-                            se.ExplicitColor = tsColor;
-                            se.ExplicitTransparency = trnsp;
-                            se.ExplicitLayer = layEnt.Layer;
-
-
-                            se.Create(doc.ShapesFolderEntity);
-                            shapesCreation.AddChildEntity(se);
-                            shapesCreation.CanDeleteFromChild(se);
-
-                        }
-                        SewOperation sewOperation = new SewOperation(doc, 0);
-                        //if (sew)
-                        //    sewOperation.AddOperation(shapesCreation);
-
-                        shapesCreation.Create();
-
-
-                        //if (sew)
-                        //{
-                        //    //try
-                        //    //{
-                        //    //    layfoldEnt.AddLayer(layer, layerName);
-                        //    //    layEnt = layfoldEnt.SearchLayer(layerName);
-                        //    //}
-
-                        //    var shapesfolder = doc.ShapesFolderEntity;
-
-                        //    localPart.NodeEntity.IsDeletable = true;
-                        //    foreach (var ts in shapeList)
-                        //    {
-                        //        ShapeEntity shapeEntity = new ShapeEntity(doc, 0);
-                        //        #region For Debug
-                        //        bool valid = ts.CheckGeometry();
-                        //        string error, error2 = "";
-                        //        ts.CheckMonikers(true, out error);
-                        //        ts.CheckShapeAndDisplayMonikers(true, out error2);
-                        //        #endregion
-                        //        shapeEntity.SetGeometry(ts, true);
-                        //        //se.ExplicitColor = tsColor;
-                        //        //se.ExplicitTransparency = trnsp;
-                        //        //se.ExplicitLayer = layEnt.Layer;
-
-                        //        //localPart.NodeEntity.AddGeometry(se);
-
-                        //        shapesCreation.AddChildEntity(shapeEntity);
-                        //        //shapesCreation.CanDeleteFromChild(se);
-                        //        //shapesfolder.AddEntity(se);
-                        //    }
-                        //    //if (sew)
-                        //    //    sewOperation.AddOperation(shapesCreation);
-
-                        //    shapesCreation.Create();
-
-
-                        if (sew)
-                        {
-                            //SewOperation sewOperation = new SewOperation(doc, 0);
-                            try
-                            {
-                                layfoldEnt.AddLayer(layer, layerName);
-                                layEnt = layfoldEnt.SearchLayer(layerName);
-                            }
-                            catch { }
-
-                            var shapesfolder = doc.ShapesFolderEntity;
-
-                            localPart.NodeEntity.IsDeletable = true;
-                            foreach (var ts in shapeList)
-                            {
-                                ShapeEntity shapeEntity = new ShapeEntity(doc, 0);
-                                #region For Debug
-                                bool valid = ts.CheckGeometry();
-                                string error, error2 = "";
-                                ts.CheckMonikers(true, out error);
-                                ts.CheckShapeAndDisplayMonikers(true, out error2);
-                                #endregion
-                                shapeEntity.SetGeometry(ts, true);
-                                //se.ExplicitColor = tsColor;
-                                //se.ExplicitTransparency = trnsp;
-                                //se.ExplicitLayer = layEnt.Layer;
-
-                                //localPart.NodeEntity.AddGeometry(se);
-
-                                shapesCreation.AddChildEntity(shapeEntity);
-                                //shapesCreation.CanDeleteFromChild(se);
-                                //shapesfolder.AddEntity(se);
-                            }
-                            //if (sew)
-                            //    sewOperation.AddOperation(shapesCreation);
-
-                            shapesCreation.Create();
-
-
-                            if (sew)
-                            {
-                                //SewOperation sewOperation = new SewOperation(doc, 0);
-                                try
-                                {
-                                    sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
-                                    for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
-                                    {
-                                        shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
-                                        sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
-                                    }
-
-                                    if (tol != 0)
-                                        sewOperation.GapWidth = new BasicSmartReal(sewOperation, tol, UnitType.Length, doc);
-                                    else
-                                        sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
-
-                                    sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
-                                    //sewOperation.Display.DefaultLayer = layer;
-                                    //sewOperation.Display.DefaultColor = tsColor;
-                                    //sewOperation.Display.DefaultTransparency = trnsp;
-                                    //sewOperation.Parent = shapesCreation;
-                                    //sewOperation.AddOperation(shapesCreation);
-                                    //shapesCreation.Parent = sewOperation;
-                                    sewOperation.Create();
-                                    entity = shapesCreation.ChildrenEntities.ElementAt(0);
-                                    if (name != null)
-                                    {
-
-                                        entity.Name = name.ToString();
-                                        entity.ExplicitLayer = layer;
-                                        entity.ExplicitColor = tsColor;
-                                        entity.ExplicitTransparency = trnsp;
-                                    }
-
-                                    if (Params.Output.Count > 0)
-                                        DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
-                                    //list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
-                                    entities.Add(entity);
-                                    localPart.NodeEntity.SetLocalConstituents(entities);
-
-                                    // Ajout de la ShapeEntity dans les représentations de la pièce locale
-                                    localPart.NodeEntity.AddEntityToLocalRepresentation(entity, Design.DB.Documents.ElementName.DetailedRepresentation);
-                                    localPart.NodeEntity.AddEntityToLocalRepresentation(entity, Design.DB.Documents.ElementName.DesignRepresentation);
-                                    localPart.NodeEntity.AddEntityToLocalRepresentation(entity, Design.DB.Documents.ElementName.SimplifiedRepresentation);
-
-
-
-                                    // Set de la géométrie
-                                    localPart.NodeEntity.NotifyModifying(true);
-                                }
-                                //TODO Handle exception just in case
-                                catch (Exception ex)
-                                {
-                                }
-                                if (Params.Output.Count > 0)
-                                    DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
-                                //list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
-                            }
-                            //TODO Handle exception just in case
-                            //catch (Exception ex)
-                            //{
-                            //}
-                            if (Params.Output.Count > 0)
-                                DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
-                            //list.Add(shapesCreation.ChildrenEntities.ElementAt(0));
-
-                            //TODO Handle exception just in case
-                            //catch (Exception ex)
-                            //        {
-                            //            Console.WriteLine(ex);
-                            //        }
-                        }
+                        tsColor = tsAttributes.Item2;
+                        trnsp = tsAttributes.Item1;
+                        layerName = tsAttributes.Item3;
 
                     }
 
+                    shapeList = rs.ToHost(tol);
+
+                    EntitiesCreation shapesCreation = new EntitiesCreation(doc, 0);
+                    Layer layer = new Layer(-1);
+                    LayerEntity layEnt = new LayerEntity(doc, 0, layer);
+
+                    var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
+                    layEnt = layfoldEnt.SearchLayer(layerName);
+
+                    if (layEnt == null)
+                    {
+
+                        layEnt = new LayerEntity(doc, 0, layer);
+                        layEnt.Name = layerName;
+                    }
+
+                    //localPart.NodeEntity.IsDeletable = true;
+                    foreach (var ts in shapeList)
+                    {
+                        ShapeEntity se = new ShapeEntity(doc, 0);
+                        se.Geometry = ts;
+                        se.ExplicitColor = tsColor;
+                        se.ExplicitTransparency = trnsp;
+                        se.ExplicitLayer = layEnt.Layer;
+
+
+                        se.Create(doc.ShapesFolderEntity);
+                        shapesCreation.AddChildEntity(se);
+                        shapesCreation.CanDeleteFromChild(se);
+
+                    }
+                    SewOperation sewOperation = new SewOperation(doc, 0);
+                    //if (sew)
+                    //    sewOperation.AddOperation(shapesCreation);
+
+                    shapesCreation.Create();
+
+
+                    if (Params.Output.Count > 0)
+                        DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
+
+                    //}
 
                 }
-                if (Params.Output.Count > 0)
 
-                    DA.SetData(0, entity); //TODO Generalize
-                                           //*/
 
             }
+            if (Params.Output.Count > 0)
+
+                DA.SetData(0, entity); //TODO Generalize
+                                       //*/
+
+
         }
 
 
@@ -509,7 +369,8 @@ namespace EPFL.GrasshopperTopSolid.Components
             }
             else
             {
-                UndoSequence.Start("grasshopper creation", false);
+
+                //UndoSequence.Start("grasshopper creation", false);
                 entitiesCreation.Create();
                 //entitiesCreation.add
                 UndoSequence.End();

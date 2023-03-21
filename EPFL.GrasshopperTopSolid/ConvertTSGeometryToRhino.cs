@@ -11,9 +11,9 @@ using TopSolid.Kernel.G.D3.Curves;
 
 namespace EPFL.GrasshopperTopSolid
 {
-    public static class TSGeometryToRhino
+    public static class TsIGeometryToRhino
     {
-        static public List<IGH_GeometricGoo> ToRhino(this TKG.IGeometry tsGeometry)
+        static public List<IGH_GeometricGoo> ToRhino(TKG.IGeometry tsGeometry)
         {
             List<IGH_GeometricGoo> ghGeometry = new List<IGH_GeometricGoo>();
 
@@ -54,7 +54,7 @@ namespace EPFL.GrasshopperTopSolid
                     {
                         {
                             GH_Curve ghCurve = new GH_Curve();
-                            GH_Convert.ToGHCurve(segment.GetOrientedCurve().ToRhino(), GH_Conversion.Both, ref ghCurve);
+                            GH_Convert.ToGHCurve(TsIGeometryToRhino.ToRhino(segment.GetOrientedCurve()), GH_Conversion.Both, ref ghCurve);
                             ghGeometry.Add(ghCurve);
                             break;
                         }
@@ -63,7 +63,7 @@ namespace EPFL.GrasshopperTopSolid
                     {
                         {
                             GH_Curve ghCurve = new GH_Curve();
-                            GH_Convert.ToGHCurve(segment.GetOrientedCurve().ToRhino(), GH_Conversion.Both, ref ghCurve);
+                            GH_Convert.ToGHCurve(TsIGeometryToRhino.ToRhino(segment.GetOrientedCurve()), GH_Conversion.Both, ref ghCurve);
                             ghGeometry.Add(ghCurve);
                             break;
                         }

@@ -11,15 +11,17 @@ using TopSolid.Kernel.G.D3.Shapes.Creations;
 using TopSolid.Kernel.SX.Collections;
 using SX = TopSolid.Kernel.SX;
 using G = TopSolid.Kernel.G;
+using TopSolid.Kernel.G.D3.Surfaces;
+using Grasshopper;
 
 namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
 {
-    public class GetShapeCurves : GH_Component
+    public class GetShapeTopology : GH_Component
     {
         /// <summary>
         /// Initializes a new instance of the GetShapeCurves class.
         /// </summary>
-        public GetShapeCurves()
+        public GetShapeTopology()
           : base("GetShapeCurves", "crvs",
               "Gets TopSolid shape curves to debug",
               "TopSolid", "Test-Debug")
@@ -41,6 +43,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
         {
             pManager.AddGeometryParameter("Rhino3DCurves", "3D", "Converted Rhino 3D Curves", GH_ParamAccess.list);
             pManager.AddGeometryParameter("Rhino2DCurves", "2D", "Converted Rhino 2D Curves", GH_ParamAccess.list);
+            pManager.AddGeometryParameter("RhinoSurface", "Srf", "Converted Rhino Surface", GH_ParamAccess.list);
+            pManager.AddGeometryParameter("Control Points", "Cpts", "Converted Control Points", GH_ParamAccess.tree);
         }
 
         /// <summary>
@@ -55,6 +59,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             //List<Brep> list = new List<Brep>();
             List<Rhino.Geometry.Curve> list3D = new List<Rhino.Geometry.Curve>();
             List<Rhino.Geometry.Curve> list2D = new List<Rhino.Geometry.Curve>();
+            List<Rhino.Geometry.Surface> listSurfaces = new List<Rhino.Geometry.Surface>();
 
             ShapeEntity entity = document.RootEntity.SearchDeepEntity(_name) as ShapeEntity;
             if (entity is null)
@@ -69,15 +74,19 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             SX.Collections.Generic.List<G.D3.Curves.IGeometricProfile> list3dprofiles = new SX.Collections.Generic.List<IGeometricProfile>();
             SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile> list2dprofiles = new SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile>();
             SX.Collections.Generic.List<EdgeList> edgeList = new SX.Collections.Generic.List<EdgeList>();
+            DataTree<Point3d> pointTree = new DataTree<Point3d>();
             foreach (Face face in shape.Faces)
             {
-                face.GetOrientedBsplineTrimmedGeometry(tol, false, false, false, boolList, list2dprofiles, list3dprofiles, edgeList);
+                OrientedSurface oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, false, false, false, boolList, list2dprofiles, list3dprofiles, edgeList);
                 list2D.AddRange(list2dprofiles.SelectMany(x => x.Segments.Select(y => y.Curve.ToRhino())).ToList());
                 list3D.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
+                listSurfaces.Add(oSurf.Surface.ToRhino());
+                pointTree.Branches.Add((oSurf.Surface as BSplineSurface).CPts.Select(x => x.ToRhino()).ToList());
             }
 
             DA.SetDataList("Rhino3DCurves", list3D);
             DA.SetDataList("Rhino2DCurves", list2D);
+            DA.SetDataList("RhinoSurface", listSurfaces);
         }
 
         /// <summary>
