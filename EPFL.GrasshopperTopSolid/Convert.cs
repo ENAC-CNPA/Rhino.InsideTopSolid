@@ -441,23 +441,23 @@ namespace EPFL.GrasshopperTopSolid
 
 
             int k = 0;
-            if (!curve.CWts.IsEmpty || curve.CWts.Count == curve.CPts.Count)
+            //if (!curve.CWts.IsEmpty || curve.CWts.Count == curve.CPts.Count)
+            //{
+            //    foreach (Point3d P in Cpts)
+            //    {
+            //        nurbsCurve.Points.SetPoint(k, P, curve.CWts[k]);
+            //        k++;
+            //    }
+            //}
+            //else
+            //{
+            foreach (Point3d P in Cpts)
             {
-                foreach (Point3d P in Cpts)
-                {
-                    nurbsCurve.Points.SetPoint(k, P, curve.CWts[k]);
-                    k++;
-                }
-            }
-            else
-            {
-                foreach (Point3d P in Cpts)
-                {
-                    nurbsCurve.Points.SetPoint(k, P, 1);
+                nurbsCurve.Points.SetPoint(k, P, 1);
 
-                    k++;
-                }
+                k++;
             }
+            //}
 
             bool periodic = curve.Bs.IsPeriodic;
 
@@ -570,22 +570,22 @@ namespace EPFL.GrasshopperTopSolid
                 rhCurve = NurbsCurve.Create(curve.IsPeriodic, curve.Degree, Cpts);
 
                 int k = 0;
-                if (curve.CWts.IsEmpty || curve.CWts.Count == 0 || curve.CWts.Count != curve.CPts.Count)
+                //if (curve.CWts.IsEmpty || curve.CWts.Count == 0 || curve.CWts.Count != curve.CPts.Count)
+                //{
+                foreach (Point3d P in Cpts)
                 {
-                    foreach (Point3d P in Cpts)
-                    {
-                        rhCurve.Points.SetPoint(k, P, 1);
-                        k++;
-                    }
+                    rhCurve.Points.SetPoint(k, P, 1);
+                    k++;
                 }
-                else
-                {
-                    foreach (Point3d P in Cpts)
-                    {
-                        rhCurve.Points.SetPoint(k, P, curve.CWts[k]);
-                        k++;
-                    }
-                }
+                //}
+                //else
+                //{
+                //    foreach (Point3d P in Cpts)
+                //    {
+                //        rhCurve.Points.SetPoint(k, P, curve.CWts[k]);
+                //        k++;
+                //    }
+                //}
 
                 for (int i = 1; i < curve.Bs.Count - 1; i++)
                 {
@@ -815,16 +815,17 @@ namespace EPFL.GrasshopperTopSolid
             {
                 for (int v = 0; v < rhinoSurface.Points.CountV; v++)
                 {
-                    rhinoSurface.Points.SetPoint(u, v, control_points[u, v]);
-                    if (!bsplineSurface.CWts.IsEmpty && bsplineSurface.CWts.Count == bsplineSurface.CPts.Count && bsplineSurface.CWts.Count != 0)
-                    {
+                    rhinoSurface.Points.SetPoint(u, v, control_points[u, v], 1);
+                    //if (!bsplineSurface.CWts.IsEmpty && bsplineSurface.CWts.Count == bsplineSurface.CPts.Count && bsplineSurface.CWts.Count != 0)
+                    //{
+                    //double w = bsplineSurface.GetCWt(u, v);  
 
-                        rhinoSurface.Points.SetWeight(u, v, bsplineSurface.GetCWt(u, v));
-                    }
-                    else
-                    {
-                        rhinoSurface.Points.SetWeight(u, v, 1);
-                    }
+                    //rhinoSurface.Points.SetWeight(u, v, bsplineSurface.GetCWt(u, v));
+                    //}
+                    //else
+                    //{
+                    //rhinoSurface.Points.SetWeight(u, v, 1);
+                    //}
                 }
             }
             return rhinoSurface;
@@ -929,7 +930,7 @@ namespace EPFL.GrasshopperTopSolid
             //function added on request, gets the 2DCurves, 3dCurves and Edges in the correct order
             OrientedSurface osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, false, outer, list2D, list3D, listEdges);
             face.MakeD2GeometricProfile(TKGD3.Plane.OXY, face.Loops.First().Edges.First().Label);
-
+            var isConic = osurf.Surface.GeometryType;
             var list2Dflat = list2D.SelectMany(f => f.Segments).ToList();
             var list3Dflat = list3D.SelectMany(f => f.Segments).ToList();
             var listEdgesflat = listEdges.SelectMany(m => m).ToList();

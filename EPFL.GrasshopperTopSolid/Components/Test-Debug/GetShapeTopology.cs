@@ -11,8 +11,14 @@ using TopSolid.Kernel.G.D3.Shapes.Creations;
 using TopSolid.Kernel.SX.Collections;
 using SX = TopSolid.Kernel.SX;
 using G = TopSolid.Kernel.G;
+using DB = TopSolid.Kernel.DB;
 using TopSolid.Kernel.G.D3.Surfaces;
 using Grasshopper;
+using TopSolid.Kernel.TX.Undo;
+using TopSolid.Kernel.DB.D3.Surfaces;
+using TopSolid.Kernel.DB.D3.Curves;
+using System.Diagnostics;
+using TopSolid.Kernel.DB.D3.Modeling.Documents;
 
 namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
 {
@@ -22,8 +28,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
         /// Initializes a new instance of the GetShapeCurves class.
         /// </summary>
         public GetShapeTopology()
-          : base("GetShapeCurves", "crvs",
-              "Gets TopSolid shape curves to debug",
+          : base("GetShapeTopology", "crvs",
+              "Gets TopSolid shape Topology to debug",
               "TopSolid", "Test-Debug")
         {
         }
@@ -34,6 +40,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("Name", "N", "Name of Shape", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("in TopSolid", "inTS", "Create Surfaces and Curves in TopSolid", GH_ParamAccess.item);
+            pManager[1].Optional = true;
         }
 
         /// <summary>
@@ -44,7 +52,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             pManager.AddGeometryParameter("Rhino3DCurves", "3D", "Converted Rhino 3D Curves", GH_ParamAccess.list);
             pManager.AddGeometryParameter("Rhino2DCurves", "2D", "Converted Rhino 2D Curves", GH_ParamAccess.list);
             pManager.AddGeometryParameter("RhinoSurface", "Srf", "Converted Rhino Surface", GH_ParamAccess.list);
-            pManager.AddGeometryParameter("Control Points", "Cpts", "Converted Control Points", GH_ParamAccess.tree);
+            pManager.AddGeometryParameter("Control Points", "Cpts", "Converted Control Points", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -54,6 +62,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             string _name = "";
+            bool inTs = false;
+            DA.GetData("in TopSolid", ref inTs);
             if (!DA.GetData("Name", ref _name)) return;
             DesignDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
             //List<Brep> list = new List<Brep>();
@@ -74,19 +84,59 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             SX.Collections.Generic.List<G.D3.Curves.IGeometricProfile> list3dprofiles = new SX.Collections.Generic.List<IGeometricProfile>();
             SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile> list2dprofiles = new SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile>();
             SX.Collections.Generic.List<EdgeList> edgeList = new SX.Collections.Generic.List<EdgeList>();
-            DataTree<Point3d> pointTree = new DataTree<Point3d>();
+            List<Point3d> pointTree = new List<Point3d>();
+            OrientedSurface oSurf;
+            UndoSequence.UndoCurrent();
+            UndoSequence.Start("Debug RHiTS", false);
             foreach (Face face in shape.Faces)
             {
-                OrientedSurface oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, false, false, false, boolList, list2dprofiles, list3dprofiles, edgeList);
+                oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, false, false, false, boolList, list2dprofiles, list3dprofiles, edgeList);
                 list2D.AddRange(list2dprofiles.SelectMany(x => x.Segments.Select(y => y.Curve.ToRhino())).ToList());
                 list3D.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
                 listSurfaces.Add(oSurf.Surface.ToRhino());
-                pointTree.Branches.Add((oSurf.Surface as BSplineSurface).CPts.Select(x => x.ToRhino()).ToList());
+                pointTree = (oSurf.Surface as BSplineSurface).CPts.Select(x => x.ToRhino()).ToList();
+                if (inTs)
+                {
+                    int curveCounter = 0;
+                    SurfaceEntity surfEntity = new SurfaceEntity(document, 0)
+                    {
+                        Name = face.Name + face.Id,
+                        OrientedGeometry = oSurf,
+
+                    };
+                    surfEntity.Create(document.ShapesFolderEntity);
+                    DB.D3.Profiles.ProfileEntity profileEntity = null;
+                    foreach (var item in list3dprofiles)
+                    {
+                        profileEntity = new DB.D3.Profiles.ProfileEntity(document, 0)
+                        {
+                            Name = $"face:{face.Id},curve:{curveCounter++}",
+                            Geometry = item,
+
+                        };
+                        profileEntity.Create();
+                    }
+
+                    DB.D2.Profiles.ProfileEntity profileEntity2D = null;
+                    foreach (var item in list2dprofiles)
+                    {
+                        profileEntity2D = new DB.D2.Profiles.ProfileEntity(document, 0)
+                        {
+                            Name = $"face:{face.Id},curve:{curveCounter++}",
+                            Geometry = item as G.D2.Curves.GeometricProfile,
+
+                        };
+                        profileEntity2D.Create();
+                    }
+
+                }
             }
+            UndoSequence.End();
 
             DA.SetDataList("Rhino3DCurves", list3D);
             DA.SetDataList("Rhino2DCurves", list2D);
             DA.SetDataList("RhinoSurface", listSurfaces);
+            DA.SetDataList("Control Points", pointTree);
         }
 
         /// <summary>
