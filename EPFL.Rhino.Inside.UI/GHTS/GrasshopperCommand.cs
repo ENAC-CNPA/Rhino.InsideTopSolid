@@ -92,6 +92,8 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
             RhinoDoc doc = RhinoDoc.ActiveDoc;
             if (doc != null)
                 doc.ModelUnitSystem = UnitSystem.Meters;
+
+            TopSolid.Kernel.SX.UI.Application.IsMouseWheelInterceptedByGraphics = false;
         }
 
         internal static bool Shutdown()

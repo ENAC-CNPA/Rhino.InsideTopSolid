@@ -33,6 +33,10 @@ using TopSolid.Cad.Design.DB.Documents;
 using Design = TopSolid.Cad.Design;
 using TK = TopSolid.Kernel;
 using TopSolid.Cad.Design.DB.Local.Operations;
+using Eto.Forms;
+using PLMComponents.Parasolid.PK_.Unsafe;
+using Rhino.UI;
+using TopSolid.Kernel.DB.D3.Shapes.Unsew;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -275,12 +279,13 @@ namespace EPFL.GrasshopperTopSolid.Components
 
 
                     // Ajout de la ChapeEntity à la pièce locale
-                    TK.DB.Entities.EntityList entities = new TK.DB.Entities.EntityList();
+                    //TK.DB.Entities.EntityList entities = new TK.DB.Entities.EntityList();
                     //entities.Add(shapeEntity);
                     //localPartCreation.Create();
 
                     Brep rs = null;
                     GH_Convert.ToBrep(gbrep, ref rs, 0);
+                    if (rs is null) return;
                     double tol = 0.00001;
                     GH_ObjectWrapper attrWrapper = null;
                     Color tsColor = Color.Empty;
@@ -292,12 +297,11 @@ namespace EPFL.GrasshopperTopSolid.Components
                     string layerName = "";
                     var tsAttributes = attrWrapper.Value as Tuple<Transparency, Color, string>;
 
-                    if (!(tsAttributes is null))
+                    if (tsAttributes != null)
                     {
                         tsColor = tsAttributes.Item2;
                         trnsp = tsAttributes.Item1;
                         layerName = tsAttributes.Item3;
-
                     }
 
                     shapeList = rs.ToHost(tol);
@@ -325,19 +329,41 @@ namespace EPFL.GrasshopperTopSolid.Components
                         se.ExplicitTransparency = trnsp;
                         se.ExplicitLayer = layEnt.Layer;
 
-
                         se.Create(doc.ShapesFolderEntity);
                         shapesCreation.AddChildEntity(se);
                         shapesCreation.CanDeleteFromChild(se);
 
                     }
                     SewOperation sewOperation = new SewOperation(doc, 0);
+
                     //if (sew)
                     //    sewOperation.AddOperation(shapesCreation);
 
+                    shapesCreation.Owner = sewOperation;
                     shapesCreation.Create();
 
+                    sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
+                    for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
+                    {
+                        //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
+                        sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
+                    }
 
+                    if (tol != 0)
+                        sewOperation.GapWidth = new BasicSmartReal(sewOperation, tol, UnitType.Length, doc);
+                    else
+                        sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
+                    sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
+                    sewOperation.ExplicitLayer = layer;
+                    //sewOperation.Parent = shapesCreation;
+                    //sewOperation.AddOperation(shapesCreation);
+                    //shapesCreation.Parent = sewOperation;
+                    sewOperation.Create();
+                    if (name != null)
+                    {
+                        entity = shapesCreation.ChildrenEntities.ElementAt(0);
+                        entity.Name = name.ToString();
+                    }
                     if (Params.Output.Count > 0)
                         DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
 
