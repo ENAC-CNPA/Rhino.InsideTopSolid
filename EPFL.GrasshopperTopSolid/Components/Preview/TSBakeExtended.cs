@@ -89,20 +89,20 @@ namespace EPFL.GrasshopperTopSolid.Components
 
         protected override void BeforeSolveInstance()
         {
-            //try
-            //{
-            //    UndoSequence.Start("Grasshopper Bake", false);
+            try
+            {
+                UndoSequence.Start("Grasshopper Bake", false);
 
-            //}
-            //catch
-            //{
-            //    UndoSequence.UndoCurrent();
-            //    UndoSequence.Start("Grasshopper Bake", false);
-            //}
+            }
+            catch
+            {
+                UndoSequence.UndoCurrent();
+                UndoSequence.Start("Grasshopper Bake", false);
+            }
 
 
-            base.BeforeSolveInstance();
             entities.Clear();
+            base.BeforeSolveInstance();
 
         }
 
@@ -154,8 +154,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                     entitiesCreation = new EntitiesCreation(doc, 0);
 
                 doc.EnsureIsDirty();
-                UndoSequence.UndoCurrent();
-                UndoSequence.Start("Bake", false);
+                //UndoSequence.UndoCurrent();
+                //UndoSequence.Start("Bake", false);
                 //list.Clear();
 
 
@@ -329,7 +329,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         se.ExplicitTransparency = trnsp;
                         se.ExplicitLayer = layEnt.Layer;
 
-                        se.Create(doc.ShapesFolderEntity);
+                        //se.Create(doc.ShapesFolderEntity);
                         shapesCreation.AddChildEntity(se);
                         shapesCreation.CanDeleteFromChild(se);
 
@@ -339,31 +339,49 @@ namespace EPFL.GrasshopperTopSolid.Components
                     //if (sew)
                     //    sewOperation.AddOperation(shapesCreation);
 
-                    shapesCreation.Owner = sewOperation;
+                    //shapesCreation.Owner = sewOperation;
+
                     shapesCreation.Create();
 
-                    sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
-                    for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
+
+                    if (shapesCreation.ChildEntityCount > 1)
                     {
-                        //shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
-                        sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
+                        var mod = shapesCreation.ChildrenEntities;
+                        sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
+                        for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
+                        {
+                            shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
+                            sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
+                        }
+
+                        if (tol != 0)
+                            sewOperation.GapWidth = new BasicSmartReal(sewOperation, tol, UnitType.Length, doc);
+                        else
+                            sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
+                        sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
+                        sewOperation.ExplicitLayer = layer;
+                        //sewOperation.Parent = shapesCreation;
+                        //sewOperation.AddOperation(shapesCreation);
+                        //shapesCreation.Parent = sewOperation;
+                        try
+                        {
+                            sewOperation.Create();
+                        }
+
+                        catch (Exception ex)
+                        {
+                            UndoSequence.End();
+                            MessageBox.Show(ex.Message, MessageBoxType.Warning);
+                        }
                     }
 
-                    if (tol != 0)
-                        sewOperation.GapWidth = new BasicSmartReal(sewOperation, tol, UnitType.Length, doc);
-                    else
-                        sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
-                    sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
-                    sewOperation.ExplicitLayer = layer;
-                    //sewOperation.Parent = shapesCreation;
-                    //sewOperation.AddOperation(shapesCreation);
-                    //shapesCreation.Parent = sewOperation;
-                    sewOperation.Create();
                     if (name != null)
                     {
                         entity = shapesCreation.ChildrenEntities.ElementAt(0);
                         entity.Name = name.ToString();
+                        doc.ShapesFolderEntity.AddEntity(entity);
                     }
+
                     if (Params.Output.Count > 0)
                         DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
 
@@ -419,6 +437,7 @@ namespace EPFL.GrasshopperTopSolid.Components
             //    UndoSequence.End();
             //} 
             //if (doc != null) doc.Update(true, false);
+            base.AfterSolveInstance();
         }
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)
