@@ -403,26 +403,6 @@ namespace EPFL.GrasshopperTopSolid.Components
 
         protected override void AfterSolveInstance()
         {
-
-            //if (entitiesCreation is null)
-            //{
-            //    UndoSequence.End();
-            //    return;
-            //}
-            //if (entitiesCreation.IsCreated)
-
-            //{
-            //    entitiesCreation.Refresh();
-            //}
-            //else
-            //{
-
-            //    //UndoSequence.Start("grasshopper creation", false);
-            //    entitiesCreation.Create();
-            //    //entitiesCreation.add
-            //    UndoSequence.End();
-            //}
-
             try
             {
                 UndoSequence.End();
@@ -433,14 +413,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                 UndoSequence.UndoCurrent();
                 if (doc != null) doc.Update(true, true);
             }
-            //finally
-            //{ 
-            //    UndoSequence.UndoCurrent();
-            //    UndoSequence.Start("refresh", false);
-            //    if (doc != null) doc.Update(true, false);
-            //    UndoSequence.End();
-            //} 
-            //if (doc != null) doc.Update(true, false);
+            
             base.AfterSolveInstance();
 
         }
