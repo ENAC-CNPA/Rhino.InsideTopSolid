@@ -91,6 +91,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         {
             try
             {
+                UndoSequence.End();
                 UndoSequence.Start("Grasshopper Bake", false);
 
             }
@@ -222,7 +223,7 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                     entity = pointEntity;
 
-                    UndoSequence.End();
+                    //UndoSequence.End();
 
                 }
 
@@ -403,31 +404,34 @@ namespace EPFL.GrasshopperTopSolid.Components
         protected override void AfterSolveInstance()
         {
 
-            base.AfterSolveInstance();
-            if (entitiesCreation is null)
-                return;
-            if (entitiesCreation.IsCreated)
+            //if (entitiesCreation is null)
+            //{
+            //    UndoSequence.End();
+            //    return;
+            //}
+            //if (entitiesCreation.IsCreated)
 
-            {
-                entitiesCreation.Refresh();
-            }
-            else
-            {
+            //{
+            //    entitiesCreation.Refresh();
+            //}
+            //else
+            //{
 
-                //UndoSequence.Start("grasshopper creation", false);
-                entitiesCreation.Create();
-                //entitiesCreation.add
-                UndoSequence.End();
-            }
-            //UndoSequence.End();
+            //    //UndoSequence.Start("grasshopper creation", false);
+            //    entitiesCreation.Create();
+            //    //entitiesCreation.add
+            //    UndoSequence.End();
+            //}
+
             try
             {
+                UndoSequence.End();
                 if (doc != null) doc.Update(true, false);
             }
             catch
             {
                 UndoSequence.UndoCurrent();
-                if (doc != null) doc.Update(true, false);
+                if (doc != null) doc.Update(true, true);
             }
             //finally
             //{ 
@@ -438,6 +442,7 @@ namespace EPFL.GrasshopperTopSolid.Components
             //} 
             //if (doc != null) doc.Update(true, false);
             base.AfterSolveInstance();
+
         }
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)
