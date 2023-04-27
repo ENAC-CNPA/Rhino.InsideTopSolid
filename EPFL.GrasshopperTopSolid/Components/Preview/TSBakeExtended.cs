@@ -37,6 +37,7 @@ using Eto.Forms;
 using PLMComponents.Parasolid.PK_.Unsafe;
 using Rhino.UI;
 using TopSolid.Kernel.DB.D3.Shapes.Unsew;
+using TopSolid.Kernel.DB.Elements;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -53,13 +54,14 @@ namespace EPFL.GrasshopperTopSolid.Components
         }
         //Class level variables, to be independent from SolveInstance
         //GH_Structure<IGH_Goo> entities = new GH_Structure<IGH_Goo>();
+        EntitiesCreation entitiesCreation;
         Entity entity;
         EntityList entities = new EntityList();
         //IGH_Structure copyTree;
         bool run = false;
         //Param_GenericObject param = new Param_GenericObject();
         DesignDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
-        EntitiesCreation entitiesCreation = null;
+        //EntitiesCreation entitiesCreation = null;
 
         /// <summary>
         /// Registers all the input parameters for this component.
@@ -89,6 +91,12 @@ namespace EPFL.GrasshopperTopSolid.Components
 
         protected override void BeforeSolveInstance()
         {
+            //Search Existing Elements that use desired name
+            //Dict<doc,Queue>
+
+            //and fill queue
+
+
             try
             {
                 UndoSequence.End();
@@ -101,11 +109,26 @@ namespace EPFL.GrasshopperTopSolid.Components
                 UndoSequence.Start("Grasshopper Bake", false);
             }
 
+            bool hasData = true;
+            foreach (var param in Params.Input)
+            {
+                if (!param.Optional)
+                    hasData = hasData && param.VolatileDataCount != 0;
+            }
 
+            if (hasData)
+            {
+                if (entitiesCreation != null && entitiesCreation.IsCreated && !entitiesCreation.IsDeleted)
+                {
+                    RootOperation.Delete(entitiesCreation);
+                }
+            }
             entities.Clear();
             base.BeforeSolveInstance();
 
         }
+
+        Queue<TopSolid.Kernel.DB.Elements.Element> PreviousElements;
 
         /// <summary>
         /// This is the method that actually does the work.
@@ -113,8 +136,16 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-
-
+            //TODO
+            //var currentElement = PreviousElements.Dequeue();
+            //if (currentElement != null)
+            //{
+            //    // Update currentElement
+            //}
+            //else
+            //{
+            //    //add new element
+            //}
             //ent = null;
             GH_String name = new GH_String();
             IGH_GeometricGoo geo = null;
@@ -151,8 +182,12 @@ namespace EPFL.GrasshopperTopSolid.Components
 
             if (run == true)
             {
-                if (entitiesCreation is null)
-                    entitiesCreation = new EntitiesCreation(doc, 0);
+                ElementList elements = new ElementList();
+                doc.GetElements(elements);
+
+                //if (entitiesCreation is null)
+                //    entitiesCreation = new EntitiesCreation(doc, 0);
+
 
                 doc.EnsureIsDirty();
                 //UndoSequence.UndoCurrent();
@@ -209,6 +244,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                         {
                             pointEntity = new PointEntity(doc, 0);
                             pointEntity.Name = entityName;
+                            if (entitiesCreation == null)
+                                entitiesCreation = new EntitiesCreation(doc, 0);
                             entitiesCreation.AddChildEntity(pointEntity);
                             //pointEntity.Create(pointsFolderEntity);
                         }
@@ -305,9 +342,6 @@ namespace EPFL.GrasshopperTopSolid.Components
                         layerName = tsAttributes.Item3;
                     }
 
-                    shapeList = rs.ToHost(tol);
-
-                    EntitiesCreation shapesCreation = new EntitiesCreation(doc, 0);
                     Layer layer = new Layer(-1);
                     LayerEntity layEnt = new LayerEntity(doc, 0, layer);
 
@@ -316,25 +350,28 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                     if (layEnt == null)
                     {
-
                         layEnt = new LayerEntity(doc, 0, layer);
                         layEnt.Name = layerName;
                     }
+
+
+                    entitiesCreation = new EntitiesCreation(doc, 0);
+
+                    shapeList = rs.ToHost(tol);
+                    //int childEntityIndex = 0;
 
                     //localPart.NodeEntity.IsDeletable = true;
                     foreach (var ts in shapeList)
                     {
                         ShapeEntity se = new ShapeEntity(doc, 0);
                         se.Geometry = ts;
-                        se.ExplicitColor = tsColor;
-                        se.ExplicitTransparency = trnsp;
-                        se.ExplicitLayer = layEnt.Layer;
 
                         //se.Create(doc.ShapesFolderEntity);
-                        shapesCreation.AddChildEntity(se);
-                        shapesCreation.CanDeleteFromChild(se);
-
+                        entitiesCreation.AddChildEntity(se);
+                        entitiesCreation.CanDeleteFromChild(se);
+                        //childEntityIndex = entitiesCreation.IndexOfChildEntity(se);
                     }
+
                     SewOperation sewOperation = new SewOperation(doc, 0);
 
                     //if (sew)
@@ -342,17 +379,16 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                     //shapesCreation.Owner = sewOperation;
 
-                    shapesCreation.Create();
+                    entitiesCreation.Create();
 
-
-                    if (shapesCreation.ChildEntityCount > 1)
+                    if (entitiesCreation.ChildEntityCount > 1)
                     {
-                        var mod = shapesCreation.ChildrenEntities;
-                        sewOperation.ModifiedEntity = shapesCreation.ChildrenEntities.First() as ShapeEntity;
-                        for (int i = 1; i < shapesCreation.ChildEntityCount; i++)
+                        //var mod = entitiesCreation.ChildrenEntities;
+                        sewOperation.ModifiedEntity = entitiesCreation.ChildrenEntities.First() as ShapeEntity;
+                        for (int i = 1; i < entitiesCreation.ChildEntityCount; i++)
                         {
-                            shapesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
-                            sewOperation.AddTool(new ProvidedSmartShape(sewOperation, shapesCreation.ChildrenEntities.ElementAt(i)));
+                            entitiesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
+                            sewOperation.AddTool(new ProvidedSmartShape(sewOperation, entitiesCreation.ChildrenEntities.ElementAt(i)));
                         }
 
                         if (tol != 0)
@@ -374,17 +410,33 @@ namespace EPFL.GrasshopperTopSolid.Components
                             UndoSequence.End();
                             MessageBox.Show(ex.Message, MessageBoxType.Warning);
                         }
+                        if (!sewOperation.IsInvalid)
+                            sewOperation.IsGhost = true;
                     }
 
                     if (name != null)
                     {
-                        entity = shapesCreation.ChildrenEntities.ElementAt(0);
+                        ShapesFolderEntity shapesFolderEntity = doc.ShapesFolderEntity;
+                        entity = shapesFolderEntity.SearchEntity(name.ToString()) as ShapeEntity;
+                        //if (entity != null)
+                        //{                            
+                        //    entity.Geometry = entitiesCreation.ChildrenEntities.ElementAt(0).Geometry;
+                        //}
+
+                        //else
+                        //{
+                        entity = entitiesCreation.ChildrenEntities.ElementAt(0);
                         entity.Name = name.ToString();
+                        //}
+
+                        entity.ExplicitColor = tsColor;
+                        entity.ExplicitTransparency = trnsp;
+                        entity.ExplicitLayer = layEnt.Layer;
                         doc.ShapesFolderEntity.AddEntity(entity);
                     }
 
                     if (Params.Output.Count > 0)
-                        DA.SetData("TopSolid Entities", shapesCreation.ChildrenEntities.ElementAt(0));
+                        DA.SetData("TopSolid Entities", entitiesCreation.ChildrenEntities.ElementAt(0));
 
                     //}
 
@@ -403,6 +455,14 @@ namespace EPFL.GrasshopperTopSolid.Components
 
         protected override void AfterSolveInstance()
         {
+            //TODO
+            //foreach (var element in PreviousElements)
+            //{
+            //    // Delete those elements
+            //}
+
+            //PreviousElements.Clear();
+
             try
             {
                 UndoSequence.End();
@@ -413,7 +473,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                 UndoSequence.UndoCurrent();
                 if (doc != null) doc.Update(true, true);
             }
-            
+
             base.AfterSolveInstance();
 
         }
