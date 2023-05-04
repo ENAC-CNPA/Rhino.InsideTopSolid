@@ -33,7 +33,8 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
                 // return the combinaison to the base & your tests
 
                 //In this case, just return the base CanInvoke
-                return base.CanInvoke;
+                //return base.CanInvoke;
+                return false;
             }
         }
 
@@ -59,8 +60,10 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
             //Method that works !!
             if (rhinoCore == null)
                 rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Normal);
-
-
+            else
+            {
+                Rhino.UI.RhinoEtoApp.MainWindow.Visible = true;
+            }
         }
 
         internal static bool Shutdown()

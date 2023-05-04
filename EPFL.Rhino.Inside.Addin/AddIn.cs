@@ -1,8 +1,10 @@
-﻿using System;
+﻿using EPFL.RhinoInsideTopSolid.UI.GHTS;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using TK = TopSolid.Kernel;
+using Grasshopper;
 
 namespace EPFL.RhinoInsideTopSolid.AddIn
 {
@@ -93,7 +95,13 @@ namespace EPFL.RhinoInsideTopSolid.AddIn
         {
             TK.SX.SessionManager.Start(typeof(EPFL.RhinoInsideTopSolid.UI.Session));
             //TK.SX.SessionManager.Start(typeof(EPFL.RhinoInsideTopSolid.DB.Session));
+            //Instances.CanvasCreated += Instances_CanvasCreated;
         }
+
+        //private void Instances_CanvasCreated(Grasshopper.GUI.Canvas.GH_Canvas canvas)
+        //{
+
+        //}
 
         /// <summary>
         /// Overrides <see cref="TK.TX.AddIns.AddIn.EndSession"/>.

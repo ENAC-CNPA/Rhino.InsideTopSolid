@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grasshopper" Version="7.4.21078.1001" IncludeAssets="compile;build" />
+    <PackageReference Include="Grasshopper" Version="7.28.23058.3001" IncludeAssets="compile;build" />
     <PackageReference Include="NLog" Version="4.7.11" />
   </ItemGroup>
 

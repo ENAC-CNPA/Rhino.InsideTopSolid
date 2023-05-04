@@ -35,11 +35,17 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
-  
-  
   <ItemGroup>
+    <Reference Include="Eto">
+      <HintPath>..\..\..\..\..\..\Program Files\Rhino 7\System\Eto.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Grasshopper">
       <HintPath>..\..\..\..\..\..\Program Files\Rhino 7\Plug-ins\Grasshopper\Grasshopper.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Rhino.UI">
+      <HintPath>..\..\..\..\..\..\Program Files\Rhino 7\System\Rhino.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="RhinoCommon">
@@ -62,7 +68,6 @@
     <Reference Include="TopSolid.Kernel.DB">
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
- 
     </Reference>
     <Reference Include="TopSolid.Kernel.DB.D2.Modeling">
       <Private>False</Private>
