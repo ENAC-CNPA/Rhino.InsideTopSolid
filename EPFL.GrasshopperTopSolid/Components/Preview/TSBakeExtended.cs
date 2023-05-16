@@ -388,7 +388,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                     SheetsSewer sheetsSewer = new SheetsSewer(TK.SX.Version.Current, modifiedShape);
                     if (shapeList.Count > 1)
                     {
-                        for (int i = 0; i < shapeList.Count; i++)
+                        for (int i = 1; i < shapeList.Count; i++)
                         {
                             sheetsSewer.AddTool(shapeList.ElementAt(i), i);
                         }
@@ -404,6 +404,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                         sheetsSewer.NbIterations = 8;
                         sheetsSewer.CreateNewBodies = true;
                         sheetsSewer.ResetEdgesPrecision = true;
+                        sheetsSewer.Merges = true;
 
                         try
                         {
@@ -462,18 +463,21 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                         else
                         {
-                            entity = entitiesCreation.ChildrenEntities.ElementAt(0);
+                            //entity = entitiesCreation.ChildrenEntities.ElementAt(0);
+                            entity = new ShapeEntity(doc, 0);
                             entity.Name = name.ToString();
+                            entity.Geometry = sheetsSewer.Shape;
                         }
 
                         entity.ExplicitColor = tsColor;
                         entity.ExplicitTransparency = trnsp;
                         entity.ExplicitLayer = layEnt.Layer;
-                        doc.ShapesFolderEntity.AddEntity(entity);
+                        entity.Create(shapesFolderEntity);
+                        //doc.ShapesFolderEntity.AddEntity(entity);
                     }
 
                     if (Params.Output.Count > 0)
-                        DA.SetData("TopSolid Entities", entitiesCreation.ChildrenEntities.ElementAt(0));
+                        DA.SetData("TopSolid Entities", entity);
 
                     //}
 
