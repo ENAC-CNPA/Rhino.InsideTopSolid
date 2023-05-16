@@ -38,6 +38,7 @@ using PLMComponents.Parasolid.PK_.Unsafe;
 using Rhino.UI;
 using TopSolid.Kernel.DB.D3.Shapes.Unsew;
 using TopSolid.Kernel.DB.Elements;
+using TopSolid.Kernel.TX.Items;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -361,73 +362,109 @@ namespace EPFL.GrasshopperTopSolid.Components
                     //int childEntityIndex = 0;
 
                     //localPart.NodeEntity.IsDeletable = true;
-                    foreach (var ts in shapeList)
-                    {
-                        ShapeEntity se = new ShapeEntity(doc, 0);
-                        se.Geometry = ts;
+                    //foreach (var ts in shapeList)
+                    //{
+                    //    ShapeEntity se = new ShapeEntity(doc, 0);
+                    //    se.Geometry = ts;
 
-                        //se.Create(doc.ShapesFolderEntity);
-                        entitiesCreation.AddChildEntity(se);
-                        entitiesCreation.CanDeleteFromChild(se);
-                        //childEntityIndex = entitiesCreation.IndexOfChildEntity(se);
-                    }
+                    //    //se.Create(doc.ShapesFolderEntity);
+                    //    entitiesCreation.AddChildEntity(se);
+                    //    entitiesCreation.CanDeleteFromChild(se);
+                    //    //childEntityIndex = entitiesCreation.IndexOfChildEntity(se);
+                    //}
 
-                    SewOperation sewOperation = new SewOperation(doc, 0);
+                    //SewOperation sewOperation = new SewOperation(doc, 0);
 
                     //if (sew)
                     //    sewOperation.AddOperation(shapesCreation);
 
                     //shapesCreation.Owner = sewOperation;
 
-                    entitiesCreation.Create();
+                    //entitiesCreation.Create();
 
-                    if (entitiesCreation.ChildEntityCount > 1)
+                    Shape modifiedShape = shapeList.First();
+                    if (modifiedShape == null)
+                        return;
+                    SheetsSewer sheetsSewer = new SheetsSewer(TK.SX.Version.Current, modifiedShape);
+                    if (shapeList.Count > 1)
                     {
-                        //var mod = entitiesCreation.ChildrenEntities;
-                        sewOperation.ModifiedEntity = entitiesCreation.ChildrenEntities.First() as ShapeEntity;
-                        for (int i = 1; i < entitiesCreation.ChildEntityCount; i++)
+                        for (int i = 0; i < shapeList.Count; i++)
                         {
-                            entitiesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//To Comment in case Debug is needed
-                            sewOperation.AddTool(new ProvidedSmartShape(sewOperation, entitiesCreation.ChildrenEntities.ElementAt(i)));
+                            sheetsSewer.AddTool(shapeList.ElementAt(i), i);
+                        }
+                        if (tol > 0)
+                        {
+                            sheetsSewer.GapWidth = tol;
+                        }
+                        else
+                        {
+                            sheetsSewer.GapWidth = TK.G.Precision.ModelingLinearTolerance;
                         }
 
-                        if (tol != 0)
-                            sewOperation.GapWidth = new BasicSmartReal(sewOperation, tol, UnitType.Length, doc);
-                        else
-                            sewOperation.GapWidth = new BasicSmartReal(sewOperation, TopSolid.Kernel.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
-                        sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
-                        sewOperation.ExplicitLayer = layer;
-                        //sewOperation.Parent = shapesCreation;
-                        //sewOperation.AddOperation(shapesCreation);
-                        //shapesCreation.Parent = sewOperation;
+                        sheetsSewer.NbIterations = 8;
+                        sheetsSewer.CreateNewBodies = true;
+                        sheetsSewer.ResetEdgesPrecision = true;
+
                         try
                         {
-                            sewOperation.Create();
-                        }
+                            sheetsSewer.Sew(ItemOperationKey.BasicKey);
 
+                        }
                         catch (Exception ex)
                         {
-                            UndoSequence.End();
-                            MessageBox.Show(ex.Message, MessageBoxType.Warning);
+                            ex.ToString();
                         }
-                        if (!sewOperation.IsInvalid)
-                            sewOperation.IsGhost = true;
+
                     }
+
+                    //if (entitiesCreation.ChildEntityCount > 1)
+                    //{
+                    //    //var mod = entitiesCreation.ChildrenEntities;
+                    //    sewOperation.ModifiedEntity = entitiesCreation.ChildrenEntities.First() as ShapeEntity;
+                    //    for (int i = 1; i < entitiesCreation.ChildEntityCount; i++)
+                    //    {
+                    //        //entitiesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//ToDO Comment in case Debug is needed
+                    //        sewOperation.AddTool(new ProvidedSmartShape(sewOperation, entitiesCreation.ChildrenEntities.ElementAt(i)));
+                    //    }
+
+                    //    if (tol != 0)
+                    //        sewOperation.GapWidth = new BasicSmartReal(sewOperation, tol, UnitType.Length, doc);
+                    //    else
+                    //        sewOperation.GapWidth = new BasicSmartReal(sewOperation, TK.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
+                    //    sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
+                    //    sewOperation.ExplicitLayer = layer;
+                    //    //sewOperation.Parent = shapesCreation;
+                    //    //sewOperation.AddOperation(shapesCreation);
+                    //    //shapesCreation.Parent = sewOperation;
+                    //    try
+                    //    {
+                    //        sewOperation.Create();
+                    //    }
+
+                    //    catch (Exception ex)
+                    //    {
+                    //        UndoSequence.End();
+                    //        MessageBox.Show(ex.Message, MessageBoxType.Warning);
+                    //    }
+                    //    //if (!sewOperation.IsInvalid) //TODO For Debug
+                    //    //    sewOperation.IsGhost = true;
+                    //}
 
                     if (name != null)
                     {
+
                         ShapesFolderEntity shapesFolderEntity = doc.ShapesFolderEntity;
                         entity = shapesFolderEntity.SearchEntity(name.ToString()) as ShapeEntity;
-                        //if (entity != null)
-                        //{                            
-                        //    entity.Geometry = entitiesCreation.ChildrenEntities.ElementAt(0).Geometry;
-                        //}
+                        if (entity != null)
+                        {
+                            entity.Geometry = sheetsSewer.Shape;
+                        }
 
-                        //else
-                        //{
-                        entity = entitiesCreation.ChildrenEntities.ElementAt(0);
-                        entity.Name = name.ToString();
-                        //}
+                        else
+                        {
+                            entity = entitiesCreation.ChildrenEntities.ElementAt(0);
+                            entity.Name = name.ToString();
+                        }
 
                         entity.ExplicitColor = tsColor;
                         entity.ExplicitTransparency = trnsp;
