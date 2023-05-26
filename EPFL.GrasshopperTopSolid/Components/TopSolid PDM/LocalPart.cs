@@ -144,8 +144,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 
             // Make default parameters.
 
-            //localPart.MakeDefaultParameters(TK.SX.Version.Current, true);
-            localPart.MakeDefaultParameters(true);
+            localPart.MakeDefaultParameters(TK.SX.Version.Current, true);
+            //localPart.MakeDefaultParameters(true);
             if (!string.IsNullOrEmpty(inName))
                 localPart.NameParameterValue = inAssemblyDocument.MakeLocalizableString(inName);
 

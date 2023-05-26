@@ -154,7 +154,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                 GH_ObjectWrapper inputValue = null;
 
                 DA.GetData(driver.EditingName, ref inputValue);
-                InstanceDriverType driverType = driver.DrivenEntity.DriverType;
+                InstanceDriverType driverType = (InstanceDriverType)driver.DrivenEntity.DriverType;
 
                 SmartObject val = null;
                 if (driver.IsGeometricDriver)
@@ -236,10 +236,10 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             assemblyDocument.EnsureIsDirty();
 
             InclusionOperation inclusionOperation = new InclusionOperation(assemblyDocument, 0, instance as DesignDocument, instanceMaker, (instance as DesignDocument).CurrentRepresentationEntity, false, null, null);
-            assemblyDocument.PositionInclusion(inclusionOperation, true, false, TopSolid.Cad.Design.DB.Constraints.FixedAddingMode.FirstInclusion, -1, null);
-
-            inclusionOperation.Create();
-
+            //assemblyDocument.PositionInclusion(inclusionOperation, true, false, TopSolid.Cad.Design.DB.Constraints.FixedAddingMode.FirstInclusion, -1, null);
+            assemblyDocument.PositionInclusion(
+                inclusionOperation, true, NewInclusionPositioningMode.NewPositioning, null,
+                TopSolid.Cad.Design.DB.Constraints.FixedAddingMode.FirstInclusion, -1, null);
             if (inclusionOperation.IsInvalid)
                 inclusionOperation.TryRepairInvalid();
 

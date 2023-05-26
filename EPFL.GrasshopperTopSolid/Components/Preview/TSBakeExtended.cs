@@ -34,7 +34,6 @@ using Design = TopSolid.Cad.Design;
 using TK = TopSolid.Kernel;
 using TopSolid.Cad.Design.DB.Local.Operations;
 using Eto.Forms;
-using PLMComponents.Parasolid.PK_.Unsafe;
 using Rhino.UI;
 using TopSolid.Kernel.DB.D3.Shapes.Unsew;
 using TopSolid.Kernel.DB.Elements;
