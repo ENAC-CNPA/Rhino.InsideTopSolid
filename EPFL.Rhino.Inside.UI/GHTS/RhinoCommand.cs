@@ -34,8 +34,10 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 
                 //In this case, just return the base CanInvoke
                 //return base.CanInvoke;
-                //if (!base.CanInvoke)
+
+                if (!base.CanInvoke)
                     return false;
+                return false;
             }
         }
 

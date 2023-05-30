@@ -385,7 +385,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                     if (modifiedShape == null)
                         return;
                     SheetsSewer sheetsSewer = new SheetsSewer(TK.SX.Version.Current, modifiedShape);
-                    if (shapeList.Count > 1)
+                    if (shapeList.Count > 1 && sew)
                     {
                         for (int i = 1; i < shapeList.Count; i++)
                         {
