@@ -20,11 +20,16 @@ using TopSolid.Kernel.TX.Items;
 using TopSolid.Kernel.WX;
 using SX = TopSolid.Kernel.SX;
 using TX = TopSolid.Kernel.TX;
+using G = TopSolid.Kernel.G;
+using TopSolid.Kernel.G.D3.Shapes.Sew;
+using Eto.Forms;
 
 namespace EPFL.GrasshopperTopSolid
 {
     static class BrepConvert
     {
+
+        #region ToRhino
         static internal Brep FaceToBrep(this Face face)
         {
             //Create the *out* variables
@@ -38,7 +43,6 @@ namespace EPFL.GrasshopperTopSolid
 
             //Topology indexes ?
             int c_index = 0;
-
 
             //Create the Brep Surface
             Brep brepsrf = new Brep();
@@ -359,6 +363,38 @@ namespace EPFL.GrasshopperTopSolid
 
         }
 
+        static public Brep[] ToRhino(this Shape shape)
+        {
+            System.Collections.Generic.List<Brep> listofBrepsrf = new System.Collections.Generic.List<Brep>();
+            Brep brep = new Brep();
+
+            foreach (Face f in shape.Faces)
+            {
+                brep = f.FaceToBrep();
+
+                //if (!brep.IsValid)
+                //{
+                //    brep = new Brep();
+                //}
+                listofBrepsrf.Add(brep);
+            }
+
+            var result = Brep.JoinBreps(listofBrepsrf, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+
+            foreach (Brep b in result)
+            {
+                b.Trims.MatchEnds();
+                b.Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+            }
+
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i].Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+            }
+
+            return result;
+
+        }
 
         //for Debug and to prevent errors
         /// <summary>
@@ -397,25 +433,28 @@ namespace EPFL.GrasshopperTopSolid
             return result;
         }
 
-        static public ShapeList ToHost(this Brep brep, double tol = TopSolid.Kernel.G.Precision.ModelingLinearTolerance)
+
+        #endregion
+
+        #region ToHost
+        /// <summary>
+        /// Converts a Rhino Brep to a TopSolid Shape
+        /// </summary>
+        /// <param name="brep"> Rhino Brep to convert</param>      
+        /// <returns></returns>
+        static public Shape ToHost(this Brep brep)
         {
-
-            double tol_TS = tol;
-
+            double tol_TS = G.Precision.ModelingLinearTolerance;
             brep.Trims.MatchEnds();
             brep.Repair(tol_TS);
             Shape shape = null;
             ShapeList ioShapes = new ShapeList();
-            //List<PositionedSketch> list3dSktech = new List<PositionedSketch>();
-            //List<TKGD2.Sketches.PositionedSketch> list2dSketch = new List<TKGD2.Sketches.PositionedSketch>();
 
             if (brep.IsValid)
             {
                 foreach (BrepFace bface in brep.Faces)
                 {
                     shape = null;
-
-                    //MakeSurfacesAndLoops(bface.ToBrep(), ioShapes, list3dSktech, list2dSketch);
 
                     shape = MakeSheetFrom3d(brep, bface, tol_TS);
 
@@ -425,21 +464,19 @@ namespace EPFL.GrasshopperTopSolid
                     if (shape == null || shape.IsEmpty)
                     {
                         shape = MakeSheet(brep, bface);
-                        //inLog.Report("Face not limited.");
-                        MessageBox.Show("Face not limited.");
+                        TopSolid.Kernel.WX.MessageBox.Show("Face not limited.");
                     }
 
                     if (shape == null || shape.IsEmpty)
-                    { }//inLog.Report("Missing face.");
+                    { }
                     else
                         ioShapes.Add(shape);
                 }
             }
 
-            return ioShapes;
+
+            return ioShapes.SewShapes();
         }
-
-
 
         private static Shape MakeSheetFrom3d(Brep inBRep, BrepFace inFace, double inLinearPrecision)
         {
@@ -462,7 +499,7 @@ namespace EPFL.GrasshopperTopSolid
             // If new problems come, see about the periodicity of the curves.
 
             //TODO check if planar to simplify
-            TKGD3.Surfaces.Surface topSolidSurface = Convert.ToHost(surface);
+            TKGD3.Surfaces.Surface topSolidSurface = surface.ToHost();
 
             if (topSolidSurface != null && topSolidSurface is BSplineSurface bsplineSurface && (topSolidSurface.IsUPeriodic || topSolidSurface.IsVPeriodic))
             {
@@ -509,16 +546,12 @@ namespace EPFL.GrasshopperTopSolid
                     sheetMaker.SetCurves(loops3d, listItemMok);
 
                     bool valid = sheetMaker.IsValid;
-                    //AHW setting to true causes an error
-                    //sheetMaker.UsesBRepMethod = true;
-                    //var x = new ItemMoniker(new CString($"S{op2.Id}"));
+
                     try
                     {
                         shape = sheetMaker.Make(null, ItemOperationKey.BasicKey);
-                        //shape.CheckIsValidOccurrence();                        
                     }
                     catch (Exception e)
-
                     {
                         Console.WriteLine(e.Message + "\n" + e.Data.ToString());
                     }
@@ -613,73 +646,35 @@ namespace EPFL.GrasshopperTopSolid
             return shape;
         }
 
-
-
-        internal static void MakeShapes(Brep inBRep, LogBuilder inLog, double inLinearPrecision, double inAngularPrecision, ShapeList ioShapes)
+        public static Shape SewShapes(this ShapeList shapeList)
         {
-            if (inBRep != null && inLog != null && ioShapes != null)
+            Shape modifiedShape = shapeList.First();
+            SheetsSewer sheetsSewer = new SheetsSewer(SX.Version.Current, modifiedShape);
+
+            for (int i = 1; i < shapeList.Count; i++)
             {
-                foreach (BrepFace face in inBRep.Faces)
-                {
-                    if (inBRep.IsValid)
-                    {
-                        Shape shape = null;
-
-                        shape = MakeSheetFrom3d(inBRep, face, inLinearPrecision);
-
-                        if (shape == null || shape.IsEmpty)
-                            shape = MakeSheetFrom2d(inBRep, face, inLinearPrecision);
-
-                        if (shape == null || shape.IsEmpty)
-                        {
-                            shape = MakeSheet(inBRep, face);
-                            //inLog.Report("Face not limited.");
-                        }
-
-                        if (shape == null || shape.IsEmpty)
-                        { }
-                        //inLog.Report("Missing face.");
-                        else
-                            ioShapes.Add(shape);
-                    }
-                    else if (inLog != null)
-                    { }
-                    //inLog.Report("Invalid face.");
-                }
+                sheetsSewer.AddTool(shapeList.ElementAt(i), i);
             }
+
+            sheetsSewer.GapWidth = G.Precision.ModelingLinearTolerance;
+            sheetsSewer.NbIterations = 8;
+            sheetsSewer.CreateNewBodies = true;
+            sheetsSewer.ResetEdgesPrecision = true;
+            sheetsSewer.Merges = true;
+
+            try
+            {
+                sheetsSewer.Sew(ItemOperationKey.BasicKey);
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
+            }
+            return modifiedShape;
         }
 
-        static public Brep[] ToRhino(this Shape shape)
-        {
-            System.Collections.Generic.List<Brep> listofBrepsrf = new System.Collections.Generic.List<Brep>();
-            Brep brep = new Brep();
 
-            foreach (Face f in shape.Faces)
-            {
-                brep = f.FaceToBrep();
 
-                //if (!brep.IsValid)
-                //{
-                //    brep = new Brep();
-                //}
-                listofBrepsrf.Add(brep);
-            }
-
-            var result = Brep.JoinBreps(listofBrepsrf, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-
-            foreach (Brep b in result)
-            {
-                b.Trims.MatchEnds();
-                b.Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-            }
-
-            for (int i = 0; i < result.Length; i++)
-            {
-                result[i].Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-            }
-
-            return result;
-
-        }
+        #endregion
     }
 }

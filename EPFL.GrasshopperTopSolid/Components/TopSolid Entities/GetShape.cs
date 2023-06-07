@@ -57,7 +57,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
             }
             else
             {
-                list = Convert.ToRhino(entity.Geometry).ToList();
+                list = entity.Geometry.ToRhino().ToList();
             }
 
             DA.SetDataList("RhinoBrep", list);

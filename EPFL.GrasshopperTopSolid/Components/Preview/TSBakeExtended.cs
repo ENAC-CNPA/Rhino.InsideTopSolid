@@ -27,17 +27,11 @@ using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.DB.Layers;
 using TopSolid.Kernel.TX.Pdm;
 using TopSolid.Kernel.GR.Attributes;
-using TopSolid.Kernel.DB.D3.Shapes.Creations;
-using Grasshopper.Kernel.Data;
 using TopSolid.Cad.Design.DB.Documents;
-using Design = TopSolid.Cad.Design;
 using TK = TopSolid.Kernel;
-using TopSolid.Cad.Design.DB.Local.Operations;
-using Eto.Forms;
-using Rhino.UI;
-using TopSolid.Kernel.DB.D3.Shapes.Unsew;
+
 using TopSolid.Kernel.DB.Elements;
-using TopSolid.Kernel.TX.Items;
+
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -60,7 +54,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         //IGH_Structure copyTree;
         bool run = false;
         //Param_GenericObject param = new Param_GenericObject();
-        DesignDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
+        PartDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as PartDocument;
         //EntitiesCreation entitiesCreation = null;
 
         /// <summary>
@@ -70,13 +64,13 @@ namespace EPFL.GrasshopperTopSolid.Components
         {
 
             pManager.AddGeometryParameter("Geometries", "G", "Geometries to bake", GH_ParamAccess.item);
-            pManager.AddGenericParameter("TSDocument", "TSDoc", "target TopSolid Document to bake-in", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Part Document", "Part", "target TopSolid Part Document to bake-in", GH_ParamAccess.item);
             pManager[1].Optional = true;
             pManager.AddTextParameter("Name", "Name", "Entity Name to be given", GH_ParamAccess.item);
             pManager[2].Optional = true;
             pManager.AddGenericParameter("TSAttributes", "attributes", "TopSolid's attributes for the baked entities", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Tolerance", "Tol", "Tolerance for bake", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("Sew?", "Sew?", "True to Sew Breps, False to keep faces split", GH_ParamAccess.item);
+            //pManager.AddNumberParameter("Tolerance", "Tol", "Tolerance for bake", GH_ParamAccess.item);
+            //pManager.AddBooleanParameter("Sew?", "Sew?", "True to Sew Breps, False to keep faces split", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Bake?", "b?", "Set true to bake", GH_ParamAccess.item);
         }
         //EntityList list = new EntityList();
@@ -93,15 +87,11 @@ namespace EPFL.GrasshopperTopSolid.Components
         {
             //Search Existing Elements that use desired name
             //Dict<doc,Queue>
-
             //and fill queue
-
-
             try
             {
                 UndoSequence.End();
                 UndoSequence.Start("Grasshopper Bake", false);
-
             }
             catch
             {
@@ -150,13 +140,10 @@ namespace EPFL.GrasshopperTopSolid.Components
             GH_String name = new GH_String();
             IGH_GeometricGoo geo = null;
 
-            bool sew = false;
+            //bool sew = false;
             if (!DA.GetData(0, ref geo)) { return; }
-            //if (geo == null) { return; }
-            //if (geo.Count == 0) { return; }
-
             DA.GetData("Bake?", ref run);
-            DA.GetData("Sew?", ref sew);
+            //DA.GetData("Sew?", ref sew);
             DA.GetData("Name", ref name);
 
 
@@ -164,36 +151,28 @@ namespace EPFL.GrasshopperTopSolid.Components
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
 
             IDocument res = null;
-            if (DA.GetData("TSDocument", ref wrapper))
+            if (DA.GetData("Part Document", ref wrapper))
             {
                 if (wrapper.Value is string || wrapper.Value is GH_String)
                 {
                     res = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault();
-                    doc = res as DesignDocument;
+                    doc = res as PartDocument;
                 }
                 else if (wrapper.Value is IDocumentItem)
-                    doc = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as DesignDocument;
+                    doc = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as PartDocument;
                 else if (wrapper.Value is IDocument)
-                    doc = wrapper.Value as DesignDocument;
+                    doc = wrapper.Value as PartDocument;
             }
 
             if (doc == null)
-                doc = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
+                doc = TopSolid.Kernel.UI.Application.CurrentDocument as PartDocument;
 
             if (run == true)
             {
+                Shape topSolidShape;
                 ElementList elements = new ElementList();
                 doc.GetElements(elements);
-
-                //if (entitiesCreation is null)
-                //    entitiesCreation = new EntitiesCreation(doc, 0);
-
-
                 doc.EnsureIsDirty();
-                //UndoSequence.UndoCurrent();
-                //UndoSequence.Start("Bake", false);
-                //list.Clear();
-
 
                 #region Simpler Geometries (Not parts)
                 if (geo is GH_Point ghPoint)
@@ -263,7 +242,6 @@ namespace EPFL.GrasshopperTopSolid.Components
                     //UndoSequence.End();
 
                 }
-
                 else if (geo is GH_Plane ghPlane)
                 {
                     var rhPlane = new Plane();
@@ -295,201 +273,72 @@ namespace EPFL.GrasshopperTopSolid.Components
                     //list.Add(se);
                 }
                 #endregion
+
+
                 else if (geo is GH_Brep gbrep)
-                {///*
-
-                    //if (doc is AssemblyDocument assemblyDocument)
-                    //{
-                    // Creation local part.
-                    //LocalPartsCreation localPartCreation = new LocalPartsCreation(assemblyDocument, 0);
-                    //PartDefinitionPrimitive localPart = new PartDefinitionPrimitive(localPartCreation, assemblyDocument);
-                    //localPart.NodeEntity.IsDeletable = false;
-
-                    // A partir de la forme G.D3.Shape shape.
-                    //ShapeEntity shapeEntity = new ShapeEntity(localPart.OwnerDocument, 0);
-
-                    // si on donne un nom à la forme de la pièce locale, on pourra y accéder plus facilement pour la mise à jour, notamment mettre à jour sa géométrie
-                    //shapeEntity.Name = Documents.ElementName.EnvelopeShape;
-
-                    //Retrouver la ShapeEntity via :
-                    //ShapeEntity shapeEntity = this.envelopePart.NodeEntity.SearchLocalConstituent(Documents.ElementName.EnvelopeShape) as ShapeEntity;
-
-
-
-                    // Ajout de la ChapeEntity à la pièce locale
-                    //TK.DB.Entities.EntityList entities = new TK.DB.Entities.EntityList();
-                    //entities.Add(shapeEntity);
-                    //localPartCreation.Create();
-
-                    Brep rs = null;
-                    GH_Convert.ToBrep(gbrep, ref rs, 0);
-                    if (rs is null) return;
-                    double tol = 0.00001;
-                    GH_ObjectWrapper attrWrapper = null;
+                {
+                    Brep rhinoBrep = null;
+                    GH_Convert.ToBrep(gbrep, ref rhinoBrep, 0);
+                    if (rhinoBrep is null) return;
+                    //double tol = 0.00001;
+                    GH_ObjectWrapper attributesWrapper = null;
                     Color tsColor = Color.Empty;
                     Transparency trnsp = Transparency.Empty;
-                    ShapeList shapeList;
 
-                    DA.GetData("Tolerance", ref tol);
-                    DA.GetData("TSAttributes", ref attrWrapper);
+                    //DA.GetData("Tolerance", ref tol);
+                    DA.GetData("TSAttributes", ref attributesWrapper);
                     string layerName = "";
-                    var tsAttributes = attrWrapper.Value as Tuple<Transparency, Color, string>;
+                    var topSolidAttributes = attributesWrapper.Value as Tuple<Transparency, Color, string>;
 
-                    if (tsAttributes != null)
+                    if (topSolidAttributes != null)
                     {
-                        tsColor = tsAttributes.Item2;
-                        trnsp = tsAttributes.Item1;
-                        layerName = tsAttributes.Item3;
+                        tsColor = topSolidAttributes.Item2;
+                        trnsp = topSolidAttributes.Item1;
+                        layerName = topSolidAttributes.Item3;
                     }
-
-                    Layer layer = new Layer(-1);
-                    LayerEntity layEnt = new LayerEntity(doc, 0, layer);
+                    Layer topSolidLayer = new Layer(-1);
+                    LayerEntity layerEntity = new LayerEntity(doc, 0, topSolidLayer);
 
                     var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
-                    layEnt = layfoldEnt.SearchLayer(layerName);
+                    layerEntity = layfoldEnt.SearchLayer(layerName);
 
-                    if (layEnt == null)
+                    if (layerEntity == null)
                     {
-                        layEnt = new LayerEntity(doc, 0, layer);
-                        layEnt.Name = layerName;
+                        layerEntity = new LayerEntity(doc, 0, topSolidLayer);
+                        layerEntity.Name = layerName;
                     }
-
 
                     entitiesCreation = new EntitiesCreation(doc, 0);
-
-                    shapeList = rs.ToHost(tol);
-                    //int childEntityIndex = 0;
-
-                    //localPart.NodeEntity.IsDeletable = true;
-                    //foreach (var ts in shapeList)
-                    //{
-                    //    ShapeEntity se = new ShapeEntity(doc, 0);
-                    //    se.Geometry = ts;
-
-                    //    //se.Create(doc.ShapesFolderEntity);
-                    //    entitiesCreation.AddChildEntity(se);
-                    //    entitiesCreation.CanDeleteFromChild(se);
-                    //    //childEntityIndex = entitiesCreation.IndexOfChildEntity(se);
-                    //}
-
-                    //SewOperation sewOperation = new SewOperation(doc, 0);
-
-                    //if (sew)
-                    //    sewOperation.AddOperation(shapesCreation);
-
-                    //shapesCreation.Owner = sewOperation;
-
-                    //entitiesCreation.Create();
-
-                    Shape modifiedShape = shapeList.First();
-                    if (modifiedShape == null)
-                        return;
-                    SheetsSewer sheetsSewer = new SheetsSewer(TK.SX.Version.Current, modifiedShape);
-                    if (shapeList.Count > 1 && sew)
-                    {
-                        for (int i = 1; i < shapeList.Count; i++)
-                        {
-                            sheetsSewer.AddTool(shapeList.ElementAt(i), i);
-                        }
-                        if (tol > 0)
-                        {
-                            sheetsSewer.GapWidth = tol;
-                        }
-                        else
-                        {
-                            sheetsSewer.GapWidth = TK.G.Precision.ModelingLinearTolerance;
-                        }
-
-                        sheetsSewer.NbIterations = 8;
-                        sheetsSewer.CreateNewBodies = true;
-                        sheetsSewer.ResetEdgesPrecision = true;
-                        sheetsSewer.Merges = true;
-
-                        try
-                        {
-                            sheetsSewer.Sew(ItemOperationKey.BasicKey);
-
-                        }
-                        catch (Exception ex)
-                        {
-                            ex.ToString();
-                        }
-
-                    }
-
-                    //if (entitiesCreation.ChildEntityCount > 1)
-                    //{
-                    //    //var mod = entitiesCreation.ChildrenEntities;
-                    //    sewOperation.ModifiedEntity = entitiesCreation.ChildrenEntities.First() as ShapeEntity;
-                    //    for (int i = 1; i < entitiesCreation.ChildEntityCount; i++)
-                    //    {
-                    //        //entitiesCreation.ChildrenEntities.ElementAt(i).IsGhost = true;//ToDO Comment in case Debug is needed
-                    //        sewOperation.AddTool(new ProvidedSmartShape(sewOperation, entitiesCreation.ChildrenEntities.ElementAt(i)));
-                    //    }
-
-                    //    if (tol != 0)
-                    //        sewOperation.GapWidth = new BasicSmartReal(sewOperation, tol, UnitType.Length, doc);
-                    //    else
-                    //        sewOperation.GapWidth = new BasicSmartReal(sewOperation, TK.G.Precision.ModelingLinearTolerance, UnitType.Length, doc);
-                    //    sewOperation.NbIterations = new BasicSmartInteger(sewOperation, 5);
-                    //    sewOperation.ExplicitLayer = layer;
-                    //    //sewOperation.Parent = shapesCreation;
-                    //    //sewOperation.AddOperation(shapesCreation);
-                    //    //shapesCreation.Parent = sewOperation;
-                    //    try
-                    //    {
-                    //        sewOperation.Create();
-                    //    }
-
-                    //    catch (Exception ex)
-                    //    {
-                    //        UndoSequence.End();
-                    //        MessageBox.Show(ex.Message, MessageBoxType.Warning);
-                    //    }
-                    //    //if (!sewOperation.IsInvalid) //TODO For Debug
-                    //    //    sewOperation.IsGhost = true;
-                    //}
+                    topSolidShape = rhinoBrep.ToHost();
 
                     if (name != null)
                     {
-
                         ShapesFolderEntity shapesFolderEntity = doc.ShapesFolderEntity;
                         entity = shapesFolderEntity.SearchEntity(name.ToString()) as ShapeEntity;
                         if (entity != null)
                         {
-                            entity.Geometry = sheetsSewer.Shape;
+                            entity.Geometry = topSolidShape;
+                            entity.ExplicitColor = tsColor;
+                            entity.ExplicitTransparency = trnsp;
+                            entity.ExplicitLayer = layerEntity.Layer;
                         }
 
                         else
                         {
-                            //entity = entitiesCreation.ChildrenEntities.ElementAt(0);
                             entity = new ShapeEntity(doc, 0);
                             entity.Name = name.ToString();
-                            entity.Geometry = sheetsSewer.Shape;
+                            entity.Geometry = topSolidShape;
+                            entity.ExplicitColor = tsColor;
+                            entity.ExplicitTransparency = trnsp;
+                            entity.ExplicitLayer = layerEntity.Layer;
+                            entity.Create(shapesFolderEntity);
                         }
-
-                        entity.ExplicitColor = tsColor;
-                        entity.ExplicitTransparency = trnsp;
-                        entity.ExplicitLayer = layEnt.Layer;
-                        entity.Create(shapesFolderEntity);
                         //doc.ShapesFolderEntity.AddEntity(entity);
                     }
-
-                    if (Params.Output.Count > 0)
-                        DA.SetData("TopSolid Entities", entity);
-
-                    //}
-
                 }
-
-
+                if (Params.Output.Count > 0)
+                    DA.SetData("TopSolid Entities", entity);
             }
-            if (Params.Output.Count > 0)
-
-                DA.SetData(0, entity); //TODO Generalize
-                                       //*/
-
-
         }
 
 
