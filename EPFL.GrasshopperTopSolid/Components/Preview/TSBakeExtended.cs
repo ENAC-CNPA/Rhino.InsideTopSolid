@@ -29,6 +29,7 @@ using TopSolid.Kernel.TX.Pdm;
 using TopSolid.Kernel.GR.Attributes;
 using TopSolid.Cad.Design.DB.Documents;
 using TK = TopSolid.Kernel;
+using SX = TopSolid.Kernel.SX;
 
 using TopSolid.Kernel.DB.Elements;
 
@@ -282,8 +283,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                     if (rhinoBrep is null) return;
                     //double tol = 0.00001;
                     GH_ObjectWrapper attributesWrapper = null;
-                    Color tsColor = Color.Empty;
-                    Transparency trnsp = Transparency.Empty;
+                    SX.Drawing.Color tsColor = SX.Drawing.Color.Empty;
+                    SX.Drawing.Transparency trnsp = SX.Drawing.Transparency.Empty;
 
                     //DA.GetData("Tolerance", ref tol);
                     DA.GetData("TSAttributes", ref attributesWrapper);

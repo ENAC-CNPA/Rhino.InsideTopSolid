@@ -9,7 +9,10 @@ using TopSolid.Cad.Design.DB.Documents;
 using TopSolid.Cad.Design.DB.Local.Operations;
 using TopSolid.Kernel.DB.D3.Shapes;
 using TopSolid.Kernel.DB.Entities;
+using TopSolid.Kernel.DB.Layers;
 using TopSolid.Kernel.G.D3.Shapes;
+using TopSolid.Kernel.GR.Attributes;
+using TopSolid.Kernel.SX.Drawing;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Pdm;
 using TopSolid.Kernel.TX.Undo;
@@ -109,16 +112,45 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
                 GH_Convert.ToBrep(rhinoGeometry, ref brep, GH_Conversion.Both);
                 Shape topSolidShape = brep.ToHost();
 
-                //TODO
+                GH_ObjectWrapper attributesWrapper = null;
+                Color topSolidColor = Color.Empty;
+                Transparency topSolidtransparency = Transparency.Empty;
+
+                DA.GetData("TSAttributes", ref attributesWrapper);
+                string topSolidLayerName = "";
+                var topSolidAttributes = attributesWrapper.Value as Tuple<Transparency, Color, string>;
+
+                if (topSolidAttributes != null)
+                {
+                    topSolidColor = topSolidAttributes.Item2;
+                    topSolidtransparency = topSolidAttributes.Item1;
+                    topSolidLayerName = topSolidAttributes.Item3;
+                }
 
 
                 LocalPartsCreation localPartCreation = new LocalPartsCreation(assemblyDocument, 0);
                 PartDefinitionPrimitive localPart = new PartDefinitionPrimitive(localPartCreation, assemblyDocument);
                 localPart.NodeEntity.IsDeletable = true;
 
+                Layer topSolidLayer = new Layer(-1);
+                LayerEntity layerEntity = new LayerEntity(assemblyDocument, 0, topSolidLayer);
+
+                var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(assemblyDocument);
+                layerEntity = layfoldEnt.SearchLayer(topSolidLayerName);
+
+                if (layerEntity == null)
+                {
+                    layerEntity = new LayerEntity(assemblyDocument, 0, topSolidLayer);
+                    layerEntity.Name = topSolidLayerName;
+                }
+
                 // A partir de la forme G.D3.Shape shape.
                 ShapeEntity shapeEntity = new ShapeEntity(localPart.OwnerDocument, 0);
-                shapeEntity.Geometry = topSolidShape;
+                shapeEntity.ExplicitColor = topSolidColor;
+                shapeEntity.ExplicitLayer = topSolidLayer;
+                shapeEntity.ExplicitTransparency = topSolidtransparency;
+                //shapeEntity.Geometry = topSolidShape;
+                shapeEntity.SetGeometry(topSolidShape, true, true);
 
                 // si on donne un nom à la forme de la pièce locale, on pourra y accéder plus facilement pour la mise à jour, notamment mettre à jour sa géométrie
                 shapeEntity.Name = name.Value;
