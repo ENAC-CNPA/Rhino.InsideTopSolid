@@ -28,7 +28,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGeometryParameter("Geometries", "G", "Rhino Geometries to bake (as list)", GH_ParamAccess.list);
+            pManager.AddGeometryParameter("Geometry", "G", "Rhino Geometry to bake", GH_ParamAccess.item);
             pManager.AddGenericParameter("Assembly Document", "A", "target TopSolid Assembly to bake-in, if none provided will get current assembly", GH_ParamAccess.item);
             pManager[1].Optional = true;
             pManager.AddTextParameter("Name", "Name", "Part Name to be given", GH_ParamAccess.item);
@@ -46,7 +46,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         }
 
         bool run = false;
-        DesignDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
+        AssemblyDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as AssemblyDocument;
 
 
         /// <summary>
@@ -55,20 +55,14 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            if (!DA.GetData("Bake?", ref run) || !run) return;
-
-            //ent = null;
             GH_String name = new GH_String();
             IGH_GeometricGoo geo = null;
-
             bool sew = false;
-            if (!DA.GetData(0, ref geo)) { return; }
-            //if (geo == null) { return; }
-            //if (geo.Count == 0) { return; }
 
-            DA.GetData("Sew?", ref sew);
-            DA.GetData("Name", ref name);
-
+            if (!DA.GetData("Bake?", ref run) || !run) return;
+            if (!DA.GetData("Geometries", ref geo)) return;
+            if (DA.GetData("Sew?", ref sew)) return;
+            if (DA.GetData("Name", ref name)) return;
 
             //Setting target document from input, or else take current document by default
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
@@ -79,16 +73,16 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
                 if (wrapper.Value is string || wrapper.Value is GH_String)
                 {
                     res = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault();
-                    doc = res as DesignDocument;
+                    doc = res as AssemblyDocument;
                 }
                 else if (wrapper.Value is IDocumentItem)
-                    doc = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as DesignDocument;
+                    doc = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as AssemblyDocument;
                 else if (wrapper.Value is IDocument)
-                    doc = wrapper.Value as DesignDocument;
+                    doc = wrapper.Value as AssemblyDocument;
             }
 
             if (doc == null)
-                doc = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
+                doc = TopSolid.Kernel.UI.Application.CurrentDocument as AssemblyDocument;
 
             //The baking process starts on button
             if (run == true)
