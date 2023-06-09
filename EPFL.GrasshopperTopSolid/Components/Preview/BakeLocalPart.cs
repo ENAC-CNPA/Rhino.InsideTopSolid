@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Data;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 using Rhino.UI;
+using TopSolid.Cad.Design.DB;
 using TopSolid.Cad.Design.DB.Documents;
 using TopSolid.Cad.Design.DB.Local.Operations;
 using TopSolid.Kernel.DB.D3.Shapes;
@@ -16,6 +19,7 @@ using TopSolid.Kernel.SX.Drawing;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Pdm;
 using TopSolid.Kernel.TX.Undo;
+using TopSolid.Kernel.TX.Units;
 using TK = TopSolid.Kernel;
 
 namespace EPFL.GrasshopperTopSolid.Components.Preview
@@ -32,8 +36,17 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         {
         }
 
+        bool run = false;
+        AssemblyDocument assemblyDocument = TopSolid.Kernel.UI.Application.CurrentDocument as AssemblyDocument;
+        List<PartEntity> CreatedPartEntities = new List<PartEntity>();
+        bool needsLocalAssemblies = false;
+        IGH_Structure volatileData;
+
         protected override void BeforeSolveInstance()
         {
+            volatileData = Params.Input[0].VolatileData;
+            needsLocalAssemblies = volatileData.PathCount > 1;
+
             try
             {
                 UndoSequence.Start("Create Local Part", false);
@@ -58,7 +71,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
             pManager[1].Optional = true;
             pManager.AddTextParameter("Name", "Name", "Name for Local Part Document", GH_ParamAccess.item);
             pManager[2].Optional = true;
-            pManager.AddGenericParameter("TSAttributes", "attributes", "TopSolid's attributes for the created entities", GH_ParamAccess.item);
+            pManager.AddGenericParameter("TopSolid Attributes", "attributes", "TopSolid's attributes for the created entities", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Bake?", "b?", "Set true to bake", GH_ParamAccess.item);
         }
 
@@ -69,8 +82,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         {
         }
 
-        bool run = false;
-        AssemblyDocument assemblyDocument = TopSolid.Kernel.UI.Application.CurrentDocument as AssemblyDocument;
+
 
 
         /// <summary>
@@ -79,96 +91,53 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            GH_String name = new GH_String();
-            IGH_GeometricGoo rhinoGeometry = null;
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();//needed for TopSolid types
 
             if (!DA.GetData("Bake?", ref run) || !run) return;
-            if (!DA.GetData("Geometry", ref rhinoGeometry)) return;
-            if (!DA.GetData("Name", ref name)) return;
 
-
-            IDocument res = null;
             if (DA.GetData("Assembly Document", ref wrapper))
             {
-                if (wrapper.Value is string || wrapper.Value is GH_String)
-                {
-                    res = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault();
-                    assemblyDocument = res as AssemblyDocument;
-                }
-                else if (wrapper.Value is IDocumentItem)
-                    assemblyDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as AssemblyDocument;
-                else if (wrapper.Value is IDocument)
-                    assemblyDocument = wrapper.Value as AssemblyDocument;
+                assemblyDocument = GetAssemblyDocument(wrapper);
             }
 
             if (assemblyDocument == null)
-                assemblyDocument = TopSolid.Kernel.UI.Application.CurrentDocument as AssemblyDocument;
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Could not find valid Assembly");
 
-            //The baking process starts on button
+            //The baking process starts on boolean true
             if (run == true)
             {
+                GH_String name = new GH_String();
+                IGH_GeometricGoo rhinoGeometry = null;
+                EntityList entities = new EntityList();
                 Brep brep = null;
+                GH_ObjectWrapper attributesWrapper = null;
+
+                if (!DA.GetData("Geometry", ref rhinoGeometry)) return;
+                if (!DA.GetData("Name", ref name)) return;
+                if (!DA.GetData("TopSolid Attributes", ref attributesWrapper)) return;
+
+                var topSolidAttributes = attributesWrapper.Value as Tuple<Transparency, Color, string>;
+                LocalPartsCreation localPartCreation = new LocalPartsCreation(assemblyDocument, 0);
+
+                ShapeEntity shapeEntity = new ShapeEntity(assemblyDocument, 0);
                 GH_Convert.ToBrep(rhinoGeometry, ref brep, GH_Conversion.Both);
                 Shape topSolidShape = brep.ToHost();
 
-                GH_ObjectWrapper attributesWrapper = null;
-                Color topSolidColor = Color.Empty;
-                Transparency topSolidtransparency = Transparency.Empty;
+                SetTopSolidEntity(topSolidAttributes, shapeEntity, topSolidShape);
 
-                DA.GetData("TSAttributes", ref attributesWrapper);
-                string topSolidLayerName = "";
-                var topSolidAttributes = attributesWrapper.Value as Tuple<Transparency, Color, string>;
-
-                if (topSolidAttributes != null)
-                {
-                    topSolidColor = topSolidAttributes.Item2;
-                    topSolidtransparency = topSolidAttributes.Item1;
-                    topSolidLayerName = topSolidAttributes.Item3;
-                }
-
-
-                LocalPartsCreation localPartCreation = new LocalPartsCreation(assemblyDocument, 0);
-                PartDefinitionPrimitive localPart = new PartDefinitionPrimitive(localPartCreation, assemblyDocument);
-                localPart.NodeEntity.IsDeletable = true;
-
-                Layer topSolidLayer = new Layer(-1);
-                LayerEntity layerEntity = new LayerEntity(assemblyDocument, 0, topSolidLayer);
-
-                var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(assemblyDocument);
-                layerEntity = layfoldEnt.SearchLayer(topSolidLayerName);
-
-                if (layerEntity == null)
-                {
-                    layerEntity = new LayerEntity(assemblyDocument, 0, topSolidLayer);
-                    layerEntity.Name = topSolidLayerName;
-                }
-
-                // A partir de la forme G.D3.Shape shape.
-                ShapeEntity shapeEntity = new ShapeEntity(localPart.OwnerDocument, 0);
-                shapeEntity.ExplicitColor = topSolidColor;
-                shapeEntity.ExplicitLayer = topSolidLayer;
-                shapeEntity.ExplicitTransparency = topSolidtransparency;
-                //shapeEntity.Geometry = topSolidShape;
-                shapeEntity.SetGeometry(topSolidShape, true, true);
-
-                // si on donne un nom à la forme de la pièce locale, on pourra y accéder plus facilement pour la mise à jour, notamment mettre à jour sa géométrie
-                shapeEntity.Name = name.Value;
-
-                //Retrouver la ShapeEntity via :
-                //ShapeEntity shapeEntity = this.envelopePart.NodeEntity.SearchLocalConstituent(Documents.ElementName.EnvelopeShape) as ShapeEntity;
-
-                // Ajout de la ChapeEntity à la pièce locale
-                EntityList entities = new EntityList();
                 entities.Add(shapeEntity);
-                localPart.NodeEntity.SetLocalConstituents(entities);
-                localPart.NodeEntity.AddEntityToLocalRepresentation(shapeEntity, TopSolid.Cad.Design.DB.Documents.ElementName.DetailedRepresentation);
-                localPart.NodeEntity.AddEntityToLocalRepresentation(shapeEntity, TopSolid.Cad.Design.DB.Documents.ElementName.DesignRepresentation);
-                localPart.NodeEntity.AddEntityToLocalRepresentation(shapeEntity, TopSolid.Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
+                PartEntity partEntity = CreateLocalPart(assemblyDocument, entities, name.Value);
+
+                localPartCreation.AddChildPart(partEntity);
                 localPartCreation.IsDeletable = true;
+                localPartCreation.Name = "Creation Part : " + name.Value;
+
+                //assemblyDocument.DetailedRepresentationEntity.AddEntity(partEntity);
+                //assemblyDocument.DesignRepresentationEntity.AddEntity(partEntity);
+                //assemblyDocument.SimplifiedRepresentationEntity.AddEntity(partEntity);
 
                 localPartCreation.Create();
-
+                CreatedPartEntities.Add(partEntity);
             }
         }
 
@@ -198,5 +167,165 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         {
             get { return new Guid("56F50B6F-7470-450E-9414-060CCC13851F"); }
         }
+
+
+        private PartEntity CreateLocalPart(AssemblyDocument inAssemblyDocument, EntityList inEntities, string inName)
+        {
+            PartEntity localPart = new PartEntity(inAssemblyDocument, 0);
+            localPart.SetLocalConstituents(inEntities);
+
+            localPart.MakeDefaultParameters(TK.SX.Version.Current, true);
+            if (!string.IsNullOrEmpty(inName))
+                localPart.NameParameterValue = inAssemblyDocument.MakeLocalizableString(inName);
+
+            foreach (Entity entity in inEntities)
+            {
+                localPart.AddEntityToLocalRepresentation(entity, TopSolid.Cad.Design.DB.Documents.ElementName.DetailedRepresentation);
+                localPart.AddEntityToLocalRepresentation(entity, TopSolid.Cad.Design.DB.Documents.ElementName.DesignRepresentation);
+                localPart.AddEntityToLocalRepresentation(entity, TopSolid.Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
+            }
+            return localPart;
+        }
+
+        private void SetTopSolidEntity(Tuple<Transparency, Color, string> topSolidAttributes, Entity entity, Shape topSolidShape)
+        {
+            Color topSolidColor = Color.Empty;
+            Transparency topSolidtransparency = Transparency.Empty;
+            string topSolidLayerName = "";
+            Layer topSolidLayer = new Layer(-1);
+            LayerEntity layerEntity = new LayerEntity(assemblyDocument, 0, topSolidLayer);
+
+            if (topSolidAttributes != null)
+            {
+                topSolidColor = topSolidAttributes.Item2;
+                topSolidtransparency = topSolidAttributes.Item1;
+                topSolidLayerName = topSolidAttributes.Item3;
+            }
+
+
+            var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(assemblyDocument);
+            layerEntity = layfoldEnt.SearchLayer(topSolidLayerName);
+
+            if (layerEntity == null)
+            {
+                layerEntity = new LayerEntity(assemblyDocument, 0, topSolidLayer);
+                layerEntity.Name = topSolidLayerName;
+            }
+
+
+            entity.ExplicitColor = topSolidColor;
+            entity.ExplicitLayer = topSolidLayer;
+            entity.ExplicitTransparency = topSolidtransparency;
+            //entity.SetGeometry(topSolidShape, true, true);
+            entity.Geometry = topSolidShape;
+        }
+
+        private AssemblyDocument GetAssemblyDocument(GH_ObjectWrapper wrapper)
+        {
+            IDocument res = null;
+            if (wrapper.Value is string || wrapper.Value is GH_String)
+            {
+                res = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault();
+                assemblyDocument = res as AssemblyDocument;
+            }
+            else if (wrapper.Value is IDocumentItem)
+                assemblyDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as AssemblyDocument;
+            else if (wrapper.Value is IDocument)
+                assemblyDocument = wrapper.Value as AssemblyDocument;
+
+            if (assemblyDocument == null)
+                assemblyDocument = TopSolid.Kernel.UI.Application.CurrentDocument as AssemblyDocument;
+
+            return assemblyDocument;
+        }
+
+
+        //Local Assemblies VIG
+        /*
+
+        /// <summary>
+
+        /// Creates a local assembly and fills representations.
+
+        /// </summary>
+
+        /// <param name="inAssemblyDoc">Input assembly document.</param>
+
+        /// <param name="definitionEntities">Definition entities of the document.</param>
+
+        /// <returns>Assembly Entity.</returns>
+
+        private AssemblyEntity CreateLocalAssembly(AssemblyDocument inAssemblyDoc, EntityList definitionEntities)
+
+                {
+
+                    AssemblyDefinitionCreation assemblyDefinitionOp = new AssemblyDefinitionCreation(inAssemblyDoc, 0);
+
+                    assemblyDefinitionOp.SetOriginals(definitionEntities);
+
+                    assemblyDefinitionOp.Create();
+
+
+
+                    AssemblyEntity assemblyEntity = assemblyDefinitionOp.ChildEntity;
+
+
+
+                    // Fill representations.
+
+
+
+                    DesignRepresentationEntity designRepresentation = inAssemblyDoc.FindOrCreateDesignRepresentation();
+
+                    SimplifiedRepresentationEntity simplifiedRepresentation = inAssemblyDoc.SimplifiedRepresentationEntity;
+
+
+
+                    if (simplifiedRepresentation != null)
+
+                    {
+
+                        assemblyEntity.CreateLocalSimplifiedRepresentation();
+
+                    }
+
+
+
+                    inAssemblyDoc.DetailedRepresentationEntity.AddLocalRepresentationConstituent(assemblyEntity, Cad.Design.DB.Documents.ElementName.DetailedRepresentation);
+
+
+
+                    designRepresentation.AddLocalRepresentationConstituent(assemblyEntity, Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
+
+
+
+                    if (simplifiedRepresentation != null)
+
+                    {
+
+                        simplifiedRepresentation.AddLocalRepresentationConstituent(assemblyEntity, Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
+
+                    }
+
+                    RepresentationReference representationRef = inAssemblyDoc.CurrentRepresentationEntity.SearchEntityRepresentation(assemblyEntity);
+
+                    if (representationRef != null)
+
+                    {
+
+                        representationRef.Activate();
+
+                    }
+
+
+
+                    return assemblyEntity;
+
+                }
+                         * 
+                         * 
+                         * 
+                         */
+
     }
 }
