@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\..\..\Sources\TopSolid 7.17\Debug x64\</OutputPath>
+    <OutputPath>..\..\..\TopSolid v7.x\bin\Debug x64\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -162,6 +162,10 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+    <Reference Include="TopSolid.Kernel.SX.NetStandard, Version=7.18.225.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\TopSolid v7.x\bin\Debug x64\TopSolid.Kernel.SX.NetStandard.dll</HintPath>
+    </Reference>
     <Reference Include="TopSolid.Kernel.SX.XmlSerializers">
       <Private>False</Private>
     </Reference>
@@ -171,6 +175,10 @@
     </Reference>
     <Reference Include="TopSolid.Kernel.TX.Formulas">
       <Private>False</Private>
+    </Reference>
+    <Reference Include="TopSolid.Kernel.TX.NetStandard, Version=7.18.225.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\TopSolid v7.x\bin\Debug x64\TopSolid.Kernel.TX.NetStandard.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.TX.OpenPackageCreator">
       <Private>False</Private>
@@ -187,9 +195,9 @@
     <Reference Include="TopSolid.Kernel.TX.Reports">
       <Private>False</Private>
     </Reference>
-    <Reference Include="TopSolid.Kernel.UI">
+    <Reference Include="TopSolid.Kernel.UI, Version=7.18.225.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
+      <HintPath>..\..\..\TopSolid v7.x\bin\Debug x64\TopSolid.Kernel.UI.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.UI.D2">
       <SpecificVersion>False</SpecificVersion>
