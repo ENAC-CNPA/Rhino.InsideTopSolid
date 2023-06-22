@@ -790,20 +790,6 @@ namespace EPFL.GrasshopperTopSolid
             }
             string log = "";
             rhinoSurface.IsValidWithLog(out log);
-            //if (!rhinoSurface.IsValid )
-            //{
-            //    if (!knotU)
-            //    {
-            //        for (int u = 0; u < bsplineSurface.UBs.Count; u++)
-            //            rhinoSurface.KnotsU[u] = bsplineSurface.UBs[u];
-            //    } 
-            //    if (!knotV)
-            //    {
-            //        for (int v = 0; v < bsplineSurface.VBs.Count; v++)
-            //            rhinoSurface.KnotsV[v] = bsplineSurface.VBs[v];
-            //    }
-            //}
-            //rhinoSurface.IsValidWithLog(out log);
             return rhinoSurface;
         }
 

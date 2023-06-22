@@ -23,6 +23,7 @@ using TX = TopSolid.Kernel.TX;
 using G = TopSolid.Kernel.G;
 using TopSolid.Kernel.G.D3.Shapes.Sew;
 using Eto.Forms;
+using TopSolid.Cad.Design.DB.Constraints;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -37,9 +38,12 @@ namespace EPFL.GrasshopperTopSolid
             TSXGen.List<TKGD2.Curves.IGeometricProfile> list2D = new TSXGen.List<TKGD2.Curves.IGeometricProfile>();
             TSXGen.List<TKGD3.Curves.IGeometricProfile> list3D = new TSXGen.List<TKGD3.Curves.IGeometricProfile>();
             TSXGen.List<EdgeList> listEdges = new TSXGen.List<EdgeList>();
-            TSXGen.List<TKGD3.Shapes.Vertex> vertexlist = new TSXGen.List<TKGD3.Shapes.Vertex>();
+            //TSXGen.List<TKGD3.Shapes.Vertex> vertexlist = new TSXGen.List<TKGD3.Shapes.Vertex>();
             double tol_Rh = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
             double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
+            bool forcesNonPeriodic = false;
+            if (face.GeometryType == SurfaceGeometryType.Cone || face.GeometryType == SurfaceGeometryType.Cylinder)
+                forcesNonPeriodic = true;
 
             //Topology indexes ?
             int c_index = 0;
@@ -47,123 +51,68 @@ namespace EPFL.GrasshopperTopSolid
             //Create the Brep Surface
             Brep brepsrf = new Brep();
 
-            int loopCount = face.LoopCount;
             //function added on request, gets the 2DCurves, 3dCurves and Edges in the correct order
-            OrientedSurface osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, false, outer, list2D, list3D, listEdges);
+            OrientedSurface osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, outer, list2D, list3D, listEdges);
             TKGD3.Surfaces.Surface topSolidSurface = osurf.Surface;
-            //OrientedSurface osurf2 = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, false, FaceTrimmingLoopsConfine.No, outer, list2D, list3D, listEdges);
 
             var list2Dflat = list2D.SelectMany(f => f.Segments).ToList();
             var list3Dflat = list3D.SelectMany(f => f.Segments).ToList();
             var listEdgesflat = listEdges.SelectMany(m => m).ToList();
 
-
-            //for debug
-            var verticesPoints = face.Vertices.Select(v => v.GetGeometry());
-            var revEdges = listEdgesflat.Select(e => Tuple.Create(e.StartVertex.GetGeometry(), e.EndVertex.GetGeometry(), e.IsReversedWithFin(face)));
-            var revCruve3D = list3Dflat.Select(c => Tuple.Create(c.Ps, c.Pe, c.IsReversed, c.GetOrientedCurve().IsReversed));
-            var revCruve2D = list2Dflat.Select(d => Tuple.Create(d.Ps, d.Pe, d.IsReversed, d.GetOrientedCurve().IsReversed));
-
             //For Debug
-            bool correct = CheckTopologicalCoherence(list2D, list3D, listEdges, loopCount);
+            bool correct = CheckTopologicalCoherence(list2D, list3D, listEdges, face.LoopCount);
             var geotype = face.GeometryType;
 
-            if (!correct)
+            int countTopo = 0;
+            while (!correct && countTopo < 4)
             {
-                if (face.GeometryType == SurfaceGeometryType.Cone)
-                {
-                    osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, true, FaceTrimmingLoopsConfine.No, outer, list2D, list3D, listEdges);
-                    list2Dflat = list2D.SelectMany(f => f.Segments).ToList();
-                    list3Dflat = list3D.SelectMany(f => f.Segments).ToList();
-                    listEdgesflat = listEdges.SelectMany(m => m).ToList();
-
-                    topSolidSurface = face.GetGeometry(true) as ConeSurface;
-                }
-
-                int loopind = 0, curveind = 0;
-
-                foreach (var curve in list3D)
-                {
-                    foreach (var segment in curve.Segments)
-                    {
-                        if (segment.GetOrientedCurve().Curve.IsCircular())
-                        {
-                            listEdges[loopind].Insert(curveind, Edge.Empty);
-                        }
-                        curveind++;
-                    }
-                    loopind++;
-                    curveind = 0;
-                }
-
-                listEdgesflat = listEdges.SelectMany(m => m).ToList();
-
+                FaceTrimmingLoopsConfine trimConfine = (FaceTrimmingLoopsConfine)countTopo;
                 Console.WriteLine("Error");
+                list2D.Clear();
+                list3D.Clear();
+                listEdges.Clear();
+                osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, trimConfine, outer, list2D, list3D, listEdges);
+
+                list2Dflat = list2D.SelectMany(f => f.Segments).ToList();
+                list3Dflat = list3D.SelectMany(f => f.Segments).ToList();
+                listEdgesflat = listEdges.SelectMany(m => m).ToList();
+                correct = CheckTopologicalCoherence(list2D, list3D, listEdges, face.LoopCount);
+                countTopo++;
             }
 
             //Add Vertices
-
             int loopIndexforVertex = 0;
             int indexInLoop = 0;
             //int vertexIndex = 0;
-            foreach (EdgeList list in listEdges)
+            foreach (var Curve in list3D)
             {
-
-                foreach (TKGD3.Shapes.Edge e in list)
+                foreach (var seg in Curve.Segments)
                 {
-                    if (e.IsEmpty)
-                    {
-                        //list3D[loopIndexforVertex].Segments.ElementAt(indexInLoop).Ps
-                        continue;
-                    }
+                    //if (e.IsEmpty)
+                    //{
+                    //    var rhinoPoint = list3D[loopIndexforVertex].Segments.ElementAt(indexInLoop).Ps.ToRhino();
+                    //    brepsrf.Vertices.Add(rhinoPoint, tol_TS);
+                    //    //list3D[loopIndexforVertex].Segments.ElementAt(indexInLoop).Ps
+                    //    continue;
+                    //}
                     //TODO UNCOMMENT as soon as error with IsReversedwithFin is resolved
-                    if (e.IsReversedWithFin(face))
-                    {
-                        vertexlist.Add(e.EndVertex);
-                    }
-                    else
-                    {
-                        vertexlist.Add(e.StartVertex);
-                    }
-                    indexInLoop++;
+                    //if (e.IsReversedWithFin(face))
+                    //{
+                    //    brepsrf.Vertices.Add(e.EndVertex.GetGeometry().ToRhino(), tol_TS);
+                    //}
+                    //else
+                    //{
+                    //    brepsrf.Vertices.Add(e.StartVertex.GetGeometry().ToRhino(), tol_TS);
+                    //}
+                    //indexInLoop++;
                     //vertexIndex++;
+
+                    brepsrf.Vertices.Add(seg.Ps.ToRhino(), tol_TS);
                 }
                 loopIndexforVertex++;
                 indexInLoop = 0;
             }
 
-            int edgeind = 0;
-            int? startind, endind;
-            System.Collections.Generic.List<(Edge edge, int edgeindex, int? startindex, int? endindex)> listedgeindexes = new System.Collections.Generic.List<(Edge, int, int?, int?)>();
-            foreach (var edge in listEdgesflat)
-            {
-                if (!edge.IsEmpty)
-                {
-                    startind = vertexlist.IndexOf(edge.StartVertex);
-                    endind = vertexlist.IndexOf(edge.EndVertex);
-
-
-                }
-                else
-                {
-                    startind = null;
-                    endind = null;
-                }
-                listedgeindexes.Add((edge: edge, edgeindex: edgeind, startindex: startind, endindex: endind));
-                edgeind++;
-            }
-
-            foreach (TKGD3.Shapes.Vertex v in vertexlist)
-            {
-                if (!v.IsEmpty) //sometimes we receive null vertices
-                {
-                    brepsrf.Vertices.Add(Convert.ToRhino(v.GetGeometry()), tol_TS);
-                }
-                else
-                {
-                    brepsrf.Vertices.Add();
-                }
-            }
 
             //Get the 3D Curves and convert them to Rhino            
             int ind = 0;
@@ -194,14 +143,14 @@ namespace EPFL.GrasshopperTopSolid
             //Edges
             int i = 0;
             int iperLoop = 0;
-            System.Collections.Generic.List<BrepEdge> rhEdges = new System.Collections.Generic.List<BrepEdge>();
+            System.Collections.Generic.List<BrepEdge> rhinoEdges = new System.Collections.Generic.List<BrepEdge>();
             foreach (EdgeList list in listEdges)
             {
                 foreach (Edge e in list)
                 {
                     if (e.IsEmpty)
                     {
-                        rhEdges.Add(brepsrf.Edges.Add(i));
+                        rhinoEdges.Add(brepsrf.Edges.Add(i));
                     }
 
                     else
@@ -210,40 +159,42 @@ namespace EPFL.GrasshopperTopSolid
                         {
                             if (e.VertexCount == 0)
                             {
-                                rhEdges.Add(brepsrf.Edges.Add(i));
+                                rhinoEdges.Add(brepsrf.Edges.Add(i));
                             }
 
                             else if (e.VertexCount != 2)
                             {
-                                rhEdges.Add(brepsrf.Edges.Add(i, i, i, tol_TS));
+                                rhinoEdges.Add(brepsrf.Edges.Add(i, i, i, tol_TS));
                             }
                             else
                             {
                                 //TODO UNCOMMENT
                                 if (e.IsReversedWithFin(face))
-                                    rhEdges.Add(brepsrf.Edges.Add(i - list.Count + 1, i, i, tol_TS));
+                                    rhinoEdges.Add(brepsrf.Edges.Add(i - list.Count + 1, i, i, tol_TS));
                                 else
-                                    rhEdges.Add(brepsrf.Edges.Add(i, i - list.Count + 1, i, tol_TS));
+                                    rhinoEdges.Add(brepsrf.Edges.Add(i, i - list.Count + 1, i, tol_TS));
                             }
                         }
                         else
                         {
-                            if (e.VertexCount != 2)
+                            if (e.VertexCount == 0)
                             {
-                                rhEdges.Add(brepsrf.Edges.Add(i, i, i, tol_TS));
+                                rhinoEdges.Add(brepsrf.Edges.Add(i));
+                            }
+                            else if (e.VertexCount != 2)
+                            {
+                                rhinoEdges.Add(brepsrf.Edges.Add(i, i, i, tol_TS));
                             }
                             // TODO UnComment
                             else
                             {
                                 if (e.IsReversedWithFin(face))
-                                    rhEdges.Add(brepsrf.Edges.Add(i + 1, i, i, tol_TS));
+                                    rhinoEdges.Add(brepsrf.Edges.Add(i + 1, i, i, tol_TS));
                                 else
-                                    rhEdges.Add(brepsrf.Edges.Add(i, i + 1, i, tol_TS));
+                                    rhinoEdges.Add(brepsrf.Edges.Add(i, i + 1, i, tol_TS));
                             }
                         }
                     }
-
-
                     i++;
                     iperLoop++;
                 }
@@ -286,8 +237,8 @@ namespace EPFL.GrasshopperTopSolid
                         crv = Convert.ToRhino(tcrvv);
                         x = brepsrf.AddTrimCurve(crv);
 
-                        if (x < rhEdges.Count)
-                            rhTrim.Add(brepsrf.Trims.Add(rhEdges[x], ic.IsReversed, rhinoLoop, x));
+                        if (x < rhinoEdges.Count)
+                            rhTrim.Add(brepsrf.Trims.Add(rhinoEdges[x], ic.IsReversed, rhinoLoop, x));
                         else
                         {
                             BrepEdge brepEdge = brepsrf.Edges.Add(x);
@@ -305,9 +256,9 @@ namespace EPFL.GrasshopperTopSolid
 
                         crv = Convert.ToRhino(tcrvv);
                         x = brepsrf.AddTrimCurve(crv);
-                        if (x < rhEdges.Count)
+                        if (x < rhinoEdges.Count)
                         {
-                            var trim = brepsrf.Trims.Add(rhEdges[x], ic.IsReversed, rhinoLoop, x);
+                            var trim = brepsrf.Trims.Add(rhinoEdges[x], ic.IsReversed, rhinoLoop, x);
 
                             rhTrim.Add(trim);
                         }
@@ -348,7 +299,6 @@ namespace EPFL.GrasshopperTopSolid
                 brepsrf.IsValidWithLog(out log);
                 match = brepsrf.Trims.MatchEnds();
                 brepsrf.IsValidWithLog(out log);
-
             }
 
             brepsrf.SetTolerancesBoxesAndFlags(false, true, true, true, true, false, false, false);
@@ -421,7 +371,6 @@ namespace EPFL.GrasshopperTopSolid
 
             int coundEdges = listEdges.Count;
             int countEdgesFlattened = listEdgesFlattened.Count();
-
 
 
             bool profilesEqualsLoopCount = count2dProfiles == count3dProfiles && count2dProfiles == loopCount && count3dProfiles == coundEdges;

@@ -95,14 +95,17 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             UndoSequence.Start("Debug RHiTS", false);
             foreach (Face face in shape.Faces)
             {
-                oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, forcesRationa, false, false, boolList, list2dprofiles, list3dprofiles, edgeList);
+                bool forcesNonPeriodic = false;
+                if (face.GeometryType == G.D3.SurfaceGeometryType.Cone || face.GeometryType == G.D3.SurfaceGeometryType.Cylinder)
+                    forcesNonPeriodic = true;
+                oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, forcesRationa, false, forcesNonPeriodic, boolList, list2dprofiles, list3dprofiles, edgeList);
                 list2D.AddRange(list2dprofiles.SelectMany(x => x.Segments.Select(y => y.Curve.ToRhino())).ToList());
                 list3D.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
                 TopSolid.Kernel.G.D3.Surfaces.Surface surf;
-                if (face.GeometryType == G.D3.SurfaceGeometryType.Cone)
-                    surf = oSurf.Surface as ConeSurface;
-                else
-                    surf = oSurf.Surface;
+                //if (face.GeometryType == G.D3.SurfaceGeometryType.Cone)
+                //    surf = oSurf.Surface as ConeSurface;
+                //else
+                //    surf = oSurf.Surface;
                 listSurfaces.Add(oSurf.Surface.ToRhino());
                 BSplineSurface bsplineSurf = oSurf.Surface as BSplineSurface;
                 pointList = bsplineSurf.CPts.Select(x => x.ToRhino()).ToList();
