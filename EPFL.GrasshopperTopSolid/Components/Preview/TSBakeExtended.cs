@@ -335,7 +335,10 @@ namespace EPFL.GrasshopperTopSolid.Components
                             entity.Create(shapesFolderEntity);
                         }
                         //doc.ShapesFolderEntity.AddEntity(entity);
+                        entitiesCreation.AddChildEntity(entity);
+                        entitiesCreation.Create();
                     }
+
                 }
                 if (Params.Output.Count > 0)
                     DA.SetData("TopSolid Entities", entity);
