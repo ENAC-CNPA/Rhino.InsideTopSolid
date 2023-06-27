@@ -283,8 +283,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                     if (rhinoBrep is null) return;
                     //double tol = 0.00001;
                     GH_ObjectWrapper attributesWrapper = null;
-                    SX.Drawing.Color tsColor = SX.Drawing.Color.Empty;
-                    SX.Drawing.Transparency trnsp = SX.Drawing.Transparency.Empty;
+                    SX.Drawing.Color tsColor = SX.Drawing.Color.Red;
+                    SX.Drawing.Transparency trnsp = SX.Drawing.Transparency.SemiTransparent;
 
                     //DA.GetData("Tolerance", ref tol);
                     DA.GetData("TSAttributes", ref attributesWrapper);
