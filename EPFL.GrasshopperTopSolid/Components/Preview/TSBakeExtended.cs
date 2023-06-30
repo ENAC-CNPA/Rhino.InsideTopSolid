@@ -91,7 +91,8 @@ namespace EPFL.GrasshopperTopSolid.Components
             //and fill queue
             try
             {
-                UndoSequence.End();
+                if (UndoSequence.Current != null)
+                    UndoSequence.End();
                 UndoSequence.Start("Grasshopper Bake", false);
             }
             catch
