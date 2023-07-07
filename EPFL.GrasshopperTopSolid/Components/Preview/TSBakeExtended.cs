@@ -91,7 +91,7 @@ namespace EPFL.GrasshopperTopSolid.Components
             //and fill queue
             try
             {
-                UndoSequence.End();
+                if (UndoSequence.Current != null) UndoSequence.End();
                 UndoSequence.Start("Grasshopper Bake", false);
             }
             catch
@@ -332,9 +332,12 @@ namespace EPFL.GrasshopperTopSolid.Components
                             entity.ExplicitColor = tsColor;
                             entity.ExplicitTransparency = trnsp;
                             entity.ExplicitLayer = layerEntity.Layer;
-                            entity.Create(shapesFolderEntity);
+                            //entity.Create(shapesFolderEntity);
                         }
-                        //doc.ShapesFolderEntity.AddEntity(entity);
+
+                        entitiesCreation.AddChildEntity(entity);
+                        entitiesCreation.Create();
+                        doc.ShapesFolderEntity.AddEntity(entity);
                     }
                 }
                 if (Params.Output.Count > 0)

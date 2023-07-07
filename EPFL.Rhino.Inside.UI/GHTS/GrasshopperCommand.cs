@@ -69,10 +69,15 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 
         protected override void Invoke()
         {
+            System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.CurrentCulture;
 
             //Method that works !!
             if (rhinoCore == null)
+            {
                 rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Normal);
+
+                //rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/ NOSPLASH", "/ language ={ CultureInfo.CurrentCulture.LCID }" }, WindowStyle.Normal);
+            }
 
             if (!LoadGrasshopperComponents())
             {
@@ -94,6 +99,8 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
                 doc.ModelUnitSystem = UnitSystem.Meters;
 
             TopSolid.Kernel.SX.UI.Application.IsMouseWheelInterceptedByGraphics = false;
+
+            System.Threading.Thread.CurrentThread.CurrentCulture = culture;      // Reset the culture deleted by Grasshopper.
         }
 
         internal static bool Shutdown()

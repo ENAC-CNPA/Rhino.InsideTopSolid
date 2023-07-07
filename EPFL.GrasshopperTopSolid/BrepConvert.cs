@@ -24,6 +24,7 @@ using G = TopSolid.Kernel.G;
 using TopSolid.Kernel.G.D3.Shapes.Sew;
 using Eto.Forms;
 using TopSolid.Cad.Design.DB.Constraints;
+using TopSolid.Kernel.G.D3.Shapes.Healing;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -52,7 +53,7 @@ namespace EPFL.GrasshopperTopSolid
             Brep brepsrf = new Brep();
 
             //function added on request, gets the 2DCurves, 3dCurves and Edges in the correct order
-            OrientedSurface osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, outer, list2D, list3D, listEdges);
+            OrientedSurface osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, FaceTrimmingLoopsConfine.Periph, outer, list2D, list3D, listEdges, true);
             TKGD3.Surfaces.Surface topSolidSurface = osurf.Surface;
 
             var list2Dflat = list2D.SelectMany(f => f.Segments).ToList();
@@ -71,7 +72,7 @@ namespace EPFL.GrasshopperTopSolid
                 list2D.Clear();
                 list3D.Clear();
                 listEdges.Clear();
-                osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, trimConfine, outer, list2D, list3D, listEdges);
+                osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, trimConfine, outer, list2D, list3D, listEdges, true);
 
                 list2Dflat = list2D.SelectMany(f => f.Segments).ToList();
                 list3Dflat = list3D.SelectMany(f => f.Segments).ToList();
@@ -423,8 +424,10 @@ namespace EPFL.GrasshopperTopSolid
                 }
             }
 
-
-            return ioShapes.SewShapes();
+            Shape finalShape = ioShapes.SewShapes();
+            ShapeSimplifier simplifier = new ShapeSimplifier(SX.Version.Current, tol_TS);
+            simplifier.Simplify(finalShape, ItemOperationKey.BasicKey);
+            return finalShape;
         }
 
         private static Shape MakeSheetFrom3d(Brep inBRep, BrepFace inFace, double inLinearPrecision)

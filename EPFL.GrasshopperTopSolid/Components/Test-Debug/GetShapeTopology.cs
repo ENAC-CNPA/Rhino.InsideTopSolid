@@ -98,7 +98,9 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
                 bool forcesNonPeriodic = false;
                 if (face.GeometryType == G.D3.SurfaceGeometryType.Cone || face.GeometryType == G.D3.SurfaceGeometryType.Cylinder)
                     forcesNonPeriodic = true;
-                oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, forcesRationa, false, forcesNonPeriodic, boolList, list2dprofiles, list3dprofiles, edgeList);
+                list2dprofiles.Clear(); list3dprofiles.Clear(); edgeList.Clear();
+                oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, forcesRationa, false, forcesNonPeriodic, FaceTrimmingLoopsConfine.Periph,
+                    boolList, list2dprofiles, list3dprofiles, edgeList, true);
                 list2D.AddRange(list2dprofiles.SelectMany(x => x.Segments.Select(y => y.Curve.ToRhino())).ToList());
                 list3D.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
                 TopSolid.Kernel.G.D3.Surfaces.Surface surf;
