@@ -63,6 +63,7 @@ namespace EPFL.GrasshopperTopSolid
             //For Debug
             bool correct = CheckTopologicalCoherence(list2D, list3D, listEdges, face.LoopCount);
             var geotype = face.GeometryType;
+            correct = true;   // JLJ  TODO
 
             int countTopo = 0;
             while (!correct && countTopo < 4)
@@ -210,14 +211,26 @@ namespace EPFL.GrasshopperTopSolid
             brepsrf.AddSurface(topSolidSurface.ToRhino());
             BrepFace bface = brepsrf.Faces.Add(0);
             BrepLoop rhinoLoop = null;
+            Loop outerLoop =  face.SearchOuterLoop();
+            bool isOuter = false;
 
             //Get the 2D Curves and convert them to Rhino
             int x = 0;
             foreach (TKGD2.Curves.IGeometricProfile c in list2D)
             {
-                var tsloop = face.Loops.ElementAt(loopindex);
+                if (outerLoop != null && !outerLoop.IsEmpty)
+                {
+                    foreach (Edge edge in listEdges[loopindex])
+                    {
+                        if (outerLoop.Edges.Contains(edge))
+                        {
+                            isOuter = true;
+                            break;
+                        }
+                    }
+                }
 
-                if (tsloop.IsOuter)
+                if (isOuter)
                     rhinoLoop = brepsrf.Loops.Add(BrepLoopType.Outer, bface);
                 else
                     rhinoLoop = brepsrf.Loops.Add(BrepLoopType.Inner, bface);
@@ -228,7 +241,7 @@ namespace EPFL.GrasshopperTopSolid
                     Rhino.Geometry.Curve crv;
                     TKGD2.Curves.BSplineCurve tcrvv = ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false);
 
-                    if (tsloop.IsOuter)
+                    if (isOuter)
                     {
                         if (ic.IsReversed)
                         {
@@ -426,6 +439,12 @@ namespace EPFL.GrasshopperTopSolid
 
             Shape finalShape = ioShapes.SewShapes();
             ShapeSimplifier simplifier = new ShapeSimplifier(SX.Version.Current, tol_TS);
+
+            simplifier.Optimize = true;
+            simplifier.UseRepairEdgesTolerance = true;
+            simplifier.RepairEdgesTolerance = 5.0 * tol_TS;
+            //simplifier.OptimizeBlendFaces = this.checkBoxBlend.Checked;
+
             simplifier.Simplify(finalShape, ItemOperationKey.BasicKey);
             return finalShape;
         }
