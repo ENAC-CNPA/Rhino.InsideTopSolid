@@ -632,8 +632,8 @@ namespace EPFL.GrasshopperTopSolid
             if (rhinoSurface is SumSurface sumSurface)
                 return sumSurface.ToHost();
 
-            if (rhinoSurface is Rhino.Geometry.RevSurface rhinoRevSurface)
-                return rhinoRevSurface.ToHost();
+            //if (rhinoSurface is Rhino.Geometry.RevSurface rhinoRevSurface)
+            //    return rhinoRevSurface.ToHost();
 
             if (rhinoSurface is NurbsSurface nurbsSurface)
                 return nurbsSurface.ToHost();
@@ -641,12 +641,12 @@ namespace EPFL.GrasshopperTopSolid
             return rhinoSurface.ToNurbsSurface().ToHost();
 
         }
-        public static TKG.D3.Surfaces.RevolvedSurface ToHost(this Rhino.Geometry.RevSurface rhinorevSurface)
-        {
-            TKGD2.Extent extent = new TKGD2.Extent(rhinorevSurface.Domain(0).ToHost(), rhinorevSurface.Domain(1).ToHost());
-            RevolvedSurface revolvedSurface = new RevolvedSurface(rhinorevSurface.Curve.ToHost(), rhinorevSurface.Axis.LineToAxis(), extent);
-            return revolvedSurface;
-        }
+        //public static TKG.D3.Surfaces.RevolvedSurface ToHost(this Rhino.Geometry.RevSurface rhinorevSurface)
+        //{
+        //    TKGD2.Extent extent = new TKGD2.Extent(rhinorevSurface.Domain(0).ToHost(), rhinorevSurface.Domain(1).ToHost());
+        //    RevolvedSurface revolvedSurface = new RevolvedSurface(rhinorevSurface.Curve.ToHost(), rhinorevSurface.Axis.LineToAxis(), extent);
+        //    return revolvedSurface;
+        //}
         public static TKGD3.Surfaces.PlaneSurface ToHost(this Rhino.Geometry.PlaneSurface rhinoPlaneSurf)
         {
             Rhino.Geometry.Plane plane = Rhino.Geometry.Plane.WorldXY;

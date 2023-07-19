@@ -436,12 +436,12 @@ namespace EPFL.GrasshopperTopSolid
                 if (topSolidSurface.IsVPeriodic)
                     bsplineSurface.MakeVNonPeriodic();
 
-                sheetMaker.Surface = new OrientedSurface(bsplineSurface, false);
+                sheetMaker.Surface = new OrientedSurface(bsplineSurface, inFace.OrientationIsReversed);
             }
 
             else
             {
-                sheetMaker.Surface = new OrientedSurface(topSolidSurface, false);
+                sheetMaker.Surface = new OrientedSurface(topSolidSurface, inFace.OrientationIsReversed);
             }
 
             sheetMaker.SurfaceMoniker = new ItemMoniker(false, (byte)ItemType.ShapeFace, key, 1);
