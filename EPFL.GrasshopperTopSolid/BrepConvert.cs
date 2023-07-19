@@ -370,7 +370,7 @@ namespace EPFL.GrasshopperTopSolid
         static public Shape ToHost(this Brep brep)
         {
             double tol_TS = G.Precision.ModelingLinearTolerance;
-            brep.Trims.MatchEnds();
+            //brep.Trims.MatchEnds();
             brep.Repair(tol_TS);
             Shape shape = null;
             ShapeList ioShapes = new ShapeList();

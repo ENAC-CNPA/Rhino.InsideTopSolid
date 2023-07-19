@@ -72,6 +72,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 
         protected override void Invoke()
         {
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
 
             //Method that works !!
             if (rhinoCore == null)
@@ -98,6 +99,8 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
                 doc.ModelUnitSystem = UnitSystem.Meters;
 
             TopSolid.Kernel.SX.UI.Application.IsMouseWheelInterceptedByGraphics = false;
+
+            System.Threading.Thread.CurrentThread.CurrentCulture = culture;
         }
 
         internal static bool Shutdown()
