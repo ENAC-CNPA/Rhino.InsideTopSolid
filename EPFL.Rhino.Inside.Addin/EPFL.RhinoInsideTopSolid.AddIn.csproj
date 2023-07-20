@@ -37,7 +37,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\Topsolid 7.14\Debug x64\</OutputPath>
+    <OutputPath>..\..\..\..\..\..\Sources\Topsolid 7.17\Debug x64\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -85,7 +85,10 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-    <Reference Include="TopSolid.Kernel.UI, Version=7.16.400.167, Culture=neutral, PublicKeyToken=null" />
+    <Reference Include="TopSolid.Kernel.UI, Version=7.17.400.60, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.17\Debug x64\TopSolid.Kernel.UI.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddIn.cs" />
