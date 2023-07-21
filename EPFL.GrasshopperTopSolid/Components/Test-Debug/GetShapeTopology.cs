@@ -50,7 +50,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGeometryParameter("Rhino3DCurves", "3D", "Converted Rhino 3D Curves", GH_ParamAccess.list);
+            pManager.AddGeometryParameter("Rhino3DCurves", "3D", "Converted Rhino 3D Curves", GH_ParamAccess.tree);
             pManager.AddGeometryParameter("Rhino2DCurves", "2D", "Converted Rhino 2D Curves", GH_ParamAccess.list);
             pManager.AddGeometryParameter("RhinoSurface", "Srf", "Converted Rhino Surface", GH_ParamAccess.list);
             pManager.AddGeometryParameter("Control Points", "Cpts", "Converted Control Points", GH_ParamAccess.list);
@@ -65,13 +65,14 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
         {
             string _name = "";
             bool inTs = false;
-            bool forcesRationa = false;
-            DA.GetData("NonRational", ref forcesRationa);
+            bool forcesRational = false;
+            DA.GetData("NonRational", ref forcesRational);
             DA.GetData("in TopSolid", ref inTs);
             if (!DA.GetData("Name", ref _name)) return;
             DesignDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
-            //List<Brep> list = new List<Brep>();
+
             List<Rhino.Geometry.Curve> list3D = new List<Rhino.Geometry.Curve>();
+            DataTree<Rhino.Geometry.Curve> curve3DTree = new DataTree<Rhino.Geometry.Curve>();
             List<Rhino.Geometry.Curve> list2D = new List<Rhino.Geometry.Curve>();
             List<(double, double, double, double)> cPtsList = new List<(double, double, double, double)>();
             List<Rhino.Geometry.Surface> listSurfaces = new List<Rhino.Geometry.Surface>();
@@ -95,12 +96,14 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             UndoSequence.Start("Debug RHiTS", false);
             foreach (Face face in shape.Faces)
             {
+
                 bool forcesNonPeriodic = false;
                 if (face.GeometryType == G.D3.SurfaceGeometryType.Cone || face.GeometryType == G.D3.SurfaceGeometryType.Cylinder)
                     forcesNonPeriodic = true;
-                oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, forcesRationa, false, forcesNonPeriodic, boolList, list2dprofiles, list3dprofiles, edgeList);
+                oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, forcesRational, false, forcesNonPeriodic, boolList, list2dprofiles, list3dprofiles, edgeList);
                 list2D.AddRange(list2dprofiles.SelectMany(x => x.Segments.Select(y => y.Curve.ToRhino())).ToList());
-                list3D.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
+                //list3D.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
+                curve3DTree.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
                 TopSolid.Kernel.G.D3.Surfaces.Surface surf;
                 //if (face.GeometryType == G.D3.SurfaceGeometryType.Cone)
                 //    surf = oSurf.Surface as ConeSurface;
@@ -153,7 +156,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             }
             UndoSequence.End();
 
-            DA.SetDataList("Rhino3DCurves", list3D);
+            DA.SetDataTree(0, curve3DTree);
             DA.SetDataList("Rhino2DCurves", list2D);
             DA.SetDataList("RhinoSurface", listSurfaces);
             DA.SetDataList("Control Points", pointList);

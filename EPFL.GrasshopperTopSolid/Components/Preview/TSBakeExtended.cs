@@ -70,6 +70,7 @@ namespace EPFL.GrasshopperTopSolid.Components
             pManager.AddTextParameter("Name", "Name", "Entity Name to be given", GH_ParamAccess.item);
             pManager[2].Optional = true;
             pManager.AddGenericParameter("TSAttributes", "attributes", "TopSolid's attributes for the baked entities", GH_ParamAccess.item);
+            pManager[3].Optional = true;
             //pManager.AddNumberParameter("Tolerance", "Tol", "Tolerance for bake", GH_ParamAccess.item);
             //pManager.AddBooleanParameter("Sew?", "Sew?", "True to Sew Breps, False to keep faces split", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Bake?", "b?", "Set true to bake", GH_ParamAccess.item);
@@ -286,28 +287,31 @@ namespace EPFL.GrasshopperTopSolid.Components
                     GH_ObjectWrapper attributesWrapper = null;
                     SX.Drawing.Color tsColor = SX.Drawing.Color.Red;
                     SX.Drawing.Transparency trnsp = SX.Drawing.Transparency.SemiTransparent;
-
-                    //DA.GetData("Tolerance", ref tol);
-                    DA.GetData("TSAttributes", ref attributesWrapper);
-                    string layerName = "";
-                    var topSolidAttributes = attributesWrapper.Value as Tuple<Transparency, Color, string>;
-
-                    if (topSolidAttributes != null)
-                    {
-                        tsColor = topSolidAttributes.Item2;
-                        trnsp = topSolidAttributes.Item1;
-                        layerName = topSolidAttributes.Item3;
-                    }
                     Layer topSolidLayer = new Layer(-1);
                     LayerEntity layerEntity = new LayerEntity(doc, 0, topSolidLayer);
 
-                    var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
-                    layerEntity = layfoldEnt.SearchLayer(layerName);
-
-                    if (layerEntity == null)
+                    //DA.GetData("Tolerance", ref tol);
+                    if (DA.GetData("TSAttributes", ref attributesWrapper))
                     {
-                        layerEntity = new LayerEntity(doc, 0, topSolidLayer);
-                        layerEntity.Name = layerName;
+                        string layerName = "";
+                        var topSolidAttributes = attributesWrapper.Value as Tuple<Transparency, Color, string>;
+
+                        if (topSolidAttributes != null)
+                        {
+                            tsColor = topSolidAttributes.Item2;
+                            trnsp = topSolidAttributes.Item1;
+                            layerName = topSolidAttributes.Item3;
+                        }
+
+                        var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
+                        layerEntity = layfoldEnt.SearchLayer(layerName);
+
+                        if (layerEntity == null)
+                        {
+                            layerEntity = new LayerEntity(doc, 0, topSolidLayer);
+                            layerEntity.Name = layerName;
+                        }
+
                     }
 
                     entitiesCreation = new EntitiesCreation(doc, 0);
