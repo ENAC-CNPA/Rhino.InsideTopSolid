@@ -19,6 +19,7 @@ using TopSolid.Kernel.DB.D3.Surfaces;
 using TopSolid.Kernel.DB.D3.Curves;
 using System.Diagnostics;
 using TopSolid.Kernel.DB.D3.Modeling.Documents;
+using Grasshopper.Kernel.Data;
 
 namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
 {
@@ -57,6 +58,14 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             pManager.AddGenericParameter("Control Points+weight", "CPtsW", "Control points with Weights", GH_ParamAccess.list);
         }
 
+        protected override void BeforeSolveInstance()
+        {
+            if (UndoSequence.Current != null)
+                UndoSequence.End();
+            UndoSequence.Start("Grasshopper GetTopology", true);
+            base.BeforeSolveInstance();
+        }
+
         /// <summary>
         /// This is the method that actually does the work.
         /// </summary>
@@ -71,11 +80,20 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             if (!DA.GetData("Name", ref _name)) return;
             DesignDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
 
-            List<Rhino.Geometry.Curve> list3D = new List<Rhino.Geometry.Curve>();
+            //List<Rhino.Geometry.Curve> list3D = new List<Rhino.Geometry.Curve>();
             DataTree<Rhino.Geometry.Curve> curve3DTree = new DataTree<Rhino.Geometry.Curve>();
+
+
             List<Rhino.Geometry.Curve> list2D = new List<Rhino.Geometry.Curve>();
+            DataTree<Rhino.Geometry.Curve> curve2dTree = new DataTree<Rhino.Geometry.Curve>();
+
             List<(double, double, double, double)> cPtsList = new List<(double, double, double, double)>();
+            DataTree<(double, double, double, double)> cPTsDataTree = new DataTree<(double, double, double, double)>();
+
+
             List<Rhino.Geometry.Surface> listSurfaces = new List<Rhino.Geometry.Surface>();
+            DataTree<Rhino.Geometry.Surface> surfacesDataTree = new DataTree<Rhino.Geometry.Surface>();
+
 
             ShapeEntity entity = document.RootEntity.SearchDeepEntity(_name) as ShapeEntity;
             if (entity is null)
@@ -92,18 +110,33 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             SX.Collections.Generic.List<EdgeList> edgeList = new SX.Collections.Generic.List<EdgeList>();
             List<Point3d> pointList = new List<Point3d>();
             OrientedSurface oSurf;
-            UndoSequence.UndoCurrent();
-            UndoSequence.Start("Debug RHiTS", false);
+            //UndoSequence.UndoCurrent();
+            //UndoSequence.Start("Debug RHiTS", false);
+            int faceindex = 0;
+            int counter = 0;
             foreach (Face face in shape.Faces)
             {
+                var currentPath = new GH_Path(faceindex);
 
                 bool forcesNonPeriodic = false;
                 if (face.GeometryType == G.D3.SurfaceGeometryType.Cone || face.GeometryType == G.D3.SurfaceGeometryType.Cylinder)
                     forcesNonPeriodic = true;
+
+
                 oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, forcesRational, false, forcesNonPeriodic, boolList, list2dprofiles, list3dprofiles, edgeList);
+
+
                 list2D.AddRange(list2dprofiles.SelectMany(x => x.Segments.Select(y => y.Curve.ToRhino())).ToList());
+
                 //list3D.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
-                curve3DTree.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
+                foreach (var profile in list3dprofiles)
+                {
+                    var curves = profile.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino()).ToList();
+                    currentPath = new GH_Path(faceindex, counter++);
+                    curve3DTree.AddRange(curves, currentPath);
+                }
+                counter = 0;
+
                 TopSolid.Kernel.G.D3.Surfaces.Surface surf;
                 //if (face.GeometryType == G.D3.SurfaceGeometryType.Cone)
                 //    surf = oSurf.Surface as ConeSurface;
@@ -153,14 +186,21 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
                     }
 
                 }
+                faceindex++;
             }
-            UndoSequence.End();
 
             DA.SetDataTree(0, curve3DTree);
             DA.SetDataList("Rhino2DCurves", list2D);
             DA.SetDataList("RhinoSurface", listSurfaces);
             DA.SetDataList("Control Points", pointList);
             DA.SetDataList("Control Points+weight", cPtsList);
+        }
+
+        protected override void AfterSolveInstance()
+        {
+            if (UndoSequence.Current != null) UndoSequence.End();
+            base.AfterSolveInstance();
+
         }
 
         /// <summary>
