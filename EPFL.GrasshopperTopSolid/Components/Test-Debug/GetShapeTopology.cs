@@ -52,10 +52,10 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddGeometryParameter("Rhino3DCurves", "3D", "Converted Rhino 3D Curves", GH_ParamAccess.tree);
-            pManager.AddGeometryParameter("Rhino2DCurves", "2D", "Converted Rhino 2D Curves", GH_ParamAccess.list);
-            pManager.AddGeometryParameter("RhinoSurface", "Srf", "Converted Rhino Surface", GH_ParamAccess.list);
-            pManager.AddGeometryParameter("Control Points", "Cpts", "Converted Control Points", GH_ParamAccess.list);
-            pManager.AddGenericParameter("Control Points+weight", "CPtsW", "Control points with Weights", GH_ParamAccess.list);
+            pManager.AddGeometryParameter("Rhino2DCurves", "2D", "Converted Rhino 2D Curves", GH_ParamAccess.tree);
+            pManager.AddGeometryParameter("RhinoSurface", "Srf", "Converted Rhino Surface", GH_ParamAccess.tree);
+            pManager.AddGeometryParameter("Control Points", "Cpts", "Converted Control Points", GH_ParamAccess.tree);
+            pManager.AddGenericParameter("Control Points+weight", "CPtsW", "Control points with Weights", GH_ParamAccess.tree);
         }
 
         protected override void BeforeSolveInstance()
@@ -75,16 +75,19 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             string _name = "";
             bool inTs = false;
             bool forcesRational = false;
-            DA.GetData("NonRational", ref forcesRational);
-            DA.GetData("in TopSolid", ref inTs);
+
+            if (!DA.GetData("NonRational", ref forcesRational)) return;
+            if (!DA.GetData("in TopSolid", ref inTs)) return;
             if (!DA.GetData("Name", ref _name)) return;
+
+
             DesignDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
 
             //List<Rhino.Geometry.Curve> list3D = new List<Rhino.Geometry.Curve>();
             DataTree<Rhino.Geometry.Curve> curve3DTree = new DataTree<Rhino.Geometry.Curve>();
 
 
-            List<Rhino.Geometry.Curve> list2D = new List<Rhino.Geometry.Curve>();
+            //List<Rhino.Geometry.Curve> list2D = new List<Rhino.Geometry.Curve>();
             DataTree<Rhino.Geometry.Curve> curve2dTree = new DataTree<Rhino.Geometry.Curve>();
 
             List<(double, double, double, double)> cPtsList = new List<(double, double, double, double)>();
@@ -93,6 +96,9 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
 
             List<Rhino.Geometry.Surface> listSurfaces = new List<Rhino.Geometry.Surface>();
             DataTree<Rhino.Geometry.Surface> surfacesDataTree = new DataTree<Rhino.Geometry.Surface>();
+
+
+            DataTree<Rhino.Geometry.Point3d> pointsDataTree = new DataTree<Rhino.Geometry.Point3d>();
 
 
             ShapeEntity entity = document.RootEntity.SearchDeepEntity(_name) as ShapeEntity;
@@ -108,7 +114,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             SX.Collections.Generic.List<G.D3.Curves.IGeometricProfile> list3dprofiles = new SX.Collections.Generic.List<IGeometricProfile>();
             SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile> list2dprofiles = new SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile>();
             SX.Collections.Generic.List<EdgeList> edgeList = new SX.Collections.Generic.List<EdgeList>();
-            List<Point3d> pointList = new List<Point3d>();
+            IEnumerable<Point3d> pointList = null;
             OrientedSurface oSurf;
             //UndoSequence.UndoCurrent();
             //UndoSequence.Start("Debug RHiTS", false);
@@ -125,27 +131,36 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
 
                 oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, forcesRational, false, forcesNonPeriodic, boolList, list2dprofiles, list3dprofiles, edgeList);
 
-
-                list2D.AddRange(list2dprofiles.SelectMany(x => x.Segments.Select(y => y.Curve.ToRhino())).ToList());
+                foreach (var profile in list2dprofiles)
+                {
+                    var curves = profile.Segments.Select(x => x.Curve.ToRhino());
+                    currentPath = new GH_Path(faceindex, counter++);
+                    curve2dTree.AddRange(curves, currentPath);
+                }
+                counter = 0;
+                //list2D.AddRange(list2dprofiles.SelectMany(x => x.Segments.Select(y => y.Curve.ToRhino())).ToList());
 
                 //list3D.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
                 foreach (var profile in list3dprofiles)
                 {
-                    var curves = profile.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino()).ToList();
+                    var curves = profile.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino());
                     currentPath = new GH_Path(faceindex, counter++);
                     curve3DTree.AddRange(curves, currentPath);
                 }
                 counter = 0;
 
-                TopSolid.Kernel.G.D3.Surfaces.Surface surf;
-                //if (face.GeometryType == G.D3.SurfaceGeometryType.Cone)
-                //    surf = oSurf.Surface as ConeSurface;
-                //else
-                //    surf = oSurf.Surface;
+                currentPath = new GH_Path(faceindex);
                 listSurfaces.Add(oSurf.Surface.ToRhino());
+                surfacesDataTree.AddRange(listSurfaces, currentPath);
+
                 BSplineSurface bsplineSurf = oSurf.Surface as BSplineSurface;
-                pointList = bsplineSurf.CPts.Select(x => x.ToRhino()).ToList();
+                pointList = bsplineSurf.CPts.Select(x => x.ToRhino());
+                pointsDataTree.AddRange(pointList, currentPath);
+
+
                 cPtsList = bsplineSurf.CPts.Zip(bsplineSurf.CWts, (x, y) => (x.X, x.Y, x.Z, y)).ToList();
+                cPTsDataTree.AddRange(cPtsList, currentPath);
+
 
 
                 if (inTs)
@@ -190,10 +205,10 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             }
 
             DA.SetDataTree(0, curve3DTree);
-            DA.SetDataList("Rhino2DCurves", list2D);
-            DA.SetDataList("RhinoSurface", listSurfaces);
-            DA.SetDataList("Control Points", pointList);
-            DA.SetDataList("Control Points+weight", cPtsList);
+            DA.SetDataTree(1, curve2dTree);
+            DA.SetDataTree(2, surfacesDataTree);
+            DA.SetDataTree(3, pointsDataTree);
+            DA.SetDataTree(4, cPTsDataTree);
         }
 
         protected override void AfterSolveInstance()
