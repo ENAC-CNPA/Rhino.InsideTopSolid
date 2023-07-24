@@ -20,6 +20,7 @@ using TopSolid.Kernel.DB.D3.Curves;
 using System.Diagnostics;
 using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using Grasshopper.Kernel.Data;
+using Grasshopper.Kernel.Geometry.Delaunay;
 
 namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
 {
@@ -44,6 +45,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             pManager.AddBooleanParameter("in TopSolid", "inTS", "Create Surfaces and Curves in TopSolid", GH_ParamAccess.item);
             pManager[1].Optional = true;
             pManager.AddBooleanParameter("NonRational", "nonRat", "forces non rational bspline", GH_ParamAccess.item);
+            pManager[2].Optional = true;
         }
 
         /// <summary>
@@ -66,40 +68,29 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             base.BeforeSolveInstance();
         }
 
+
+
         /// <summary>
         /// This is the method that actually does the work.
         /// </summary>
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            //Output Data Trees
+            DataTree<Rhino.Geometry.Curve> curve3DTree = new DataTree<Rhino.Geometry.Curve>();
+            DataTree<Rhino.Geometry.Curve> curve2dTree = new DataTree<Rhino.Geometry.Curve>();
+            DataTree<(double, double, double, double)> cPTsDataTree = new DataTree<(double, double, double, double)>();
+            DataTree<Rhino.Geometry.Surface> surfacesDataTree = new DataTree<Rhino.Geometry.Surface>();
+            DataTree<Rhino.Geometry.Point3d> pointsDataTree = new DataTree<Point3d>();
+
             string _name = "";
-            bool inTs = false;
-            bool forcesRational = false;
-
-            if (!DA.GetData("NonRational", ref forcesRational)) return;
-            if (!DA.GetData("in TopSolid", ref inTs)) return;
             if (!DA.GetData("Name", ref _name)) return;
-
+            bool inTs = false;
+            DA.GetData("in TopSolid", ref inTs);
+            bool forcesRational = false;
+            DA.GetData("NonRational", ref forcesRational);
 
             DesignDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
-
-            //List<Rhino.Geometry.Curve> list3D = new List<Rhino.Geometry.Curve>();
-            DataTree<Rhino.Geometry.Curve> curve3DTree = new DataTree<Rhino.Geometry.Curve>();
-
-
-            //List<Rhino.Geometry.Curve> list2D = new List<Rhino.Geometry.Curve>();
-            DataTree<Rhino.Geometry.Curve> curve2dTree = new DataTree<Rhino.Geometry.Curve>();
-
-            List<(double, double, double, double)> cPtsList = new List<(double, double, double, double)>();
-            DataTree<(double, double, double, double)> cPTsDataTree = new DataTree<(double, double, double, double)>();
-
-
-            List<Rhino.Geometry.Surface> listSurfaces = new List<Rhino.Geometry.Surface>();
-            DataTree<Rhino.Geometry.Surface> surfacesDataTree = new DataTree<Rhino.Geometry.Surface>();
-
-
-            DataTree<Rhino.Geometry.Point3d> pointsDataTree = new DataTree<Rhino.Geometry.Point3d>();
-
 
             ShapeEntity entity = document.RootEntity.SearchDeepEntity(_name) as ShapeEntity;
             if (entity is null)
@@ -108,99 +99,25 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
                 return;
             }
 
-            double tol = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
-            Shape shape = entity.Geometry;
-            BoolList boolList = new BoolList();
-            SX.Collections.Generic.List<G.D3.Curves.IGeometricProfile> list3dprofiles = new SX.Collections.Generic.List<IGeometricProfile>();
-            SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile> list2dprofiles = new SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile>();
-            SX.Collections.Generic.List<EdgeList> edgeList = new SX.Collections.Generic.List<EdgeList>();
-            IEnumerable<Point3d> pointList = null;
-            OrientedSurface oSurf;
-            //UndoSequence.UndoCurrent();
-            //UndoSequence.Start("Debug RHiTS", false);
             int faceindex = 0;
-            int counter = 0;
-            foreach (Face face in shape.Faces)
+            foreach (G.D3.Shapes.Face face in entity.Geometry.Faces)
             {
-                var currentPath = new GH_Path(faceindex);
+                SX.Collections.Generic.List<G.D3.Curves.IGeometricProfile> list3dprofiles = new SX.Collections.Generic.List<IGeometricProfile>();
+                SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile> list2dprofiles = new SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile>();
+                SX.Collections.Generic.List<G.D3.Shapes.EdgeList> edgeList = new SX.Collections.Generic.List<G.D3.Shapes.EdgeList>();
+                BoolList boolList = new BoolList();
+                OrientedSurface oSurf;
 
                 bool forcesNonPeriodic = false;
                 if (face.GeometryType == G.D3.SurfaceGeometryType.Cone || face.GeometryType == G.D3.SurfaceGeometryType.Cylinder)
                     forcesNonPeriodic = true;
 
+                oSurf = face.GetOrientedBsplineTrimmedGeometry(G.Precision.ModelingLinearTolerance, forcesRational, false, forcesNonPeriodic, boolList, list2dprofiles, list3dprofiles, edgeList);
 
-                oSurf = face.GetOrientedBsplineTrimmedGeometry(tol, forcesRational, false, forcesNonPeriodic, boolList, list2dprofiles, list3dprofiles, edgeList);
-
-                foreach (var profile in list2dprofiles)
-                {
-                    var curves = profile.Segments.Select(x => x.Curve.ToRhino());
-                    currentPath = new GH_Path(faceindex, counter++);
-                    curve2dTree.AddRange(curves, currentPath);
-                }
-                counter = 0;
-                //list2D.AddRange(list2dprofiles.SelectMany(x => x.Segments.Select(y => y.Curve.ToRhino())).ToList());
-
-                //list3D.AddRange(list3dprofiles.SelectMany(x => x.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino())).ToList());
-                foreach (var profile in list3dprofiles)
-                {
-                    var curves = profile.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino());
-                    currentPath = new GH_Path(faceindex, counter++);
-                    curve3DTree.AddRange(curves, currentPath);
-                }
-                counter = 0;
-
-                currentPath = new GH_Path(faceindex);
-                listSurfaces.Add(oSurf.Surface.ToRhino());
-                surfacesDataTree.AddRange(listSurfaces, currentPath);
-
-                BSplineSurface bsplineSurf = oSurf.Surface as BSplineSurface;
-                pointList = bsplineSurf.CPts.Select(x => x.ToRhino());
-                pointsDataTree.AddRange(pointList, currentPath);
-
-
-                cPtsList = bsplineSurf.CPts.Zip(bsplineSurf.CWts, (x, y) => (x.X, x.Y, x.Z, y)).ToList();
-                cPTsDataTree.AddRange(cPtsList, currentPath);
-
-
-
+                FillInOutputDataTrees(oSurf, curve2dTree, curve3DTree, surfacesDataTree, pointsDataTree, cPTsDataTree, list3dprofiles, list2dprofiles, faceindex);
                 if (inTs)
-                {
-                    int curveCounter = 0;
-                    SurfaceEntity surfEntity = new SurfaceEntity(document, 0)
-                    {
-                        Name = face.Name + face.Id,
-                        OrientedGeometry = oSurf,
+                    CreateinTopSolid(oSurf, list3dprofiles, list2dprofiles, face, document);
 
-                    };
-                    surfEntity.Create(document.ShapesFolderEntity);
-                    CurvesFolderEntity curvesFolderEntity = new CurvesFolderEntity(document, 0);
-                    curvesFolderEntity.Create(document.RootEntity);
-
-                    DB.D3.Profiles.ProfileEntity profileEntity = null;
-                    foreach (var item in list3dprofiles)
-                    {
-                        profileEntity = new DB.D3.Profiles.ProfileEntity(document, 0)
-                        {
-                            Name = $"face:{face.Id},curve:{curveCounter++}",
-                            Geometry = item,
-
-                        };
-                        profileEntity.Create(curvesFolderEntity);
-                    }
-
-                    DB.D2.Profiles.ProfileEntity profileEntity2D = null;
-                    foreach (var item in list2dprofiles)
-                    {
-                        profileEntity2D = new DB.D2.Profiles.ProfileEntity(document, 0)
-                        {
-                            Name = $"face:{face.Id},curve:{curveCounter++}",
-                            Geometry = item as G.D2.Curves.GeometricProfile,
-
-                        };
-                        profileEntity2D.Create(curvesFolderEntity);
-                    }
-
-                }
                 faceindex++;
             }
 
@@ -209,6 +126,86 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             DA.SetDataTree(2, surfacesDataTree);
             DA.SetDataTree(3, pointsDataTree);
             DA.SetDataTree(4, cPTsDataTree);
+        }
+
+        private void FillInOutputDataTrees(OrientedSurface oSurf, DataTree<Rhino.Geometry.Curve> curve2dTree, DataTree<Rhino.Geometry.Curve> curve3DTree, DataTree<Rhino.Geometry.Surface> surfacesDataTree, DataTree<Point3d> pointsDataTree, DataTree<(double, double, double, double)> cPTsDataTree, SX.Collections.Generic.List<IGeometricProfile> list3dprofiles, SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile> list2dprofiles, int faceindex)
+        {
+            int counter = 0;
+            var currentPath = new GH_Path(faceindex);
+            foreach (var profile in list2dprofiles)
+            {
+                var curves = profile.Segments.Select(x => x.Curve.ToRhino());
+                currentPath = new GH_Path(faceindex, counter++);
+                curve2dTree.AddRange(curves, currentPath);
+            }
+            counter = 0;
+
+            foreach (var profile in list3dprofiles)
+            {
+                var curves = profile.Segments.Select(y => y.GetOrientedCurve().Curve.ToRhino());
+                currentPath = new GH_Path(faceindex, counter++);
+                curve3DTree.AddRange(curves, currentPath);
+            }
+            counter = 0;
+
+            currentPath = new GH_Path(faceindex);
+            surfacesDataTree.AddRange(new[] { oSurf.Surface.ToRhino() }, currentPath);
+
+            BSplineSurface bsplineSurf = oSurf.Surface as BSplineSurface;
+            pointsDataTree.AddRange(bsplineSurf.CPts.Select(x => x.ToRhino()), currentPath);
+
+            IEnumerable<double> weights;
+            if (bsplineSurf != null && !bsplineSurf.CWts.IsEmpty && bsplineSurf.CWts.Count != 0)
+            {
+                weights = bsplineSurf.CWts.Select(x => x);
+            }
+
+            else
+            {
+                weights = bsplineSurf.CPts.Select(x => 1.0);
+            }
+
+            cPTsDataTree.AddRange(bsplineSurf.CPts.Zip(weights, (x, y) => (x.X, x.Y, x.Z, y)), currentPath);
+            //throw new NotImplementedException();
+        }
+
+        private void CreateinTopSolid(OrientedSurface oSurf, SX.Collections.Generic.List<IGeometricProfile> list3dprofiles, SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile> list2dprofiles, G.D3.Shapes.Face face, DesignDocument document)
+        {
+            int curveCounter = 0;
+            SurfaceEntity surfEntity = new SurfaceEntity(document, 0)
+            {
+                Name = face.Name + face.Id,
+                OrientedGeometry = oSurf,
+
+            };
+            surfEntity.Create(document.ShapesFolderEntity);
+            CurvesFolderEntity curvesFolderEntity = new CurvesFolderEntity(document, 0);
+            curvesFolderEntity.Create(document.RootEntity);
+
+            DB.D3.Profiles.ProfileEntity profileEntity = null;
+            foreach (var item in list3dprofiles)
+            {
+                profileEntity = new DB.D3.Profiles.ProfileEntity(document, 0)
+                {
+                    Name = $"face:{face.Id},curve:{curveCounter++}",
+                    Geometry = item,
+
+                };
+                profileEntity.Create(curvesFolderEntity);
+            }
+
+            DB.D2.Profiles.ProfileEntity profileEntity2D = null;
+            foreach (var item in list2dprofiles)
+            {
+                profileEntity2D = new DB.D2.Profiles.ProfileEntity(document, 0)
+                {
+                    Name = $"face:{face.Id},curve:{curveCounter++}",
+                    Geometry = item as G.D2.Curves.GeometricProfile,
+
+                };
+                profileEntity2D.Create(curvesFolderEntity);
+            }
+
         }
 
         protected override void AfterSolveInstance()
