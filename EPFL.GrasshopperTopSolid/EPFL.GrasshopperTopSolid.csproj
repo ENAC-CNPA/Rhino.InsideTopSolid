@@ -6,6 +6,8 @@
     <Title>GrasshopperTopSolid</Title>
     <Description>Description of GrasshopperTopSolid</Description>
     <TargetExt>.gha</TargetExt>
+    <Platforms>AnyCPU;x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -130,14 +132,26 @@
     <StartAction>Program</StartAction>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutDir>C:\Sources\TopSolid v7.x\bin\Debug x64</OutDir>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>C:\Sources\Topsolid 7.17\Debug x64\</OutDir>
     <DefineConstants>TRACE</DefineConstants>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>C:\Sources\Topsolid 7.17\Debug x64\</OutDir>
+    <DefineConstants>TRACE</DefineConstants>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <WarningLevel>5</WarningLevel>
+    <OutputPath>C:\Sources\Topsolid 7.17\Debug x64\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <WarningLevel>5</WarningLevel>
     <OutputPath>C:\Sources\TopSolid v7.x\bin\Debug x64</OutputPath>
   </PropertyGroup>

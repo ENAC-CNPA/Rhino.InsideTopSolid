@@ -70,6 +70,7 @@ namespace EPFL.GrasshopperTopSolid.Components
             pManager.AddTextParameter("Name", "Name", "Entity Name to be given", GH_ParamAccess.item);
             pManager[2].Optional = true;
             pManager.AddGenericParameter("TSAttributes", "attributes", "TopSolid's attributes for the baked entities", GH_ParamAccess.item);
+            pManager[3].Optional = true;
             //pManager.AddNumberParameter("Tolerance", "Tol", "Tolerance for bake", GH_ParamAccess.item);
             //pManager.AddBooleanParameter("Sew?", "Sew?", "True to Sew Breps, False to keep faces split", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Bake?", "b?", "Set true to bake", GH_ParamAccess.item);
@@ -91,7 +92,8 @@ namespace EPFL.GrasshopperTopSolid.Components
             //and fill queue
             try
             {
-                if (UndoSequence.Current != null) UndoSequence.End();
+                if (UndoSequence.Current != null)
+                    UndoSequence.End();
                 UndoSequence.Start("Grasshopper Bake", false);
             }
             catch
@@ -283,30 +285,33 @@ namespace EPFL.GrasshopperTopSolid.Components
                     if (rhinoBrep is null) return;
                     //double tol = 0.00001;
                     GH_ObjectWrapper attributesWrapper = null;
-                    SX.Drawing.Color tsColor = SX.Drawing.Color.Empty;
-                    SX.Drawing.Transparency trnsp = SX.Drawing.Transparency.Empty;
-
-                    //DA.GetData("Tolerance", ref tol);
-                    DA.GetData("TSAttributes", ref attributesWrapper);
-                    string layerName = "";
-                    var topSolidAttributes = attributesWrapper.Value as Tuple<Transparency, Color, string>;
-
-                    if (topSolidAttributes != null)
-                    {
-                        tsColor = topSolidAttributes.Item2;
-                        trnsp = topSolidAttributes.Item1;
-                        layerName = topSolidAttributes.Item3;
-                    }
+                    SX.Drawing.Color tsColor = SX.Drawing.Color.Red;
+                    SX.Drawing.Transparency trnsp = SX.Drawing.Transparency.SemiTransparent;
                     Layer topSolidLayer = new Layer(-1);
                     LayerEntity layerEntity = new LayerEntity(doc, 0, topSolidLayer);
 
-                    var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
-                    layerEntity = layfoldEnt.SearchLayer(layerName);
-
-                    if (layerEntity == null)
+                    //DA.GetData("Tolerance", ref tol);
+                    if (DA.GetData("TSAttributes", ref attributesWrapper))
                     {
-                        layerEntity = new LayerEntity(doc, 0, topSolidLayer);
-                        layerEntity.Name = layerName;
+                        string layerName = "";
+                        var topSolidAttributes = attributesWrapper.Value as Tuple<Transparency, Color, string>;
+
+                        if (topSolidAttributes != null)
+                        {
+                            tsColor = topSolidAttributes.Item2;
+                            trnsp = topSolidAttributes.Item1;
+                            layerName = topSolidAttributes.Item3;
+                        }
+
+                        var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
+                        layerEntity = layfoldEnt.SearchLayer(layerName);
+
+                        if (layerEntity == null)
+                        {
+                            layerEntity = new LayerEntity(doc, 0, topSolidLayer);
+                            layerEntity.Name = layerName;
+                        }
+
                     }
 
                     entitiesCreation = new EntitiesCreation(doc, 0);
@@ -334,11 +339,11 @@ namespace EPFL.GrasshopperTopSolid.Components
                             entity.ExplicitLayer = layerEntity.Layer;
                             //entity.Create(shapesFolderEntity);
                         }
-
                         entitiesCreation.AddChildEntity(entity);
                         entitiesCreation.Create();
                         doc.ShapesFolderEntity.AddEntity(entity);
                     }
+
                 }
                 if (Params.Output.Count > 0)
                     DA.SetData("TopSolid Entities", entity);

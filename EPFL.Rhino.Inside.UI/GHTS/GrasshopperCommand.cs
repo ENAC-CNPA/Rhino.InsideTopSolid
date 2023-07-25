@@ -19,6 +19,8 @@ using System.IO;
 using System.Reflection;
 using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using tsPrec = TopSolid.Kernel.G.Precision;
+using TopSolid.Kernel.TX.Formulas.Scripting;
+
 
 namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 {
@@ -65,16 +67,17 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
         private static bool _grasshopperLoaded = false;
         public static Grasshopper.Plugin.GH_RhinoScriptInterface Script { get; private set; }
 
+        //static System.Globalization.CultureInfo cultureInfo = TopSolid.Kernel.SX.Globalization.CultureInfo.LocalizationCulture;
 
 
         protected override void Invoke()
         {
-            System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.CurrentCulture;
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
 
             //Method that works !!
             if (rhinoCore == null)
-            {
-                rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Normal);
+                rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/ NOSPLASH", "/ language ={ CultureInfo.CurrentCulture.LCID }" }, WindowStyle.Normal);
+
 
                 //rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/ NOSPLASH", "/ language ={ CultureInfo.CurrentCulture.LCID }" }, WindowStyle.Normal);
             }
@@ -100,7 +103,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 
             TopSolid.Kernel.SX.UI.Application.IsMouseWheelInterceptedByGraphics = false;
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = culture;      // Reset the culture deleted by Grasshopper.
+            System.Threading.Thread.CurrentThread.CurrentCulture = culture;
         }
 
         internal static bool Shutdown()

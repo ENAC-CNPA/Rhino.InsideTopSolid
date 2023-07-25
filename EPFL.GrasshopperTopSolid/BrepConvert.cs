@@ -83,36 +83,14 @@ namespace EPFL.GrasshopperTopSolid
             }
 
             //Add Vertices
-            int loopIndexforVertex = 0;
-            int indexInLoop = 0;
+
             //int vertexIndex = 0;
             foreach (var Curve in list3D)
             {
                 foreach (var seg in Curve.Segments)
                 {
-                    //if (e.IsEmpty)
-                    //{
-                    //    var rhinoPoint = list3D[loopIndexforVertex].Segments.ElementAt(indexInLoop).Ps.ToRhino();
-                    //    brepsrf.Vertices.Add(rhinoPoint, tol_TS);
-                    //    //list3D[loopIndexforVertex].Segments.ElementAt(indexInLoop).Ps
-                    //    continue;
-                    //}
-                    //TODO UNCOMMENT as soon as error with IsReversedwithFin is resolved
-                    //if (e.IsReversedWithFin(face))
-                    //{
-                    //    brepsrf.Vertices.Add(e.EndVertex.GetGeometry().ToRhino(), tol_TS);
-                    //}
-                    //else
-                    //{
-                    //    brepsrf.Vertices.Add(e.StartVertex.GetGeometry().ToRhino(), tol_TS);
-                    //}
-                    //indexInLoop++;
-                    //vertexIndex++;
-
                     brepsrf.Vertices.Add(seg.Ps.ToRhino(), tol_TS);
                 }
-                loopIndexforVertex++;
-                indexInLoop = 0;
             }
 
 
@@ -129,12 +107,10 @@ namespace EPFL.GrasshopperTopSolid
                     var crv = orientedcrv.Curve.ToRhino();
                     //var crvi = ic.GetOrientedCurve().Curve;
                     //AHW commented to prevent error, check if it affects good conversion
-
                     if (orientedcrv.IsReversed)
                     {
                         crv.Reverse();
                     }
-
                     c_index = brepsrf.AddEdgeCurve(crv);
                     indperLoop++;
                 }
@@ -408,7 +384,7 @@ namespace EPFL.GrasshopperTopSolid
         static public Shape ToHost(this Brep brep)
         {
             double tol_TS = G.Precision.ModelingLinearTolerance;
-            brep.Trims.MatchEnds();
+            //brep.Trims.MatchEnds();
             brep.Repair(tol_TS);
             Shape shape = null;
             ShapeList ioShapes = new ShapeList();
@@ -482,12 +458,12 @@ namespace EPFL.GrasshopperTopSolid
                 if (topSolidSurface.IsVPeriodic)
                     bsplineSurface.MakeVNonPeriodic();
 
-                sheetMaker.Surface = new OrientedSurface(bsplineSurface, false);
+                sheetMaker.Surface = new OrientedSurface(bsplineSurface, inFace.OrientationIsReversed);
             }
 
             else
             {
-                sheetMaker.Surface = new OrientedSurface(topSolidSurface, false);
+                sheetMaker.Surface = new OrientedSurface(topSolidSurface, inFace.OrientationIsReversed);
             }
 
             sheetMaker.SurfaceMoniker = new ItemMoniker(false, (byte)ItemType.ShapeFace, key, 1);
