@@ -115,6 +115,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
                 oSurf = face.GetOrientedBsplineTrimmedGeometry(G.Precision.ModelingLinearTolerance, forcesRational, false, forcesNonPeriodic, boolList, list2dprofiles, list3dprofiles, edgeList);
 
                 FillInOutputDataTrees(oSurf, curve2dTree, curve3DTree, surfacesDataTree, pointsDataTree, cPTsDataTree, list3dprofiles, list2dprofiles, faceindex);
+
+                //To create topological elements as TopSolid Entities
                 if (inTs)
                     CreateinTopSolid(oSurf, list3dprofiles, list2dprofiles, face, document);
 
@@ -166,7 +168,6 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             }
 
             cPTsDataTree.AddRange(bsplineSurf.CPts.Zip(weights, (x, y) => (x.X, x.Y, x.Z, y)), currentPath);
-            //throw new NotImplementedException();
         }
 
         private void CreateinTopSolid(OrientedSurface oSurf, SX.Collections.Generic.List<IGeometricProfile> list3dprofiles, SX.Collections.Generic.List<G.D2.Curves.IGeometricProfile> list2dprofiles, G.D3.Shapes.Face face, DesignDocument document)
@@ -176,13 +177,12 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             {
                 Name = face.Name + face.Id,
                 OrientedGeometry = oSurf,
-
             };
             surfEntity.Create(document.ShapesFolderEntity);
             CurvesFolderEntity curvesFolderEntity = new CurvesFolderEntity(document, 0);
             curvesFolderEntity.Create(document.RootEntity);
 
-            DB.D3.Profiles.ProfileEntity profileEntity = null;
+            DB.D3.Profiles.ProfileEntity profileEntity;
             foreach (var item in list3dprofiles)
             {
                 profileEntity = new DB.D3.Profiles.ProfileEntity(document, 0)
@@ -194,7 +194,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
                 profileEntity.Create(curvesFolderEntity);
             }
 
-            DB.D2.Profiles.ProfileEntity profileEntity2D = null;
+            DB.D2.Profiles.ProfileEntity profileEntity2D;
             foreach (var item in list2dprofiles)
             {
                 profileEntity2D = new DB.D2.Profiles.ProfileEntity(document, 0)
@@ -212,7 +212,6 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
         {
             if (UndoSequence.Current != null) UndoSequence.End();
             base.AfterSolveInstance();
-
         }
 
         /// <summary>
