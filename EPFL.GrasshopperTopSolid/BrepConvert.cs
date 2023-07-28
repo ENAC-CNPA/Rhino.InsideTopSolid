@@ -43,7 +43,7 @@ namespace EPFL.GrasshopperTopSolid
             double tol_Rh = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
             double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
             bool forcesNonPeriodic = false;
-            if (face.GeometryType == SurfaceGeometryType.Cone || face.GeometryType == SurfaceGeometryType.Cylinder)
+            if (face.GeometryType == SurfaceGeometryType.Cone || face.GeometryType == SurfaceGeometryType.Cylinder || face.GeometryType == SurfaceGeometryType.Sphere || face.GeometryType == SurfaceGeometryType.Torus)
                 forcesNonPeriodic = true;
 
             //Topology indexes ?
@@ -319,18 +319,27 @@ namespace EPFL.GrasshopperTopSolid
                 listofBrepsrf.Add(brep);
             }
 
-            var result = Brep.JoinBreps(listofBrepsrf, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+            double tolerance = 0.00001; /*RhinoDoc.ActiveDoc.ModelAbsoluteTolerance*/
+            var result = Brep.CreateBooleanUnion(listofBrepsrf, tolerance);
+            if (result is null)
+            {
+                result = Brep.JoinBreps(listofBrepsrf, tolerance);
+            }
+            //var result = Brep.JoinBreps(listofBrepsrf, tolerance );
 
             foreach (Brep b in result)
             {
-                b.Trims.MatchEnds();
-                b.Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+                if (!b.IsValid)
+                {
+                    b.Trims.MatchEnds();
+                    b.Repair(tolerance);
+                }
             }
 
-            for (int i = 0; i < result.Length; i++)
-            {
-                result[i].Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-            }
+            //for (int i = 0; i < result.Length; i++)
+            //{
+            //    result[i].Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+            //}
 
             return result;
 
