@@ -133,22 +133,23 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>C:\Sources\Topsolid 7.17\Debug x64\</OutDir>
+    <OutDir>C:\Sources\TopSolid v7.x\bin\Debug x64\</OutDir>
     <DefineConstants>TRACE</DefineConstants>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>C:\Sources\Topsolid 7.17\Debug x64\</OutDir>
+    <OutDir>C:\Sources\TopSolid v7.x\bin\Debug x64\</OutDir>
     <DefineConstants>TRACE</DefineConstants>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <OutputPath>C:\Sources\TopSolid v7.x\bin\Debug x64\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <WarningLevel>5</WarningLevel>
-    <OutputPath>C:\Sources\Topsolid 7.17\Debug x64\</OutputPath>
+    <OutputPath>C:\Sources\TopSolid v7.x\bin\Debug x64\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

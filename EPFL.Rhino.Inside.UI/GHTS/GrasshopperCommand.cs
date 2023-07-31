@@ -80,7 +80,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 
 
                 //rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/ NOSPLASH", "/ language ={ CultureInfo.CurrentCulture.LCID }" }, WindowStyle.Normal);
-            }
+            
 
             if (!LoadGrasshopperComponents())
             {

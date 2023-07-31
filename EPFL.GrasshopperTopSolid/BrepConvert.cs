@@ -43,8 +43,9 @@ namespace EPFL.GrasshopperTopSolid
             double tol_Rh = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
             double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
             bool forcesNonPeriodic = false;
-            if (face.GeometryType == SurfaceGeometryType.Cone || face.GeometryType == SurfaceGeometryType.Cylinder || face.GeometryType == SurfaceGeometryType.Sphere || face.GeometryType == SurfaceGeometryType.Torus)
+            if (face.GeometryType == SurfaceGeometryType.Cone || face.GeometryType == SurfaceGeometryType.Cylinder || face.GeometryType == SurfaceGeometryType.Sphere || face.GeometryType == SurfaceGeometryType.Torus || face.GeometryType == SurfaceGeometryType.Revolved)
                 forcesNonPeriodic = true;
+
 
             //Topology indexes ?
             int c_index = 0;
@@ -320,18 +321,26 @@ namespace EPFL.GrasshopperTopSolid
             }
 
             double tolerance = 0.00001; /*RhinoDoc.ActiveDoc.ModelAbsoluteTolerance*/
-            var result = Brep.CreateBooleanUnion(listofBrepsrf, tolerance);
-            if (result is null)
+            var  result = Brep.JoinBreps(listofBrepsrf, tolerance);
+            if (result is null || !result.First().IsValid)
             {
-                result = Brep.JoinBreps(listofBrepsrf, tolerance);
+                result = Brep.JoinBreps(listofBrepsrf, tolerance*5);
+
+                if (result is null || !result.First().IsValid)
+                {
+                    result = Brep.CreateBooleanUnion(listofBrepsrf, tolerance);
+                    if (result is null)
+                        result = Brep.CreateBooleanUnion(listofBrepsrf, tolerance*5);
+                }
             }
+
             //var result = Brep.JoinBreps(listofBrepsrf, tolerance );
 
             foreach (Brep b in result)
             {
                 if (!b.IsValid)
                 {
-                    b.Trims.MatchEnds();
+                    //b.Trims.MatchEnds();
                     b.Repair(tolerance);
                 }
             }
