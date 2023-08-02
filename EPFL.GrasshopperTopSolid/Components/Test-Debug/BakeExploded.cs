@@ -133,7 +133,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
 
             foreach (var face in brep.Faces)
             {
-                Brep faceBRep = face.ToBrep();
+                Brep faceBRep = face.DuplicateFace(false);
                 SurfaceEntity surfaceEntity = new SurfaceEntity(partDocument, 0)
                 {
                     Geometry = face.UnderlyingSurface().ToHost(),
@@ -203,7 +203,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
                     loopFolder.Create(curves3DFolderEntity);
                     foreach (var trim in loop.Trims)
                     {
-                        TopSolid.Kernel.G.D3.Curves.Curve topCurve = trim.TrimCurve.ToHost();
+                        TopSolid.Kernel.G.D3.Curves.Curve topCurve = trim.Edge.EdgeCurve.ToHost();
                         TopSolid.Kernel.DB.D3.Curves.CurveEntity curveEntity = new TopSolid.Kernel.DB.D3.Curves.CurveEntity(partDocument, 0)
                         {
                             Geometry = topCurve,
