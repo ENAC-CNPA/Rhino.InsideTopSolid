@@ -24,6 +24,7 @@ using G = TopSolid.Kernel.G;
 using TopSolid.Kernel.G.D3.Shapes.Sew;
 using Eto.Forms;
 using TopSolid.Cad.Design.DB.Constraints;
+using TopSolid.Kernel.G.D3.Shapes.Healing;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -40,10 +41,11 @@ namespace EPFL.GrasshopperTopSolid
             TSXGen.List<EdgeList> listEdges = new TSXGen.List<EdgeList>();
             //TSXGen.List<TKGD3.Shapes.Vertex> vertexlist = new TSXGen.List<TKGD3.Shapes.Vertex>();
             double tol_Rh = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
-            double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
+            double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance/2;
             bool forcesNonPeriodic = false;
-            if (face.GeometryType == SurfaceGeometryType.Cone || face.GeometryType == SurfaceGeometryType.Cylinder)
+            if (face.GeometryType == SurfaceGeometryType.Cone || face.GeometryType == SurfaceGeometryType.Cylinder || face.GeometryType == SurfaceGeometryType.Sphere || face.GeometryType == SurfaceGeometryType.Torus || face.GeometryType == SurfaceGeometryType.Revolved)
                 forcesNonPeriodic = true;
+
 
             //Topology indexes ?
             int c_index = 0;
@@ -52,7 +54,7 @@ namespace EPFL.GrasshopperTopSolid
             Brep brepsrf = new Brep();
 
             //function added on request, gets the 2DCurves, 3dCurves and Edges in the correct order
-            OrientedSurface osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, outer, list2D, list3D, listEdges);
+            OrientedSurface osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, FaceTrimmingLoopsConfine.Periph, outer, list2D, list3D, listEdges, true);
             TKGD3.Surfaces.Surface topSolidSurface = osurf.Surface;
 
             var list2Dflat = list2D.SelectMany(f => f.Segments).ToList();
@@ -71,7 +73,7 @@ namespace EPFL.GrasshopperTopSolid
                 list2D.Clear();
                 list3D.Clear();
                 listEdges.Clear();
-                osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, trimConfine, outer, list2D, list3D, listEdges);
+                osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, trimConfine, outer, list2D, list3D, listEdges, true);
 
                 list2Dflat = list2D.SelectMany(f => f.Segments).ToList();
                 list3Dflat = list3D.SelectMany(f => f.Segments).ToList();
@@ -185,14 +187,41 @@ namespace EPFL.GrasshopperTopSolid
             brepsrf.AddSurface(topSolidSurface.ToRhino());
             BrepFace bface = brepsrf.Faces.Add(0);
             BrepLoop rhinoLoop = null;
+            Loop outerLoop = face.SearchOuterLoop();
+            bool isOuter = false;
 
             //Get the 2D Curves and convert them to Rhino
             int x = 0;
             foreach (TKGD2.Curves.IGeometricProfile c in list2D)
             {
-                var tsloop = face.Loops.ElementAt(loopindex);
+                if (list2D.Count == 1)
+                {
+                    isOuter = true;
+                }                
+                else if (outerLoop != null && !outerLoop.IsEmpty)
+                {
+                    foreach (Edge edge in listEdges[loopindex])
+                    {
+                        if (outerLoop.Edges.Contains(edge))
+                        {
+                            isOuter = true;
+                            break;
+                        }
+                    }
+                }
 
-                if (tsloop.IsOuter)
+                else
+                {
+                    if (listEdges[loopindex].Contains(Edge.Empty))
+                    {
+                        isOuter = true;
+                        //break;
+                    }
+                }
+
+               
+
+                if (isOuter)
                     rhinoLoop = brepsrf.Loops.Add(BrepLoopType.Outer, bface);
                 else
                     rhinoLoop = brepsrf.Loops.Add(BrepLoopType.Inner, bface);
@@ -203,7 +232,7 @@ namespace EPFL.GrasshopperTopSolid
                     Rhino.Geometry.Curve crv;
                     TKGD2.Curves.BSplineCurve tcrvv = ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false);
 
-                    if (tsloop.IsOuter)
+                    if (isOuter)
                     {
                         if (ic.IsReversed)
                         {
@@ -305,17 +334,34 @@ namespace EPFL.GrasshopperTopSolid
                 listofBrepsrf.Add(brep);
             }
 
-            var result = Brep.JoinBreps(listofBrepsrf, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+            double tolerance = 0.00001; /*RhinoDoc.ActiveDoc.ModelAbsoluteTolerance*/
+            var result = Brep.JoinBreps(listofBrepsrf, tolerance);
+
+
+            if (result is null || result.Length>1 ||!result.First().IsValid)
+            {
+                result = Brep.JoinBreps(listofBrepsrf, tolerance * 5);
+
+                //if (result is null || !result.First().IsValid)
+                //{
+                //    result = Brep.CreateBooleanUnion(listofBrepsrf, tolerance);
+                //    if (result is null)
+                //        result = Brep.CreateBooleanUnion(listofBrepsrf, tolerance * 5);
+                //}
+            }
+
+            //var result = Brep.JoinBreps(listofBrepsrf, tolerance );
+
+            if (result is null)
+                return listofBrepsrf.ToArray();
 
             foreach (Brep b in result)
             {
-                b.Trims.MatchEnds();
-                b.Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-            }
-
-            for (int i = 0; i < result.Length; i++)
-            {
-                result[i].Repair(RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+                if (!b.IsValid)
+                {
+                    //b.Trims.MatchEnds();
+                    b.Repair(tolerance);
+                }
             }
 
             return result;
@@ -349,7 +395,7 @@ namespace EPFL.GrasshopperTopSolid
             int countEdgesFlattened = listEdgesFlattened.Count();
 
 
-            bool profilesEqualsLoopCount = count2dProfiles == count3dProfiles && count2dProfiles == loopCount && count3dProfiles == coundEdges;
+            bool profilesEqualsLoopCount = count2dProfiles == count3dProfiles && /*count2dProfiles == loopCount &&*/ count3dProfiles == coundEdges;
             bool flattenedequals = count2dSegmentsFlattened == count3dSegmentsFlattened && count2dSegmentsFlattened == countEdgesFlattened;
 
             bool result = profilesEqualsLoopCount && flattenedequals;
@@ -399,8 +445,16 @@ namespace EPFL.GrasshopperTopSolid
                 }
             }
 
+            Shape finalShape = ioShapes.SewShapes();
+            ShapeSimplifier simplifier = new ShapeSimplifier(SX.Version.Current, tol_TS);
 
-            return ioShapes.SewShapes();
+            simplifier.Optimize = true;
+            simplifier.UseRepairEdgesTolerance = true;
+            simplifier.RepairEdgesTolerance = 5.0 * tol_TS;
+            //simplifier.OptimizeBlendFaces = this.checkBoxBlend.Checked;
+
+            simplifier.Simplify(finalShape, ItemOperationKey.BasicKey);
+            return finalShape;
         }
 
         private static Shape MakeSheetFrom3d(Brep inBRep, BrepFace inFace, double inLinearPrecision)

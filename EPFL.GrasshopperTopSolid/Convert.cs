@@ -297,6 +297,7 @@ namespace EPFL.GrasshopperTopSolid
                 return polyCurve.ToHost();
             if (rhinoCurve is NurbsCurve nurbsCurve)
                 return nurbsCurve.ToHost();
+            
             return rhinoCurve.ToNurbsCurve().ToHost();
         }
 
@@ -348,21 +349,60 @@ namespace EPFL.GrasshopperTopSolid
         static public TopSolid.Kernel.G.D3.Curves.BSplineCurve ToHost(this Rhino.Geometry.NurbsCurve nurbsCurve)
         {
             bool isRational = nurbsCurve.IsRational;
-            bool isPeriodic = nurbsCurve.IsPeriodic;
             int degree = nurbsCurve.Degree;
-            DoubleList knotList = ToDoubleList(nurbsCurve.Knots);
-            PointList pts = ToPointList(nurbsCurve.Points);
-            DoubleList weightList = ToDoubleList(nurbsCurve.Points);
-            BSpline bspline = new BSpline(isPeriodic, degree, knotList);
+            int offKnot, nbCP;
+            DoubleList topKnots = new DoubleList();
+            bool isPeriodic = nurbsCurve.IsPeriodic;
+
+            if (isPeriodic)
+            {
+                offKnot = nurbsCurve.Degree - 1;
+                nbCP = nurbsCurve.Points.Count - nurbsCurve.Degree;
+            }
+            else
+            {
+                offKnot = 0;
+                nbCP = nurbsCurve.Points.Count;
+
+                topKnots.Add(nurbsCurve.Knots[0]);
+            }
+
+            for (int i = offKnot; i < nurbsCurve.Knots.Count - offKnot; i++)
+                topKnots.Add(nurbsCurve.Knots[i]);
+
+            if (isPeriodic == false)
+                topKnots.Add(nurbsCurve.Knots.Last());           
+         
+            DoubleList topWeights = new DoubleList();
+            var pnts = new PointList();
+            for (int i = 0; i < nbCP; i++)
+            {
+                if (nurbsCurve.IsRational)
+                {
+                    topWeights.Add(nurbsCurve.Points[i].Weight);
+                    var p = nurbsCurve.Points[i];
+                    var location = p.Location;
+                    var pt = new TKG.D3.Point(location.X, location.Y, location.Z);
+                    pnts.Add(pt);
+                }
+                else
+                {
+                    var p = nurbsCurve.Points[i];
+                    var location = p.Location;
+                    var pt = new TKG.D3.Point(location.X, location.Y, location.Z);
+                    pnts.Add(pt);
+                }                   
+            }
+
+            BSpline bspline = new BSpline(isPeriodic, degree, topKnots);
             if (isRational)
             {
-                //var w = c.Points.ConvertAll(x => x.Weight);
-                BSplineCurve bsplineCurve = new BSplineCurve(bspline, pts, weightList);
+                BSplineCurve bsplineCurve = new BSplineCurve(bspline, pnts, topWeights);
                 return bsplineCurve;
             }
             else
             {
-                BSplineCurve bsplineCurve = new BSplineCurve(bspline, pts);
+                BSplineCurve bsplineCurve = new BSplineCurve(bspline, pnts);
                 return bsplineCurve;
             }
         }
@@ -429,6 +469,7 @@ namespace EPFL.GrasshopperTopSolid
         /// <returns></returns>
         static public Rhino.Geometry.NurbsCurve ToRhino(this BSplineCurve curve)
         {
+
             Rhino.Collections.Point3dList Cpts = new Rhino.Collections.Point3dList();
 
             curve = curve.GetBSplineCurve(false, false);
