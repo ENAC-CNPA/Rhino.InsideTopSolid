@@ -319,14 +319,17 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                     if (name != null)
                     {
-                        ShapesFolderEntity shapesFolderEntity = doc.ShapesFolderEntity;
-                        entity = shapesFolderEntity.SearchEntity(name.ToString()) as ShapeEntity;
-                        if (entity != null)
+                        if (name.Value != null && name.Value != "")
                         {
-                            entity.Geometry = topSolidShape;
-                            entity.ExplicitColor = tsColor;
-                            entity.ExplicitTransparency = trnsp;
-                            entity.ExplicitLayer = layerEntity.Layer;
+                            ShapesFolderEntity shapesFolderEntity = doc.ShapesFolderEntity;
+                            entity = shapesFolderEntity.SearchEntity(name.ToString()) as ShapeEntity;
+                            if (entity != null)
+                            {
+                                entity.Geometry = topSolidShape;
+                                entity.ExplicitColor = tsColor;
+                                entity.ExplicitTransparency = trnsp;
+                                entity.ExplicitLayer = layerEntity.Layer;
+                            }
                         }
 
                         else
@@ -339,6 +342,21 @@ namespace EPFL.GrasshopperTopSolid.Components
                             entity.ExplicitLayer = layerEntity.Layer;
                             //entity.Create(shapesFolderEntity);
                         }
+
+                        if (entity == null)
+                        {
+
+                            entity = new ShapeEntity(doc, 0)
+                            {
+                                Name = name.ToString(),
+                                Geometry = topSolidShape,
+                                ExplicitColor = tsColor,
+                                ExplicitTransparency = trnsp,
+                                ExplicitLayer = layerEntity.Layer
+                            };
+                        }
+
+
                         entitiesCreation.AddChildEntity(entity);
                         entitiesCreation.Create();
                         doc.ShapesFolderEntity.AddEntity(entity);

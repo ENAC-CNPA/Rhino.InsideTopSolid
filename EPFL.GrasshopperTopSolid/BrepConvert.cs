@@ -41,7 +41,7 @@ namespace EPFL.GrasshopperTopSolid
             TSXGen.List<EdgeList> listEdges = new TSXGen.List<EdgeList>();
             //TSXGen.List<TKGD3.Shapes.Vertex> vertexlist = new TSXGen.List<TKGD3.Shapes.Vertex>();
             double tol_Rh = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
-            double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance/2;
+            double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance / 2;
             bool forcesNonPeriodic = false;
             if (face.GeometryType == SurfaceGeometryType.Cone || face.GeometryType == SurfaceGeometryType.Cylinder || face.GeometryType == SurfaceGeometryType.Sphere || face.GeometryType == SurfaceGeometryType.Torus || face.GeometryType == SurfaceGeometryType.Revolved)
                 forcesNonPeriodic = true;
@@ -197,7 +197,7 @@ namespace EPFL.GrasshopperTopSolid
                 if (list2D.Count == 1)
                 {
                     isOuter = true;
-                }                
+                }
                 else if (outerLoop != null && !outerLoop.IsEmpty)
                 {
                     foreach (Edge edge in listEdges[loopindex])
@@ -219,7 +219,7 @@ namespace EPFL.GrasshopperTopSolid
                     }
                 }
 
-               
+
 
                 if (isOuter)
                     rhinoLoop = brepsrf.Loops.Add(BrepLoopType.Outer, bface);
@@ -338,9 +338,9 @@ namespace EPFL.GrasshopperTopSolid
             var result = Brep.JoinBreps(listofBrepsrf, tolerance);
 
 
-            if (result is null || result.Length>1 ||!result.First().IsValid)
+            if (result is null || result.Length > 1 || !result.First().IsValid)
             {
-                result = Brep.JoinBreps(listofBrepsrf, tolerance * 5);
+                result = Brep.JoinBreps(listofBrepsrf, tolerance * 5);//TODO
 
                 //if (result is null || !result.First().IsValid)
                 //{
@@ -512,7 +512,16 @@ namespace EPFL.GrasshopperTopSolid
                 foreach (var trim in loop.Trims)
                 {
                     if (loops3d.Count < loopIndex - 1 || listItemMok.Count < loopIndex - 1) break;
-                    loops3d[loopIndex].Add(trim.Edge.EdgeCurve.ToHost());
+                    //Rhino.Geometry.Curve edgeCurve= trim.Edge.EdgeCurve;
+
+                    if (trim.Edge != null) //trim.Edge can be null for singular Trims
+                        loops3d[loopIndex].Add(trim.Edge.EdgeCurve.ToHost());
+                    //else
+                    //{
+                    //    Rhino.Geometry.Curve edgeCurve = trim.
+                    //    loops3d[loopIndex].Add(trim.Edge.EdgeCurve.ToHost());
+                    //}
+
                     listItemMok[loopIndex].Add(new ItemMoniker(false, (byte)ItemType.SketchSegment, key, i++));
                 }
                 loopIndex++;
