@@ -45,6 +45,7 @@ using TopSolid.Kernel.WX;
 using System.Diagnostics;
 using TopSolid.Kernel.SX.Collections.Generic;
 using Rhino.PlugIns;
+using TopSolid.Kernel.UI.Commands;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -297,7 +298,7 @@ namespace EPFL.GrasshopperTopSolid
                 return polyCurve.ToHost();
             if (rhinoCurve is NurbsCurve nurbsCurve)
                 return nurbsCurve.ToHost();
-            
+
             return rhinoCurve.ToNurbsCurve().ToHost();
         }
 
@@ -371,8 +372,8 @@ namespace EPFL.GrasshopperTopSolid
                 topKnots.Add(nurbsCurve.Knots[i]);
 
             if (isPeriodic == false)
-                topKnots.Add(nurbsCurve.Knots.Last());           
-         
+                topKnots.Add(nurbsCurve.Knots.Last());
+
             DoubleList topWeights = new DoubleList();
             var pnts = new PointList();
             for (int i = 0; i < nbCP; i++)
@@ -391,7 +392,7 @@ namespace EPFL.GrasshopperTopSolid
                     var location = p.Location;
                     var pt = new TKG.D3.Point(location.X, location.Y, location.Z);
                     pnts.Add(pt);
-                }                   
+                }
             }
 
             BSpline bspline = new BSpline(isPeriodic, degree, topKnots);
@@ -704,23 +705,90 @@ namespace EPFL.GrasshopperTopSolid
 
         public static TKG.D3.Surfaces.BSplineSurface ToHost(this NurbsSurface nurbsSurface)
         {
+            /*
             bool isRational = nurbsSurface.IsRational;
             bool isPeriodicU = nurbsSurface.IsPeriodic(0);
             bool isPeriodicV = nurbsSurface.IsPeriodic(1);
             var degreeU = nurbsSurface.Degree(0);
             var degreeV = nurbsSurface.Degree(1);
-            var knotsU = ToDoubleList(nurbsSurface.KnotsU);
-            var knotsV = ToDoubleList(nurbsSurface.KnotsV);
-            var controlPoints = ToPointList(nurbsSurface.Points);
+            DoubleList knotsU = ToDoubleList(nurbsSurface.KnotsU);
+            DoubleList knotsV = ToDoubleList(nurbsSurface.KnotsV);
+            PointList controlPoints = ToPointList(nurbsSurface.Points);
             var weightDoubleList = ToDoubleList(nurbsSurface.Points);
-
             BSpline bsplineU = new BSpline(isPeriodicU, degreeU, knotsU);
             BSpline bsplineV = new BSpline(isPeriodicV, degreeV, knotsV);
+            */
 
-            if (isRational)
-                return new BSplineSurface(bsplineU, bsplineV, controlPoints, weightDoubleList);
+            int offKnot, nbCPu, nbCPv;
+            DoubleList topKnots = new DoubleList();
 
-            return new BSplineSurface(bsplineU, bsplineV, controlPoints);
+            bool isPeriodic = nurbsSurface.IsPeriodic(0);
+            if (isPeriodic) // According to v4_WishBone.3dm.
+            {
+                offKnot = nurbsSurface.Degree(0) - 1;
+                nbCPu = nurbsSurface.Points.CountU - nurbsSurface.Degree(0);
+            }
+            else
+            {
+                offKnot = 0;
+                nbCPu = nurbsSurface.Points.CountU;
+
+                topKnots.Add(nurbsSurface.KnotsU[0]);
+            }
+
+            for (int i = offKnot; i < nurbsSurface.KnotsU.Count - offKnot; i++)
+                topKnots.Add(nurbsSurface.KnotsU[i]);
+
+            if (isPeriodic == false)
+                topKnots.Add(nurbsSurface.KnotsU.Last());
+
+            BSpline bsplineU = new BSpline(isPeriodic, nurbsSurface.Degree(0), topKnots);
+
+            topKnots.Clear();
+
+            isPeriodic = nurbsSurface.IsPeriodic(1);
+            if (isPeriodic)
+            {
+                offKnot = nurbsSurface.Degree(1) - 1;
+                nbCPv = nurbsSurface.Points.CountV - nurbsSurface.Degree(1);
+            }
+            else
+            {
+                offKnot = 0;
+                nbCPv = nurbsSurface.Points.CountV;
+
+                topKnots.Add(nurbsSurface.KnotsV[0]);
+            }
+
+            for (int i = offKnot; i < nurbsSurface.KnotsV.Count - offKnot; i++)
+                topKnots.Add(nurbsSurface.KnotsV[i]);
+
+            if (isPeriodic == false)
+                topKnots.Add(nurbsSurface.KnotsV.Last());
+
+            BSpline bsplV = new BSpline(isPeriodic, nurbsSurface.Degree(1), topKnots);
+
+            DoubleList topWeights = new DoubleList();
+            PointList topPnts = new PointList();
+
+
+            for (int i = 0; i < nbCPu; i++)
+                for (int j = 0; j < nbCPv; j++)
+                {
+                    if (!nurbsSurface.IsRational)
+                    {
+                        topWeights.Add(nurbsSurface.Points.GetWeight(i, j));
+                        topPnts.Add((new Point3d(nurbsSurface.Points.GetControlPoint(i, j).Location) / nurbsSurface.Points.GetWeight(i, j)).ToHost());
+                    }
+                    else
+                        topPnts.Add((new Point3d(nurbsSurface.Points.GetControlPoint(i, j).Location)).ToHost());
+                }
+
+            return new BSplineSurface(bsplineU, bsplV, topPnts, topWeights);
+
+
+
+
         }
 
 
@@ -873,7 +941,7 @@ namespace EPFL.GrasshopperTopSolid
             }
             return w;
         }
-        #endregion        
+        #endregion
 
         #region Other Solid or surface Geometries
 

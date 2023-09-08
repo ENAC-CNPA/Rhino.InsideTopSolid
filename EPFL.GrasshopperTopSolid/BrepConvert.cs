@@ -479,6 +479,10 @@ namespace EPFL.GrasshopperTopSolid
 
             //TODO check if planar to simplify
             TKGD3.Surfaces.Surface topSolidSurface = surface.ToHost();
+            if (!topSolidSurface.IsValid)
+            {
+                Console.WriteLine("error");
+            }
 
             if (topSolidSurface != null && topSolidSurface is BSplineSurface bsplineSurface && (topSolidSurface.IsUPeriodic || topSolidSurface.IsVPeriodic))
             {
@@ -555,11 +559,15 @@ namespace EPFL.GrasshopperTopSolid
 
             TrimmedSheetMaker sheetMaker = new TrimmedSheetMaker(SX.Version.Current);
             sheetMaker.LinearTolerance = inLinearPrecision;
-            Rhino.Geometry.Surface surface = inFace.DuplicateSurface();
+            Rhino.Geometry.Surface surface = inBRep.Surfaces[inFace.FaceIndex];
 
             // Closed BSpline surfaces must be made periodic for parasolid with 2d curves (according to torus and sphere in v5_example.3dm).
             // If new problems come, see about the periodicity of the curves.
-            TKGD3.Surfaces.Surface topSolidSurface = Convert.ToHost(surface);
+            TKGD3.Surfaces.Surface topSolidSurface = surface.ToHost();
+            if (!topSolidSurface.IsValid)
+            {
+                Console.WriteLine("error");
+            }
             if (topSolidSurface != null && topSolidSurface is BSplineSurface bsplineSurface && ((bsplineSurface.IsUClosed && bsplineSurface.IsUPeriodic == false) || (bsplineSurface.IsVClosed && bsplineSurface.IsVPeriodic == false)))
             {
                 bsplineSurface = (BSplineSurface)bsplineSurface.Clone();
