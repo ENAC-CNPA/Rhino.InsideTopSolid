@@ -55,6 +55,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         //IGH_Structure copyTree;
         bool run = false;
         //Param_GenericObject param = new Param_GenericObject();
+        bool hasAttributes = false;
         PartDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as PartDocument;
         //EntitiesCreation entitiesCreation = null;
 
@@ -109,13 +110,15 @@ namespace EPFL.GrasshopperTopSolid.Components
                     hasData = hasData && param.VolatileDataCount != 0;
             }
 
-            if (hasData)
-            {
-                if (entitiesCreation != null && entitiesCreation.IsCreated && !entitiesCreation.IsDeleted)
-                {
-                    RootOperation.Delete(entitiesCreation);
-                }
-            }
+            if (Params.Input[3].VolatileDataCount != 0)
+                hasAttributes = true;
+            //if (hasData)
+            //{
+            //    if (entitiesCreation != null && entitiesCreation.IsCreated && !entitiesCreation.IsDeleted)
+            //    {
+            //        RootOperation.Delete(entitiesCreation);
+            //    }
+            //}
             entities.Clear();
             base.BeforeSolveInstance();
 
@@ -283,83 +286,44 @@ namespace EPFL.GrasshopperTopSolid.Components
                     Brep rhinoBrep = null;
                     GH_Convert.ToBrep(gbrep, ref rhinoBrep, 0);
                     if (rhinoBrep is null) return;
-                    //double tol = 0.00001;
-                    GH_ObjectWrapper attributesWrapper = null;
-                    SX.Drawing.Color tsColor = SX.Drawing.Color.Red;
-                    SX.Drawing.Transparency trnsp = SX.Drawing.Transparency.SemiTransparent;
-                    Layer topSolidLayer = new Layer(-1);
-                    LayerEntity layerEntity = new LayerEntity(doc, 0, topSolidLayer);
-
-                    //DA.GetData("Tolerance", ref tol);
-                    if (DA.GetData("TSAttributes", ref attributesWrapper))
-                    {
-                        string layerName = "";
-                        var topSolidAttributes = attributesWrapper.Value as Tuple<Transparency, Color, string>;
-
-                        if (topSolidAttributes != null)
-                        {
-                            tsColor = topSolidAttributes.Item2;
-                            trnsp = topSolidAttributes.Item1;
-                            layerName = topSolidAttributes.Item3;
-                        }
-
-                        var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
-                        layerEntity = layfoldEnt.SearchLayer(layerName);
-
-                        if (layerEntity == null)
-                        {
-                            layerEntity = new LayerEntity(doc, 0, topSolidLayer);
-                            layerEntity.Name = layerName;
-                        }
-
-                    }
-
-                    entitiesCreation = new EntitiesCreation(doc, 0);
+                                      
                     topSolidShape = rhinoBrep.ToHost();
 
                     if (name != null)
                     {
-                        if (name.Value != null && name.Value != "")
+                        bool OpCreated = entitiesCreation != null && entitiesCreation.IsCreated && !entitiesCreation.IsDeleted;
+                        if (OpCreated)
                         {
-                            ShapesFolderEntity shapesFolderEntity = doc.ShapesFolderEntity;
-                            entity = shapesFolderEntity.SearchEntity(name.ToString()) as ShapeEntity;
+                            entitiesCreation.IsEdited = true;
+                            entitiesCreation.NeedsExecuting = true;
+
+                            ShapeEntity existingShpaeEntity = entitiesCreation.ChildrenEntities.First() as ShapeEntity;
+                            if (existingShpaeEntity != null)
+                                entity = existingShpaeEntity;                            
+                     
                             if (entity != null)
                             {
                                 entity.Geometry = topSolidShape;
-                                entity.ExplicitColor = tsColor;
-                                entity.ExplicitTransparency = trnsp;
-                                entity.ExplicitLayer = layerEntity.Layer;
+                                SetShapeAttributes(entity, DA, name);
+                                (entity.Geometry as Shape).UpdateDisplayItems();
+                                entity.NotifyModifying(true);
                             }
-                        }
+                            entitiesCreation.IsEdited = false;
+                        }                        
 
                         else
                         {
-                            entity = new ShapeEntity(doc, 0);
-                            entity.Name = name.ToString();
-                            entity.Geometry = topSolidShape;
-                            entity.ExplicitColor = tsColor;
-                            entity.ExplicitTransparency = trnsp;
-                            entity.ExplicitLayer = layerEntity.Layer;
-                            //entity.Create(shapesFolderEntity);
+                            entity = new ShapeEntity(doc, 0);                            
+                            entity.Geometry = topSolidShape;                            
+                            SetShapeAttributes(entity, DA, name);
+                            
+
+                            entitiesCreation = new EntitiesCreation(doc, 0);
+                            entitiesCreation.AddChildEntity(entity);
+                            entitiesCreation.Create();
+                            doc.ShapesFolderEntity.AddEntity(entity);
                         }
 
-                        if (entity == null)
-                        {
-
-                            entity = new ShapeEntity(doc, 0)
-                            {
-                                Name = name.ToString(),
-                                Geometry = topSolidShape,
-                                ExplicitColor = tsColor,
-                                ExplicitTransparency = trnsp,
-                                ExplicitLayer = layerEntity.Layer
-                            };
-                        }
-
-
-                        entitiesCreation.AddChildEntity(entity);
-                        entitiesCreation.Create();
-                        doc.ShapesFolderEntity.AddEntity(entity);
                     }
 
                 }
@@ -368,6 +332,51 @@ namespace EPFL.GrasshopperTopSolid.Components
             }
         }
 
+        private void SetShapeAttributes(Entity entity, IGH_DataAccess DA, GH_String name)
+        {
+            GH_ObjectWrapper attributesWrapper = null;
+            SX.Drawing.Color tsColor = SX.Drawing.Color.Red;
+            SX.Drawing.Transparency trnsp = SX.Drawing.Transparency.SemiTransparent;
+            Layer topSolidLayer = new Layer(-1);
+            LayerEntity layerEntity = new LayerEntity(doc, 0, topSolidLayer);
+
+            if (DA.GetData("TSAttributes", ref attributesWrapper))
+            {
+                string layerName = "";
+                var topSolidAttributes = attributesWrapper.Value as Tuple<Transparency, Color, string>;
+
+                if (topSolidAttributes != null)
+                {
+                    tsColor = topSolidAttributes.Item2;
+                    trnsp = topSolidAttributes.Item1;
+                    layerName = topSolidAttributes.Item3;
+                }
+
+                var layfoldEnt = LayersFolderEntity.GetOrCreateFolder(doc);
+                layerEntity = layfoldEnt.SearchLayer(layerName);
+
+                if (layerEntity == null)
+                {
+                    layerEntity = new LayerEntity(doc, 0, topSolidLayer);
+                    layerEntity.Name = layerName;
+                }          
+                
+            }
+
+            entity.ExplicitColor = tsColor;
+            entity.ExplicitTransparency = trnsp;
+            entity.ExplicitLayer = layerEntity.Layer;
+
+            if (name.Value != null && name.Value != "")
+            {
+                var searchEntity = doc.ShapesFolderEntity.SearchEntity(name.Value);
+                if (searchEntity == null)
+                {
+                    entity.Name = name.Value;
+                }
+            }
+
+        }
 
         protected override void AfterSolveInstance()
         {
