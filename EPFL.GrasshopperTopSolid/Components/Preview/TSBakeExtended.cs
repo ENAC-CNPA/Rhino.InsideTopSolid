@@ -132,46 +132,14 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            //TODO
-            //var currentElement = PreviousElements.Dequeue();
-            //if (currentElement != null)
-            //{
-            //    // Update currentElement
-            //}
-            //else
-            //{
-            //    //add new element
-            //}
-            //ent = null;
             GH_String name = new GH_String();
             IGH_GeometricGoo geo = null;
-
-            //bool sew = false;
+            
             if (!DA.GetData(0, ref geo)) { return; }
-            DA.GetData("Bake?", ref run);
-            //DA.GetData("Sew?", ref sew);
+            DA.GetData("Bake?", ref run);            
             DA.GetData("Name", ref name);
 
-
-            //Setting target document from input, or else take current document by default
-            GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
-
-            IDocument res = null;
-            if (DA.GetData("Part Document", ref wrapper))
-            {
-                if (wrapper.Value is string || wrapper.Value is GH_String)
-                {
-                    res = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault();
-                    doc = res as PartDocument;
-                }
-                else if (wrapper.Value is IDocumentItem)
-                    doc = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as PartDocument;
-                else if (wrapper.Value is IDocument)
-                    doc = wrapper.Value as PartDocument;
-            }
-
-            if (doc == null)
-                doc = TopSolid.Kernel.UI.Application.CurrentDocument as PartDocument;
+            GetPartdocument(DA);
 
             if (run == true)
             {
@@ -330,6 +298,32 @@ namespace EPFL.GrasshopperTopSolid.Components
                 if (Params.Output.Count > 0)
                     DA.SetData("TopSolid Entities", entity);
             }
+        }
+
+        /// <summary>
+        /// Sets target document from input, or else take current document by default
+        /// </summary>
+        /// <param name="dA"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void GetPartdocument(IGH_DataAccess DA)
+        {
+            GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
+            IDocument res = null;
+            if (DA.GetData("Part Document", ref wrapper))
+            {
+                if (wrapper.Value is string || wrapper.Value is GH_String)
+                {
+                    res = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault();
+                    doc = res as PartDocument;
+                }
+                else if (wrapper.Value is IDocumentItem)
+                    doc = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as PartDocument;
+                else if (wrapper.Value is IDocument)
+                    doc = wrapper.Value as PartDocument;
+            }
+
+            if (doc == null)
+                doc = TopSolid.Kernel.UI.Application.CurrentDocument as PartDocument;
         }
 
         private void SetShapeAttributes(Entity entity, IGH_DataAccess DA, GH_String name)
