@@ -24,6 +24,8 @@ using TopSolid.Kernel.TX.Units;
 using TopSolid.Kernel.UI.Selections;
 using TK = TopSolid.Kernel;
 using SX = TopSolid.Kernel.SX;
+using Cad = TopSolid.Cad;
+using DB = TopSolid.Kernel.DB;
 
 namespace EPFL.GrasshopperTopSolid.Components.Preview
 {
@@ -100,141 +102,103 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
             if (assemblyDocument == null)
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Could not find valid Assembly");
 
-            int test = 1;
 
             //The baking process starts on boolean true
             if (run == true)
             {
-                if (test == 0)
+                if (assemblyDocument == null)
+                    return;
+
+                SX.Collections.Generic.List<ShapeEntity> entities = new SX.Collections.Generic.List<ShapeEntity>();
+
+                #region Make shape entity
+
+                // Shape entity : A remplacer par le code Grasshopper
+
+                ShapeEntity shapeEntity = new ShapeEntity(assemblyDocument, 0);
+                entities.Add(shapeEntity);
+
+                Brep rhinoBrep = new Brep();
+                DA.GetData("Geometry", ref rhinoBrep);
+                Shape shape = rhinoBrep.ToHost();
+
+                // Replace shape geometry.
+
+                shapeEntity.Create();
+                shapeEntity.Geometry = shape;
+
+                //assemblyDocument.ShapesFolderEntity.AddEntity(shapeEntity); Can be changed later
+
+                // 
+                TK.DB.Operations.EntitiesCreation entitiesCreation = new TK.DB.Operations.EntitiesCreation(assemblyDocument, 0);
+                entitiesCreation.AddChildEntity(shapeEntity);
+                entitiesCreation.Create();
+
+                #endregion Make shape entity
+
+                #region Make local parts
+
+                SX.Collections.Generic.List<PartEntity> localParts = this.MakeLocalParts(assemblyDocument, entities);
+                LocalPartsCreation localPartCreation = new LocalPartsCreation(assemblyDocument, 0);
+                localPartCreation.SetChildParts(localParts);
+                localPartCreation.Create();
+
+                #endregion Make local parts
+
+                #region Make local assembly
+
+                AssemblyDefinitionCreation assemblyDefinitionCreation = new AssemblyDefinitionCreation(assemblyDocument, 0);
+                assemblyDefinitionCreation.IsModifiable = true;
+                assemblyDefinitionCreation.IsDeletable = true;
+
+                EntityList children = new EntityList();
+                SX.Collections.Generic.List<PartEntity> localChilren = localPartCreation.GetChildPartEntities(null);
+                children.AddRange(localChilren);
+
+                assemblyDefinitionCreation.SetOriginals(children);
+                assemblyDefinitionCreation.Create();
+
+                #region Manage properties (Name, Description, ...).
+
+                AssemblyEntity assemblyEntity = assemblyDefinitionCreation.ChildEntity;
+
+                assemblyEntity.NameParameterValue = new TK.SX.Globalization.LocalizableString("Super Assembly");
+                assemblyEntity.DescriptionParameterValue = new TK.SX.Globalization.LocalizableString("Super local assembly with local parts");
+                assemblyEntity.PartNumberParameterValue = "GH";
+
+                #endregion Manage properties (Name, Reference, ...).
+
+                #region Manage representations.
+
+                //
+
+                Cad.Design.DB.Representations.DesignRepresentationEntity designRepresentation = assemblyDocument.FindOrCreateDesignRepresentation();
+                Cad.Design.DB.Representations.SimplifiedRepresentationEntity simplifiedRepresentation = assemblyDocument.SimplifiedRepresentationEntity;
+
+                if (simplifiedRepresentation != null)
                 {
-
-                    if (assemblyDocument == null)
-                        return;
-
-                    List<ShapeEntity> selectedShapes = new List<ShapeEntity>();
-                    foreach (Entity entity in CurrentSelections.GetSelectedEntities())
-                    {
-                        ShapeEntity shape = entity as ShapeEntity;
-                        if (shape == null) continue;
-
-                        selectedShapes.Add(shape);
-                    }
-
-                    INodeObject container = TK.WX.Pdm.Dialogs.Tools.GetContainer(this, assemblyDocument);
-                    if (container == null)
-                        return;
-
-                    AssemblyDocument assemblyDocument = new AssemblyDocument();
-
-                    List<PartEntity> localParts = this.MakeLocalParts(assemblyDocument, selectedShapes);
-                    this.MakeOperation(assemblyDocument, localParts);
-
-                    PdmClientStore.CurrentPdmClient.CreateItemWithDocument(assemblyDocument, true, container);
-
-                    TK.UI.Application.ActivateDocument(assemblyDocument);
-                }
-                else if (test == 1)
-                {
-                    AssemblyDocument assemblyDocument = this.CurrentDocument as AssemblyDocument;
-                    if (assemblyDocument == null)
-                        return;
-
-                    List<ShapeEntity> entities = new List<ShapeEntity>();
-
-                    #region Make shape entity
-
-                    // Shape entity : A remplacer par le code Grasshopper
-
-                    ShapeEntity shapeEntity = new ShapeEntity(assemblyDocument, 0);
-                    entities.Add(shapeEntity);
-
-                    TK.G.D3.Shapes.Creations.BlockMaker blockMaker = new TK.G.D3.Shapes.Creations.BlockMaker(TK.SX.Version.Current);
-                    blockMaker.Frame = TK.G.D3.Frame.OXYZ;
-                    blockMaker.XLength = 0.01;
-                    blockMaker.YLength = 0.01;
-                    blockMaker.ZLength = 0.01;
-
-                    Shape shape = blockMaker.Make(shapeEntity, null);
-
-                    // Replace shape geometry.
-
-                    shapeEntity.Create();
-                    shapeEntity.Geometry = shape;
-
-                    assemblyDocument.ShapesFolderEntity.AddEntity(shapeEntity);
-
-                    // 
-                    TK.DB.Operations.EntitiesCreation entitiesCreation = new TK.DB.Operations.EntitiesCreation(assemblyDocument, 0);
-                    entitiesCreation.AddChildEntity(shapeEntity);
-                    entitiesCreation.Create();
-
-                    #endregion Make shape entity
-
-                    #region Make local parts
-
-                    List<PartEntity> localParts = this.MakeLocalParts(assemblyDocument, entities);
-                    LocalPartsCreation localPartCreation = new LocalPartsCreation(assemblyDocument, 0);
-                    localPartCreation.SetChildParts(localParts);
-                    localPartCreation.Create();
-
-                    #endregion Make local parts
-
-                    #region Make local assembly
-
-                    AssemblyDefinitionCreation assemblyDefinitionCreation = new AssemblyDefinitionCreation(assemblyDocument, 0);
-                    assemblyDefinitionCreation.IsModifiable = true;
-                    assemblyDefinitionCreation.IsDeletable = true;
-
-                    EntityList children = new EntityList();
-                    List<PartEntity> localChilren = localPartCreation.GetChildPartEntities(null);
-                    children.AddRange(localChilren);
-
-                    assemblyDefinitionCreation.SetOriginals(children);
-                    assemblyDefinitionCreation.Create();
-
-                    #region Manage properties (Name, Description, ...).
-
-                    AssemblyEntity assemblyEntity = assemblyDefinitionCreation.ChildEntity;
-
-                    assemblyEntity.NameParameterValue = new TK.SX.Globalization.LocalizableString("Super Assembly");
-                    assemblyEntity.DescriptionParameterValue = new TK.SX.Globalization.LocalizableString("Super local assembly with local parts");
-                    assemblyEntity.PartNumberParameterValue = "GH";
-
-                    #endregion Manage properties (Name, Reference, ...).
-
-                    #region Manage representations.
-
-                    //
-
-                    DB.Representations.DesignRepresentationEntity designRepresentation = assemblyDocument.FindOrCreateDesignRepresentation();
-                    DB.Representations.SimplifiedRepresentationEntity simplifiedRepresentation = assemblyDocument.SimplifiedRepresentationEntity;
-
-                    if (simplifiedRepresentation != null)
-                    {
-                        assemblyEntity.CreateLocalSimplifiedRepresentation();
-                    }
-
-                    assemblyDocument.DetailedRepresentationEntity.AddLocalRepresentationConstituent(assemblyEntity, Cad.Design.DB.Documents.ElementName.DetailedRepresentation);
-
-                    designRepresentation.AddLocalRepresentationConstituent(assemblyEntity, Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
-
-                    if (simplifiedRepresentation != null)
-                    {
-                        simplifiedRepresentation.AddLocalRepresentationConstituent(assemblyEntity, Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
-                    }
-
-                    #endregion Manage representations.
-
-                    #endregion Make local assembly
-
-                    assemblyDocument.Update(true, true);
+                    assemblyEntity.CreateLocalSimplifiedRepresentation();
                 }
 
+                assemblyDocument.DetailedRepresentationEntity.AddLocalRepresentationConstituent(assemblyEntity, Cad.Design.DB.Documents.ElementName.DetailedRepresentation);
 
+                designRepresentation.AddLocalRepresentationConstituent(assemblyEntity, Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
+
+                if (simplifiedRepresentation != null)
+                {
+                    simplifiedRepresentation.AddLocalRepresentationConstituent(assemblyEntity, Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
+                }
+
+                #endregion Manage representations.
+
+                #endregion Make local assembly
+
+                assemblyDocument.Update(true, true);
 
 
             }
         }
+
 
         protected override void AfterSolveInstance()
         {
@@ -255,9 +219,9 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
             op.Create();
         }
 
-        private List<PartEntity> MakeLocalParts(AssemblyDocument inAssemblyDocument, List<ShapeEntity> inShapeEntities)
+        private SX.Collections.Generic.List<PartEntity> MakeLocalParts(AssemblyDocument inAssemblyDocument, SX.Collections.Generic.List<ShapeEntity> inShapeEntities)
         {
-            List<PartEntity> localParts = new List<PartEntity>();
+            SX.Collections.Generic.List<PartEntity> localParts = new SX.Collections.Generic.List<PartEntity>();
 
             int i = 1;
             foreach (ShapeEntity originalShape in inShapeEntities)
