@@ -26,6 +26,7 @@ using TK = TopSolid.Kernel;
 using SX = TopSolid.Kernel.SX;
 using Cad = TopSolid.Cad;
 using DB = TopSolid.Kernel.DB;
+using Grasshopper.Kernel.Data;
 
 namespace EPFL.GrasshopperTopSolid.Components.Preview
 {
@@ -67,10 +68,10 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGeometryParameter("Geometry", "G", "Rhino Geometry to bake", GH_ParamAccess.item);
+            pManager.AddGeometryParameter("Geometry", "G", "Rhino Geometry to bake", GH_ParamAccess.tree);
             pManager.AddGenericParameter("Assembly Document", "A", "target TopSolid Assembly to bake-in, if none provided will get current assembly", GH_ParamAccess.item);
             pManager[1].Optional = true;
-            pManager.AddTextParameter("Name", "Name", "Name for Local Part Document", GH_ParamAccess.item);
+            pManager.AddTextParameter("Name", "Name", "Name for Local Part Document", GH_ParamAccess.tree);
             pManager[2].Optional = true;
             pManager.AddGenericParameter("TopSolid Attributes", "attributes", "TopSolid's attributes for the created entities", GH_ParamAccess.item);
             //pManager[3].Optional = true;
@@ -90,6 +91,9 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+
+
+
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();//needed for TopSolid types
 
             if (!DA.GetData("Bake?", ref run) || !run) return;
@@ -110,6 +114,43 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
                     return;
 
                 SX.Collections.Generic.List<ShapeEntity> entities = new SX.Collections.Generic.List<ShapeEntity>();
+                GH_Structure<IGH_GeometricGoo> rhinoBrepTree = new GH_Structure<IGH_GeometricGoo>();
+                GH_Structure<IGH_Goo> nameTree = new GH_Structure<IGH_Goo>();
+
+                DA.GetDataTree("Geometry", out rhinoBrepTree);
+                DA.GetDataTree("Name", out nameTree);
+
+                if (rhinoBrepTree is null)
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error)
+
+                bool sameBranches = rhinoBrepTree.Branches.Count == nameTree.Branches.Count;
+                bool sameDataCount = rhinoBrepTree.DataCount == nameTree.DataCount;
+
+                if (sameBranches && sameDataCount)
+                {
+                    int longestPath = rhinoBrepTree.LongestPathIndex();
+                    int dimensionOfAssemblies = rhinoBrepTree.get_Path(longestPath).Length;
+
+                    System.Collections.IList list;
+                    GH_Path previousPath = rhinoBrepTree.Paths[0];
+                    GH_Path path;
+
+                    for (int i = 0; i < rhinoBrepTree.PathCount; i++)
+                    {
+                        path = rhinoBrepTree.get_Path(i);
+                        if (rhinoBrepTree.PathExists(path))
+                            list = rhinoBrepTree.get_Branch(path);
+
+                        rhinoBrepTree.ToList();
+
+                        foreach (var branch in rhinoBrepTree.Branches)
+                        {
+                            var path = ;
+                            if (rhinoBrepTree.PathExists(path) && rhinoBrepTree.get_Branch(path) != null)
+                                list = rhinoBrepTree.get_Branch(path);
+                        }
+                    }
+                }
 
                 #region Make shape entity
 
@@ -117,10 +158,6 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
 
                 ShapeEntity shapeEntity = new ShapeEntity(assemblyDocument, 0);
                 entities.Add(shapeEntity);
-
-                Brep rhinoBrep = new Brep();
-                DA.GetData("Geometry", ref rhinoBrep);
-                Shape shape = rhinoBrep.ToHost();
 
                 // Replace shape geometry.
 
