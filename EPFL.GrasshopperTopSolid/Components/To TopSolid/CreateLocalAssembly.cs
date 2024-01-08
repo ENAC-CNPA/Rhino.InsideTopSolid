@@ -37,7 +37,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         public CreateLocalAssembly()
           : base("CreateLocalAssembly", "Nickname",
               "Bakes Rhino Geometry into Local Parts and Assemblies",
-              "TopSolid", "Preview")
+              "TopSolid", "To TopSolid")
         {
         }
         bool run = false;

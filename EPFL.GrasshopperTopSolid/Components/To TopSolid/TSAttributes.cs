@@ -17,7 +17,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         public TSAttributes()
           : base("TSAttributes", "Attributes",
               "takes in Colour, Transparency and Layer info to profide an attributes set",
-              "TopSolid", "Preview")
+              "TopSolid", "To TopSolid")
         {
         }
 

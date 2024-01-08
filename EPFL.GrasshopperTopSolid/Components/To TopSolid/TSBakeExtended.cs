@@ -44,7 +44,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         public TSBakeExtended()
           : base("TopSolid Bake Extended", "TSBakeExt",
               "Bake Geometries with extended options",
-              "TopSolid", "Preview")
+              "TopSolid", "To TopSolid")
         {
         }
         //Class level variables, to be independent from SolveInstance
@@ -134,9 +134,9 @@ namespace EPFL.GrasshopperTopSolid.Components
         {
             GH_String name = new GH_String();
             IGH_GeometricGoo geo = null;
-            
+
             if (!DA.GetData(0, ref geo)) { return; }
-            DA.GetData("Bake?", ref run);            
+            DA.GetData("Bake?", ref run);
             DA.GetData("Name", ref name);
 
             GetPartdocument(DA);
@@ -254,7 +254,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                     Brep rhinoBrep = null;
                     GH_Convert.ToBrep(gbrep, ref rhinoBrep, 0);
                     if (rhinoBrep is null) return;
-                                      
+
                     topSolidShape = rhinoBrep.ToHost();
 
                     if (name != null)
@@ -267,8 +267,8 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                             ShapeEntity existingShpaeEntity = entitiesCreation.ChildrenEntities.First() as ShapeEntity;
                             if (existingShpaeEntity != null)
-                                entity = existingShpaeEntity;                            
-                     
+                                entity = existingShpaeEntity;
+
                             if (entity != null)
                             {
                                 entity.Geometry = topSolidShape;
@@ -277,14 +277,14 @@ namespace EPFL.GrasshopperTopSolid.Components
                                 entity.NotifyModifying(true);
                             }
                             entitiesCreation.IsEdited = false;
-                        }                        
+                        }
 
                         else
                         {
-                            entity = new ShapeEntity(doc, 0);                            
-                            entity.Geometry = topSolidShape;                            
+                            entity = new ShapeEntity(doc, 0);
+                            entity.Geometry = topSolidShape;
                             SetShapeAttributes(entity, DA, name);
-                            
+
 
                             entitiesCreation = new EntitiesCreation(doc, 0);
                             entitiesCreation.AddChildEntity(entity);
@@ -353,8 +353,8 @@ namespace EPFL.GrasshopperTopSolid.Components
                 {
                     layerEntity = new LayerEntity(doc, 0, topSolidLayer);
                     layerEntity.Name = layerName;
-                }          
-                
+                }
+
             }
 
             entity.ExplicitColor = tsColor;

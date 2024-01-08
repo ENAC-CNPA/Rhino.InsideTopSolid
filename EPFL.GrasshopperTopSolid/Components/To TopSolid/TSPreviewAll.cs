@@ -27,7 +27,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         public TSPreviewAll()
           : base("TopSolid Preview All", "TSPreviewAll",
               "Preview All Geometries in TopSolid",
-              "TopSolid", "Preview")
+              "TopSolid", "To TopSolid")
         {
         }
 
