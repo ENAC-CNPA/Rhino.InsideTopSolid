@@ -184,7 +184,18 @@ namespace EPFL.GrasshopperTopSolid
 
             int loopindex = 0;
             System.Collections.Generic.List<BrepTrim> rhTrim = new System.Collections.Generic.List<BrepTrim>();
+
+            //if (face.GeometryType == SurfaceGeometryType.Cone)
+            //{
+            //    ConeSurface surf = topSolidSurface as ConeSurface;
+            //    var converted = surf.ToRhino();
+            //brepsrf.AddSurface(converted);
+            //}
+            //else
+            //{
+
             brepsrf.AddSurface(topSolidSurface.ToRhino());
+            //}
             BrepFace bface = brepsrf.Faces.Add(0);
             BrepLoop rhinoLoop = null;
             Loop outerLoop = face.SearchOuterLoop();
@@ -335,7 +346,9 @@ namespace EPFL.GrasshopperTopSolid
             }
 
             double tolerance = 0.00001; /*RhinoDoc.ActiveDoc.ModelAbsoluteTolerance*/
-            var result = Brep.JoinBreps(listofBrepsrf, tolerance);
+
+            //var result = Brep.JoinBreps(listofBrepsrf, tolerance);
+            var result = Brep.JoinBreps(listofBrepsrf, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
 
 
             if (result is null || result.Length > 1 || !result.First().IsValid)
@@ -436,6 +449,7 @@ namespace EPFL.GrasshopperTopSolid
                     {
                         shape = MakeSheet(brep, bface);
                         TopSolid.Kernel.WX.MessageBox.Show("Face not limited.");
+                        //TODO add bool to cancel sew
                     }
 
                     if (shape == null || shape.IsEmpty)

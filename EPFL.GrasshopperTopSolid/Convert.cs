@@ -129,13 +129,15 @@ namespace EPFL.GrasshopperTopSolid
 
         static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD3.Curves.EllipseCurve ellipseCurve)
         {
+
             var ellipse = new Rhino.Geometry.Ellipse(ellipseCurve.Plane.ToRhino(), ellipseCurve.RadiusX, ellipseCurve.RadiusY);
+            bool isClosed = ellipseCurve.IsClosed();
             if (!ellipseCurve.IsClosed())
             {
-                return ellipseCurve.GetBSplineCurve(false, false).ToRhino();
+                return ellipseCurve.GetBSplineCurve(true, true).ToRhino();
             }
-            return NurbsCurve.CreateFromEllipse(ellipse);
 
+            return NurbsCurve.CreateFromEllipse(ellipse);
         }
 
         static public Rhino.Geometry.LineCurve ToRhino(this TKG.D2.Curves.LineCurve l)
@@ -470,11 +472,15 @@ namespace EPFL.GrasshopperTopSolid
         /// <returns></returns>
         static public Rhino.Geometry.NurbsCurve ToRhino(this BSplineCurve curve)
         {
+            curve.MakeNonPeriodic();
 
             Rhino.Collections.Point3dList Cpts = new Rhino.Collections.Point3dList();
 
-            curve = curve.GetBSplineCurve(false, false);
-
+            //curve = curve.GetBSplineCurve(false, false);
+            //var x = curve.GeometryType;
+            //for Debug
+            //if (curve.IsPeriodic)
+            //curve.MakeNonPeriodic();
 
             foreach (TopSolid.Kernel.G.D3.Point P in curve.CPts)
             {
@@ -588,6 +594,8 @@ namespace EPFL.GrasshopperTopSolid
 
         static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD2.Curves.BSplineCurve curve)
         {
+            curve.MakeNonPeriodic();
+
             Rhino.Collections.Point3dList Cpts = new Rhino.Collections.Point3dList();
             Rhino.Geometry.NurbsCurve rhCurve = null;
             double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
@@ -775,10 +783,11 @@ namespace EPFL.GrasshopperTopSolid
             for (int i = 0; i < nbCPu; i++)
                 for (int j = 0; j < nbCPv; j++)
                 {
-                    if (!nurbsSurface.IsRational)
+                    if (nurbsSurface.IsRational)
                     {
                         topWeights.Add(nurbsSurface.Points.GetWeight(i, j));
-                        topPnts.Add((new Point3d(nurbsSurface.Points.GetControlPoint(i, j).Location) / nurbsSurface.Points.GetWeight(i, j)).ToHost());
+                        //topPnts.Add((new Point3d(nurbsSurface.Points.GetControlPoint(i, j).Location) / nurbsSurface.Points.GetWeight(i, j)).ToHost());
+                        topPnts.Add(new Point3d(nurbsSurface.Points.GetControlPoint(i, j).Location).ToHost());
                     }
                     else
                         topPnts.Add((new Point3d(nurbsSurface.Points.GetControlPoint(i, j).Location)).ToHost());
