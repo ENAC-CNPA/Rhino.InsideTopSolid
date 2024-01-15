@@ -23,7 +23,7 @@ namespace EPFL.RhinoInsideTopSolid.UI
 
         /// </summary>
 
-        public static readonly TK.SX.Version Current = new TK.SX.Version(7, 17, 400, 5); // 2023-10-03: …
+        public static readonly TK.SX.Version Current = new TK.SX.Version(7, 17, 400, 6); // 2024-01-15: …
 
 
 
@@ -33,7 +33,7 @@ namespace EPFL.RhinoInsideTopSolid.UI
 
         /// </summary>
 
-        public const string CurrentAssemblyVersionString = "7.17.400.005";
+        public const string CurrentAssemblyVersionString = "7.17.400.006";
 
     }
 }

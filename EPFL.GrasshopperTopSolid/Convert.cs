@@ -46,6 +46,7 @@ using System.Diagnostics;
 using TopSolid.Kernel.SX.Collections.Generic;
 using Rhino.PlugIns;
 using TopSolid.Kernel.UI.Commands;
+using TopSolid.Kernel.TX.Units;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -911,45 +912,6 @@ namespace EPFL.GrasshopperTopSolid
             return rhinoSurface;
         }
 
-
-        public static DoubleList ToDoubleList(NurbsSurfaceKnotList nurbsKnotList)
-        {
-            int count = nurbsKnotList.Count;
-            DoubleList knotDoubleList = new DoubleList(count + 2);
-            knotDoubleList.Add(nurbsKnotList[0]);
-            foreach (var knot in nurbsKnotList)
-            {
-                knotDoubleList.Add(knot);
-            }
-            knotDoubleList.Add(knotDoubleList.Last());
-            return knotDoubleList;
-        }
-
-        public static PointList ToPointList(NurbsSurfacePointList list)
-        {
-            var count = list.CountU * list.CountV;
-            var points = new PointList(count);
-
-            foreach (ControlPoint p in list)
-            {
-                var location = p.Location;
-                var pt = new TKG.D3.Point(location.X, location.Y, location.Z);
-                points.Add(pt);
-            }
-
-            return points;
-        }
-        static DoubleList ToDoubleList(NurbsSurfacePointList list)
-        {
-            var count = list.CountU * list.CountV;
-            DoubleList w = new DoubleList(count);
-            foreach (ControlPoint p in list)
-            {
-                var weight = p.Weight;
-                w.Add(weight);
-            }
-            return w;
-        }
         #endregion
 
         #region Other Solid or surface Geometries
@@ -961,8 +923,9 @@ namespace EPFL.GrasshopperTopSolid
 
         //public static TKGD3.Box ToHost(this Rhino.Geometry.Box box)
         //{
-        //    var TsBox = new TKGD3.Box();
-        //    
+
+        //    var TsBox = new TKGD3.Box(Frame.OXYZ,0, 0, 0);
+
         //}
 
 
@@ -1077,6 +1040,127 @@ namespace EPFL.GrasshopperTopSolid
             var extent = new TKG.D1.Extent(interval.T0, interval.T1);
             return extent;
         }
+        #endregion
+
+
+        #region Units Conversion
+        static G.D3.Transform transform;
+        static G.D3.Transform Transform
+        {
+            get
+            {
+                return transform;
+            }
+            return G.D3.Transform.Identity;
+        }
+
+
+        static SimpleUnit UnitConversion(Rhino.UnitSystem inUnit)
+        {
+            SimpleUnit outUnit = LengthUnits.Meter;
+
+            switch (inUnit)
+            {
+                case UnitSystem.Angstroms:
+                    outUnit = LengthUnits.Angstrom;
+                    break;
+
+                case UnitSystem.Nanometers:
+                    outUnit = LengthUnits.Nanometer;
+                    break;
+
+                case UnitSystem.Microns:
+                    outUnit = LengthUnits.Micrometer;
+                    break;
+
+                case UnitSystem.Millimeters:
+                    outUnit = LengthUnits.Millimeter;
+                    break;
+
+                case UnitSystem.Centimeters:
+                    outUnit = LengthUnits.Centimeter;
+                    break;
+
+                case UnitSystem.Decimeters:
+                    outUnit = LengthUnits.Decimeter;
+                    break;
+
+                case UnitSystem.Kilometers:
+                    outUnit = LengthUnits.Kilometer;
+                    break;
+
+                case UnitSystem.Microinches:
+                    outUnit = LengthUnits.Microinch;
+                    break;
+
+                case UnitSystem.Mils:
+                    outUnit = LengthUnits.Mil;
+                    break;
+
+                case UnitSystem.Inches:
+                    outUnit = LengthUnits.Inch;
+                    break;
+
+                case UnitSystem.Feet:
+                    outUnit = LengthUnits.Foot;
+                    break;
+
+                case UnitSystem.Yards:
+                    outUnit = LengthUnits.Yard;
+                    break;
+
+                case UnitSystem.Miles:
+                    outUnit = LengthUnits.Mile;
+                    break;
+
+                case UnitSystem.PrinterPoints:
+                    outUnit = LengthUnits.Point;
+                    break;
+
+                case UnitSystem.Meters:
+                default:
+                    break;
+            }
+
+            return outUnit;
+        }
+
+        static Rhino.UnitSystem UnitConversion(SimpleUnit inUnit)
+        {
+            if (inUnit == LengthUnits.Angstrom)
+                return Rhino.UnitSystem.Angstroms;
+            else if (inUnit == LengthUnits.Nanometer)
+                return Rhino.UnitSystem.Nanometers;
+            else if (inUnit == LengthUnits.Micrometer)
+                return Rhino.UnitSystem.Microns;
+            else if (inUnit == LengthUnits.Millimeter)
+                return Rhino.UnitSystem.Millimeters;
+            else if (inUnit == LengthUnits.Centimeter)
+                return Rhino.UnitSystem.Centimeters;
+            else if (inUnit == LengthUnits.Decimeter)
+                return Rhino.UnitSystem.Decimeters;
+            else if (inUnit == LengthUnits.Kilometer)
+                return Rhino.UnitSystem.Kilometers;
+            else if (inUnit == LengthUnits.Microinch)
+                return Rhino.UnitSystem.Microinches;
+            else if (inUnit == LengthUnits.Mil)
+                return Rhino.UnitSystem.Mils;
+            else if (inUnit == LengthUnits.Inch)
+                return Rhino.UnitSystem.Inches;
+            else if (inUnit == LengthUnits.Foot)
+                return Rhino.UnitSystem.Feet;
+            else if (inUnit == LengthUnits.Yard)
+                return Rhino.UnitSystem.Yards;
+            else if (inUnit == LengthUnits.Mile)
+                return Rhino.UnitSystem.Miles;
+            else if (inUnit == LengthUnits.Point)
+                return Rhino.UnitSystem.PrinterPoints;
+            else
+                return Rhino.UnitSystem.Meters; // Default case
+        }
+
+
+
         #endregion
     }
 }
