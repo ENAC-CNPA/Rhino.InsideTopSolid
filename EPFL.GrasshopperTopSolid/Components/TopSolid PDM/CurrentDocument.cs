@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 using Grasshopper.Kernel;
 using Rhino.Geometry;
+using TopSolid.Cad.Design.DB.Documents;
+using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using TopSolid.Kernel.TX.Documents;
 
 namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
@@ -31,7 +33,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("TS Current Document", "TS Doc", "Gets TopSolid Current Document", GH_ParamAccess.item);
+            pManager.AddGenericParameter("TS Current Document", "TS Doc", "Gets TopSolid Current Part or Assembly Document", GH_ParamAccess.item);
 
         }
 
@@ -42,7 +44,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             //TopSolid.Kernel.WX.Application.CurrentDocumentChanged += Application_CurrentDocumentChanged;
-            IDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument;
+            DesignDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
             //Application_CurrentDocumentChanged(DA, EventArgs.Empty);
             DA.SetData(0, doc);
         }
