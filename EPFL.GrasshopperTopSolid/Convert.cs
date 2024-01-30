@@ -1051,7 +1051,9 @@ namespace EPFL.GrasshopperTopSolid
             {
                 return transform;
             }
-            return G.D3.Transform.Identity;
+
+            set { transform = value; }  
+            //return G.D3.Transform.Identity;
         }
 
 
