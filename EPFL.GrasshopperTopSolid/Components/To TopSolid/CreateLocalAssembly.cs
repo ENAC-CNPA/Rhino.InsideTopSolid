@@ -137,9 +137,18 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
 
                     System.Collections.IList list;
 
-                    GH_Path currentPath;
+                    GH_Path currentPath = rhinoBrepTree.Paths[0];
+                    GH_Path previousPath = rhinoBrepTree.Paths[0];
 
 
+                    int positionOnPath = longestPathDimension - 1;
+                    while (positionOnPath > longestPathDimension && positionOnPath>0)
+                    {
+                        if (currentPath.Length - positionOnPath < 0)
+                            continue;
+
+                        positionOnPath--;
+                    }
                     for (int i = 0; i < rhinoBrepTree.PathCount; i++)
                     {
                         currentPath = rhinoBrepTree.get_Path(i);
@@ -219,9 +228,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
 
                                 #endregion Manage properties (Name, Reference, ...).
 
-                                #region Manage representations
-
-                                //
+                                #region Manage representations                                                           
 
                                 Cad.Design.DB.Representations.DesignRepresentationEntity localdesignRepresentation = assemblyDocument.FindOrCreateDesignRepresentation();
                                 Cad.Design.DB.Representations.SimplifiedRepresentationEntity localsimplifiedRepresentation = assemblyDocument.SimplifiedRepresentationEntity;
@@ -299,12 +306,13 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
                     }
 
                     //int currentLevel = 1;
-                    GH_Path previousPath = rhinoBrepTree.Paths[0];
+                    //GH_Path previousPath = rhinoBrepTree.Paths[0];
                     int counter;
                     EntityList assemblySubAssemblies = new EntityList();
                     AssemblyEntity assembly;
                     GH_Path path;
 
+                    /*
                     for (int i = 0; i < longestPathDimension; i++)
                     {
                         counter = 0;
@@ -388,6 +396,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
                         counter++;
 
                     }
+                    */
                 }
 
 
