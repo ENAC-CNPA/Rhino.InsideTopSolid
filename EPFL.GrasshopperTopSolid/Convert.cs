@@ -1044,14 +1044,20 @@ namespace EPFL.GrasshopperTopSolid
 
 
         #region Units Conversion
-        static G.D3.Transform transform;
+        private static G.D3.Transform transform;
         static G.D3.Transform Transform
         {
             get
             {
-                return transform;
+
+                return G.D3.Transform.Identity;
+
             }
-            return G.D3.Transform.Identity;
+            set
+            {
+                transform = value;
+            }
+
         }
 
 
