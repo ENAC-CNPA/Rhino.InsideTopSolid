@@ -132,14 +132,23 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
                 if (sameBranches && sameDataCount)
                 {
                     List<(AssemblyEntity, GH_Path)> assembliesPathMatch = new System.Collections.Generic.List<(AssemblyEntity, GH_Path)>();
-                    int longestPath = rhinoBrepTree.LongestPathIndex();
-                    int longestPathDimension = rhinoBrepTree.get_Path(longestPath).Length;
+                    int longestPathIndex = rhinoBrepTree.LongestPathIndex();
+                    int longestPathDimension = rhinoBrepTree.get_Path(longestPathIndex).Length;
 
                     System.Collections.IList list;
 
-                    GH_Path currentPath;
+                    GH_Path currentPath = rhinoBrepTree.Paths[0];
+                    GH_Path previousPath = rhinoBrepTree.Paths[0];
 
 
+                    int positionOnPath = longestPathDimension - 1;
+                    while (positionOnPath > longestPathDimension && positionOnPath>0)
+                    {
+                        if (currentPath.Length - positionOnPath < 0)
+                            continue;
+
+                        positionOnPath--;
+                    }
                     for (int i = 0; i < rhinoBrepTree.PathCount; i++)
                     {
                         currentPath = rhinoBrepTree.get_Path(i);
@@ -151,6 +160,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
                             list = rhinoBrepTree.get_Branch(currentPath);
                             int index = 0;
                             EntityList listLevelList = new EntityList();
+                            EntityList children = new EntityList();
                             foreach (var geometry in list)
                             {
                                 entities.Clear();
@@ -182,23 +192,26 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
 
                                 #region Make local parts
 
+
+
                                 SX.Collections.Generic.List<PartEntity> localParts = this.MakeLocalParts(assemblyDocument, entities);
                                 LocalPartsCreation localPartCreation = new LocalPartsCreation(assemblyDocument, 0);
                                 localPartCreation.SetChildParts(localParts);
                                 localPartCreation.Create();
 
+                                SX.Collections.Generic.List<PartEntity> localChilren = localPartCreation.GetChildPartEntities(null);
+                                children.AddRange(localChilren);
+
                                 #endregion Make local parts
 
 
+
+                            }
                                 #region Make local assembly
 
                                 AssemblyDefinitionCreation assemblyDefinitionCreation = new AssemblyDefinitionCreation(assemblyDocument, 0);
                                 assemblyDefinitionCreation.IsModifiable = true;
                                 assemblyDefinitionCreation.IsDeletable = true;
-
-                                EntityList children = new EntityList();
-                                SX.Collections.Generic.List<PartEntity> localChilren = localPartCreation.GetChildPartEntities(null);
-                                children.AddRange(localChilren);
 
                                 assemblyDefinitionCreation.SetOriginals(children);
                                 assemblyDefinitionCreation.Create();
@@ -215,9 +228,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
 
                                 #endregion Manage properties (Name, Reference, ...).
 
-                                #region Manage representations
-
-                                //
+                                #region Manage representations                                                           
 
                                 Cad.Design.DB.Representations.DesignRepresentationEntity localdesignRepresentation = assemblyDocument.FindOrCreateDesignRepresentation();
                                 Cad.Design.DB.Representations.SimplifiedRepresentationEntity localsimplifiedRepresentation = assemblyDocument.SimplifiedRepresentationEntity;
@@ -240,67 +251,68 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
 
                                 #endregion Make local assembly
 
-                            }
 
-                            #region Make local assembly
 
-                            AssemblyDefinitionCreation localassemblyDefinitionCreation = new AssemblyDefinitionCreation(assemblyDocument, 0);
-                            localassemblyDefinitionCreation.IsModifiable = true;
-                            localassemblyDefinitionCreation.IsDeletable = true;
+                            //#region Make local assembly
 
-                            //EntityList localchildren = new EntityList();
-                            //SX.Collections.Generic.List<PartEntity> localChilren = listLocalPartCreation.GetChildPartEntities(null);
-                            //children.AddRange(localChilren);
+                            //AssemblyDefinitionCreation localassemblyDefinitionCreation = new AssemblyDefinitionCreation(assemblyDocument, 0);
+                            //localassemblyDefinitionCreation.IsModifiable = true;
+                            //localassemblyDefinitionCreation.IsDeletable = true;
 
-                            localassemblyDefinitionCreation.SetOriginals(listLevelList);
-                            localassemblyDefinitionCreation.Create();
+                            ////EntityList localchildren = new EntityList();
+                            ////SX.Collections.Generic.List<PartEntity> localChilren = listLocalPartCreation.GetChildPartEntities(null);
+                            ////children.AddRange(localChilren);
 
-                            #region Manage properties (Name, Description, ...).
+                            //localassemblyDefinitionCreation.SetOriginals(listLevelList);
+                            //localassemblyDefinitionCreation.Create();
 
-                            AssemblyEntity localassemblyEntity = localassemblyDefinitionCreation.ChildEntity;
+                            //#region Manage properties (Name, Description, ...).
 
-                            localassemblyEntity.NameParameterValue = new TK.SX.Globalization.LocalizableString(currentPath.ToString());
-                            localassemblyEntity.DescriptionParameterValue = new TK.SX.Globalization.LocalizableString("Super local assembly with local parts");
-                            localassemblyEntity.PartNumberParameterValue = "GH";
+                            //AssemblyEntity localassemblyEntity = localassemblyDefinitionCreation.ChildEntity;
 
-                            assembliesPathMatch.Add((localassemblyEntity, currentPath));
+                            //localassemblyEntity.NameParameterValue = new TK.SX.Globalization.LocalizableString(currentPath.ToString());
+                            //localassemblyEntity.DescriptionParameterValue = new TK.SX.Globalization.LocalizableString("Super local assembly with local parts");
+                            //localassemblyEntity.PartNumberParameterValue = "GH";
 
-                            #endregion Manage properties (Name, Reference, ...).
+                            //assembliesPathMatch.Add((localassemblyEntity, currentPath));
 
-                            #region Manage representations.
+                            //#endregion Manage properties (Name, Reference, ...).
 
-                            //
+                            //#region Manage representations.
 
-                            Cad.Design.DB.Representations.DesignRepresentationEntity designRepresentation = assemblyDocument.FindOrCreateDesignRepresentation();
-                            Cad.Design.DB.Representations.SimplifiedRepresentationEntity simplifiedRepresentation = assemblyDocument.SimplifiedRepresentationEntity;
+                            ////
 
-                            if (simplifiedRepresentation != null)
-                            {
-                                localassemblyEntity.CreateLocalSimplifiedRepresentation();
-                            }
+                            //Cad.Design.DB.Representations.DesignRepresentationEntity designRepresentation = assemblyDocument.FindOrCreateDesignRepresentation();
+                            //Cad.Design.DB.Representations.SimplifiedRepresentationEntity simplifiedRepresentation = assemblyDocument.SimplifiedRepresentationEntity;
 
-                            assemblyDocument.DetailedRepresentationEntity.AddLocalRepresentationConstituent(localassemblyEntity, Cad.Design.DB.Documents.ElementName.DetailedRepresentation);
+                            //if (simplifiedRepresentation != null)
+                            //{
+                            //    localassemblyEntity.CreateLocalSimplifiedRepresentation();
+                            //}
 
-                            designRepresentation.AddLocalRepresentationConstituent(localassemblyEntity, Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
+                            //assemblyDocument.DetailedRepresentationEntity.AddLocalRepresentationConstituent(localassemblyEntity, Cad.Design.DB.Documents.ElementName.DetailedRepresentation);
 
-                            if (simplifiedRepresentation != null)
-                            {
-                                simplifiedRepresentation.AddLocalRepresentationConstituent(localassemblyEntity, Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
-                            }
+                            //designRepresentation.AddLocalRepresentationConstituent(localassemblyEntity, Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
 
-                            #endregion Manage representations.
+                            //if (simplifiedRepresentation != null)
+                            //{
+                            //    simplifiedRepresentation.AddLocalRepresentationConstituent(localassemblyEntity, Cad.Design.DB.Documents.ElementName.SimplifiedRepresentation);
+                            //}
 
-                            #endregion Make local assembly
+                            //#endregion Manage representations.
+
+                            //#endregion Make local assembly
                         }
                     }
 
                     //int currentLevel = 1;
-                    GH_Path previousPath = rhinoBrepTree.Paths[0];
+                    //GH_Path previousPath = rhinoBrepTree.Paths[0];
                     int counter;
                     EntityList assemblySubAssemblies = new EntityList();
                     AssemblyEntity assembly;
                     GH_Path path;
 
+                    /*
                     for (int i = 0; i < longestPathDimension; i++)
                     {
                         counter = 0;
@@ -384,6 +396,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
                         counter++;
 
                     }
+                    */
                 }
 
 

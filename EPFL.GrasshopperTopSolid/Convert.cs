@@ -1,4 +1,4 @@
-﻿using NLog.Fluent;
+using NLog.Fluent;
 using Rhino;
 using Rhino.Geometry;
 using Rhino.Geometry.Collections;
