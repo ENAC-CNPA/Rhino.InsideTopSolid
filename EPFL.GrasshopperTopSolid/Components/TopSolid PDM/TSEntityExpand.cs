@@ -10,6 +10,8 @@ using TopSolid.Kernel.DB.BackgroundDocuments;
 using TopSolid.Kernel.DB.Entities;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Pdm;
+using TopSolid.Kernel.DB.Documents;
+using TopSolid.Cad.Design.DB;
 
 namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 {
@@ -104,14 +106,39 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             {
                 compEntity = ent.BackgroundDocument.RootEntity;
             }
-            else
-                compEntity = (CompositeEntity)obj.Value;
-
-            foreach (var tsObj in compEntity.Constituents)
+            else if (obj.Value is TopSolid.Kernel.DB.Documents.Document document)
             {
-                DA.SetData(tsObj.EditingName, tsObj);
+                compEntity = document.RootEntity;
+
+            }
+            else if (obj.Value is NodeEntity nodeEntity)
+            {
+                if (nodeEntity is AssemblyEntity assemblyEntity && assemblyEntity.HasConstituents)
+                {
+                    TopSolid.Kernel.SX.Collections.Generic.List<PartEntity> parts = new TopSolid.Kernel.SX.Collections.Generic.List<PartEntity>();
+                    assemblyEntity.GetConstituentParts(parts);
+                    foreach (var tsObj in parts)
+                    {
+                        DA.SetData(tsObj.EditingName, tsObj);
+                    }
+                    return;
+                }
+
+                compEntity = nodeEntity.DefinitionDocument.RootEntity;
             }
 
+            else
+            {
+                compEntity = obj.Value as CompositeEntity;
+            }
+
+            if (compEntity != null)
+            {
+                foreach (var tsObj in compEntity.Constituents)
+                {
+                    DA.SetData(tsObj.EditingName, tsObj);
+                }
+            }
         }
 
         public bool CanInsertParameter(GH_ParameterSide side, int index)
@@ -162,9 +189,30 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                 {
                     compEntity = ent.BackgroundDocument.RootEntity;
                 }
+                else if (ghObj.Value is TopSolid.Kernel.DB.Documents.Document document)
+                {
+                    compEntity = document.RootEntity;
 
+                }
+                else if (ghObj.Value is NodeEntity nodeEntity)
+                {
+                    if (nodeEntity is AssemblyEntity assemblyEntity && assemblyEntity.HasConstituents)
+                    {
+                        TopSolid.Kernel.SX.Collections.Generic.List<PartEntity> parts = new TopSolid.Kernel.SX.Collections.Generic.List<PartEntity>();
+                        assemblyEntity.GetConstituentParts(parts);
+                        foreach (var tsObj in parts)
+                        {
+                            listofDocsNames.Add(tsObj.EditingName);
+                        }
+                        return listofDocsNames;
+                    }
+
+                    compEntity = nodeEntity.DefinitionDocument.RootEntity;
+                }
                 else
-                    compEntity = (CompositeEntity)ghObj.Value;
+                {
+                    compEntity = ghObj.Value as CompositeEntity;
+                }
 
                 if (compEntity != null)
                 {
