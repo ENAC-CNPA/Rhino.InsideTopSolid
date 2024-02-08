@@ -12,6 +12,7 @@ using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Pdm;
 using TopSolid.Kernel.DB.Documents;
 using TopSolid.Cad.Design.DB;
+using TopSolid.Kernel.DB.Elements;
 
 namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 {
@@ -117,14 +118,16 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                 {
                     TopSolid.Kernel.SX.Collections.Generic.List<PartEntity> parts = new TopSolid.Kernel.SX.Collections.Generic.List<PartEntity>();
                     assemblyEntity.GetConstituentParts(parts);
-                    foreach (var tsObj in parts)
-                    {
-                        DA.SetData(tsObj.EditingName, tsObj);
-                    }
-                    return;
-                }
+                    compEntity = assemblyEntity.DefinitionDocument.PartsFolderEntity;
 
-                compEntity = nodeEntity.DefinitionDocument.RootEntity;
+                    //foreach (var tsObj in parts)
+                    //{
+                    //    DA.SetData(tsObj.EditingName, tsObj);
+                    //}
+                    //return;
+                }
+                else
+                    compEntity = nodeEntity.DefinitionDocument.RootEntity;
             }
 
             else
@@ -200,14 +203,18 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                     {
                         TopSolid.Kernel.SX.Collections.Generic.List<PartEntity> parts = new TopSolid.Kernel.SX.Collections.Generic.List<PartEntity>();
                         assemblyEntity.GetConstituentParts(parts);
-                        foreach (var tsObj in parts)
-                        {
-                            listofDocsNames.Add(tsObj.EditingName);
-                        }
-                        return listofDocsNames;
+                        ElementList elementlist = new ElementList();
+                        assemblyEntity.GetConstituents(elementlist);
+                        assemblyEntity.GetSubPartOccurrences(parts);
+                        compEntity = assemblyEntity.DefinitionDocument.PartsFolderEntity;
+                        //foreach (var tsObj in parts)
+                        //{
+                        //    listofDocsNames.Add(tsObj.EditingName);
+                        //}
+                        //return listofDocsNames;
                     }
-
-                    compEntity = nodeEntity.DefinitionDocument.RootEntity;
+                    else
+                        compEntity = nodeEntity.DefinitionDocument.RootEntity;
                 }
                 else
                 {

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
+using TopSolid.Cad.Design.DB.Documents;
 using TopSolid.Kernel.DB.D3.Points;
 using G = TopSolid.Kernel.G;
 
@@ -45,11 +47,16 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             Grasshopper.Kernel.Types.GH_ObjectWrapper obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
             DA.GetData(0, ref obj);
             if (obj == null) return;
-
-            switch (obj.Value)
+            var currentDocument = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
+            if (currentDocument != null)
             {
 
             }
+
+            //switch (obj.Value)
+            //{
+
+            //}
 
             if (obj.Value is PointEntity pointEntity)
             {
@@ -58,6 +65,14 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             else if (obj.Value is G.D3.Point point)
             {
 
+            }
+
+            else if (obj.Value is GH_Point rhPoint)
+            {
+                Rhino.Geometry.Point3d point1;
+                rhPoint.CastTo(out point1);
+                SmartPoint smartPoint = new BasicSmartPoint(null, point1.ToHost());
+                DA.SetData(0, smartPoint);
             }
         }
 
