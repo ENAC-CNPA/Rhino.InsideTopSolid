@@ -63,6 +63,11 @@ namespace EPFL.GrasshopperTopSolid
             return new TKG.D3.Point(p.X, p.Y, p.Z);
         }
 
+        static public TKG.D3.Point ToHost(this Point3f p)
+        {
+            return new TKG.D3.Point(p.X, p.Y, p.Z);
+        }
+
         static public TKG.D2.Point ToHost2d(this Point3d p)
         {
             return new TKG.D2.Point(p.X, p.Y);

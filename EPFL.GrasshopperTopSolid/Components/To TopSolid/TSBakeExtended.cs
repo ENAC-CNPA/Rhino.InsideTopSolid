@@ -33,6 +33,9 @@ using SX = TopSolid.Kernel.SX;
 
 using TopSolid.Kernel.DB.Elements;
 using TopSolid.Kernel.G.D3.Shapes.FacetShapes;
+using TopSolid.Kernel.SX.IO;
+using TopSolid.Kernel.TX.Items;
+using TopSolid.Kernel.WX;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -258,9 +261,67 @@ namespace EPFL.GrasshopperTopSolid.Components
                         return;
                     }
 
-                    rhinoMesh.Faces.qu
-
+                    EntitiesCreation entitiesCreation = new EntitiesCreation(doc, 0);
                     FacetedShapeMaker maker = new FacetedShapeMaker(TK.SX.Version.Current);
+                        bool ok = false;
+                    if (rhinoMesh.Faces.ConvertQuadsToTriangles())
+                    {
+                        ItemOperationKey opKey = new ItemOperationKey(entitiesCreation.Id);
+                        ShapesFolderEntity folder = doc.ShapesFolderEntity;
+
+                        
+                        TrianglesFacetedShapeMaker shapeMaker = new TrianglesFacetedShapeMaker(TK.SX.Version.Current);
+                        shapeMaker.DistancePrecision = TK.G.Precision.LinearPrecision;
+                        shapeMaker.PlanarAngularPrecision = TK.G.Precision.LinearPrecision;
+                        //shapeMaker.CleansMesh = this.CleansMesh;
+                        //shapeMaker.CleanTolerance = this.CleanTolerance;
+                        //if (this.CleansMesh)
+                        //    shapeMaker.FindFaces = this.FindsFaces;
+                        //else
+                        //    shapeMaker.FindFaces = false;
+                        
+                        shapeMaker.AngularPrecision = Rhino.RhinoDoc.ActiveDoc.ModelAngleToleranceDegrees;
+                        //shapeMaker.FillsHoles = this.FillsHoles;
+
+                        for (int j=0; j < rhinoMesh.Faces.Count; j++)
+                        {
+                            var triangle = rhinoMesh.Faces[j];
+                            shapeMaker.AddTriangle(rhinoMesh.Vertices[triangle.A].ToHost(), rhinoMesh.Vertices[triangle.B].ToHost(), rhinoMesh.Vertices[triangle.C].ToHost());
+                        }
+
+                        ShapeEntity shapeEntity = new ShapeEntity(doc, 0);
+                        Shape shape = null;
+                        try // 111407
+                        {
+                            shape = shapeMaker.MakeShape(shapeEntity, opKey);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message);
+                        }
+
+                        if (shape != null)
+                        {
+                            ItemMonikerKey monKey = new ItemMonikerKey(shape.LevelKey, opKey);
+                            shape.SetDefaultMonikers(monKey);
+
+                            shapeEntity.Geometry = shape;
+
+                            folder.AddEntity(shapeEntity);
+
+                            entitiesCreation.AddChildEntity(shapeEntity);
+
+                            ok = true;
+                        }
+                           
+                        
+                        
+                        if (!ok)
+                        {
+                            //polyhedron
+                        }
+                    }
+
 
                 }
 
