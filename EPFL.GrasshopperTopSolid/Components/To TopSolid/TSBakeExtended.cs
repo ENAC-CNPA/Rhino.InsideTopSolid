@@ -32,7 +32,7 @@ using TK = TopSolid.Kernel;
 using SX = TopSolid.Kernel.SX;
 
 using TopSolid.Kernel.DB.Elements;
-
+using TopSolid.Kernel.G.D3.Shapes.FacetShapes;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -248,6 +248,21 @@ namespace EPFL.GrasshopperTopSolid.Components
                 }
                 #endregion
 
+                else if (geo is GH_Mesh gh_mesh)
+                {
+                    Mesh rhinoMesh = null;
+                    GH_Convert.ToMesh(gh_mesh, ref rhinoMesh, GH_Conversion.Both);
+                    if (rhinoMesh is null)
+                    {
+                        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Mesh error, null");
+                        return;
+                    }
+
+                    rhinoMesh.Faces.qu
+
+                    FacetedShapeMaker maker = new FacetedShapeMaker(TK.SX.Version.Current);
+
+                }
 
                 else if (geo is GH_Brep gbrep)
                 {

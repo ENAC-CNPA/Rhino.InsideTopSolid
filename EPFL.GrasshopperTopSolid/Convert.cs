@@ -47,6 +47,7 @@ using TopSolid.Kernel.SX.Collections.Generic;
 using Rhino.PlugIns;
 using TopSolid.Kernel.UI.Commands;
 using TopSolid.Kernel.TX.Units;
+using TopSolid.Kernel.G.D3.Shapes.Polyhedrons;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -911,6 +912,16 @@ namespace EPFL.GrasshopperTopSolid
             rhinoSurface.IsValidWithLog(out log);
             return rhinoSurface;
         }
+
+        #endregion
+
+        #region Mesh
+        static public IGeometry ToHost(this Rhino.Geometry.Mesh rhinoMesh)
+        {
+
+            return new Shape(null);
+        }
+
 
         #endregion
 
