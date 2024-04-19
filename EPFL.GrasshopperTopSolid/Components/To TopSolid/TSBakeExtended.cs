@@ -310,6 +310,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                             folder.AddEntity(shapeEntity);
 
                             entitiesCreation.AddChildEntity(shapeEntity);
+                            entitiesCreation.Create();
 
                             ok = true;
                         }
