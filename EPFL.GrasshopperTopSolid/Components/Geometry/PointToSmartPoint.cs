@@ -47,7 +47,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             Grasshopper.Kernel.Types.GH_ObjectWrapper obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
             DA.GetData(0, ref obj);
             if (obj == null) return;
-            var currentDocument = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
+            var currentDocument = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument; //TODO make it an input parameter
             if (currentDocument != null)
             {
 

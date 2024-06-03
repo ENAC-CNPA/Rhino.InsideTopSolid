@@ -18,9 +18,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
             Console.WriteLine("Test Start 0");
         }
 
-
         // Properties:
-
 
         /// <summary>
         /// Return true to Enable the command button
@@ -29,62 +27,24 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
         {
             get
             {
-                //Best practice:
-                // return the combinaison to the base & your tests
-
-                //In this case, just return the base CanInvoke
-                //return base.CanInvoke;
-
-                if (!base.CanInvoke)
+                if (!base.CanInvoke || Rhinoceros.rhinoCore == null)
                     return false;
-                return false;
+                return true;
             }
         }
 
 
 
         // Methods:
-
-        /// <summary>
-        /// Method call when the command button is pressed
-        /// </summary>
-
-
-        /// <summary>
-        /// Method call when the command button is pressed
-        /// </summary>
-        /// 
-        static RhinoCore rhinoCore;
-        //private static bool _grasshopperLoaded = false;
-        public static Grasshopper.Plugin.GH_RhinoScriptInterface Script { get; private set; }
-
         protected override void Invoke()
         {
-            //Method that works !!
-            if (rhinoCore == null)
-                rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH" }, WindowStyle.Normal);
-            else
-            {
-                Rhino.UI.RhinoEtoApp.MainWindow.Visible = true;
-            }
+            //      if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            //  Rhinoceros.RunCommandAbout();
+            //else
+            Rhinoceros.ShowAsync();
         }
 
-        internal static bool Shutdown()
-        {
-            if (rhinoCore is object)
-            {
-                try
-                {
-                    rhinoCore.Dispose();
-                    rhinoCore = null;
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+
 
     }
 }

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using TK = TopSolid.Kernel;
 using Grasshopper;
+using Rhino.Runtime.InProcess;
 
 namespace EPFL.RhinoInsideTopSolid.AddIn
 {
@@ -109,7 +110,7 @@ namespace EPFL.RhinoInsideTopSolid.AddIn
         /// </summary>
         public override void EndSession()
         {
-
+            RhinoInsideTopSolid.UI.Rhinoceros.RhinoShutdown();
         }
 
         /// <summary>
@@ -120,5 +121,11 @@ namespace EPFL.RhinoInsideTopSolid.AddIn
             return TK.SX.String.ReadResourceTextFile(typeof(AddIn), "EPFL.RhinoInsideTopSolid.AddIn.xml");
 
         }
+
+        /// <summary>
+        /// Method call when the command button is pressed
+        /// </summary>
+        /// 
+
     }
 }

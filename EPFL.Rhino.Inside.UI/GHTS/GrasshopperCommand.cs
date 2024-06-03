@@ -58,11 +58,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 
         // Methods:
 
-        /// <summary>
-        /// Method call when the command button is pressed
-        /// </summary>
-        /// 
-        static RhinoCore rhinoCore;
+
 
         private static bool _grasshopperLoaded = false;
         public static Grasshopper.Plugin.GH_RhinoScriptInterface Script { get; private set; }
@@ -72,12 +68,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 
         protected override void Invoke()
         {
-            var culture = System.Globalization.CultureInfo.CurrentCulture;
-
-            //Method that works !!
-            if (rhinoCore == null)
-                rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/ NOSPLASH", "/ language ={ CultureInfo.CurrentCulture.LCID }" }, WindowStyle.Normal);
-
+            Rhinoceros.RhinoStartup();
 
             if (!LoadGrasshopperComponents())
             {
@@ -100,31 +91,15 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 
             TopSolid.Kernel.SX.UI.Application.IsMouseWheelInterceptedByGraphics = false;
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+
         }
 
-        internal static bool Shutdown()
-        {
-            if (rhinoCore is object)
-            {
-                try
-                {
-                    rhinoCore.Dispose();
-                    rhinoCore = null;
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+
+
         public static bool LoadGrasshopperComponents()
         {
             if (_grasshopperLoaded)
                 return true;
-
-
 
             var LoadGHAProc = Grasshopper.Instances.ComponentServer.GetType().GetMethod("LoadGHA", BindingFlags.NonPublic | BindingFlags.Instance);
             if (LoadGHAProc == null)
