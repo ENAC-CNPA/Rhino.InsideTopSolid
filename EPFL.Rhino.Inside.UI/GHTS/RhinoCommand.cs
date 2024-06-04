@@ -38,10 +38,10 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
         // Methods:
         protected override void Invoke()
         {
-            //      if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            //if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             //  Rhinoceros.RunCommandAbout();
             //else
-            Rhinoceros.ShowAsync();
+            Rhinoceros.Show();
         }
 
 
