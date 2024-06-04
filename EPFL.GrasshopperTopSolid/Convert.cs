@@ -48,11 +48,23 @@ using Rhino.PlugIns;
 using TopSolid.Kernel.UI.Commands;
 using TopSolid.Kernel.TX.Units;
 using TopSolid.Kernel.G.D3.Shapes.Polyhedrons;
+using EPFL.RhinoInsideTopSolid.UI;
 
 namespace EPFL.GrasshopperTopSolid
 {
     public static class Convert
     {
+
+        #region scaleManagement To TopSolid
+
+        internal static double ModelScaleFactorToHost => UnitConverter.ToInternalLength;
+
+        internal static GeometryTolerance ToleranceHost => GeometryTolerance.Internal;
+        public static double ToInternalLength(double value) => ToInternalLength(value, ModelScaleFactorToHost);
+        internal static double ToInternalLength(double value, double factor) => value * factor;
+
+        #endregion
+
         static public double topSolidLinear = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
         static public double topSolidAngular = TopSolid.Kernel.G.Precision.AngularPrecision;
 
