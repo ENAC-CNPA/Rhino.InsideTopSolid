@@ -6,7 +6,8 @@
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>-->
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.RhinoCommand</MenuItem>
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.GrasshopperCommand</MenuItem>
-
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.LockSolver</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.Recompute</MenuItem>
   </MenuStripItems>
   <ToolStripItems>
 
@@ -14,6 +15,8 @@
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.Test.TestCommandUI</MenuItem>-->
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.RhinoCommand</MenuItem>
     <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.GrasshopperCommand</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.LockSolver</MenuItem>
+    <MenuItem xsi:type="CommandMenuItem">EPFL.RhinoInsideTopSolid.UI.GHTS.Recompute</MenuItem>
 
   </ToolStripItems>
 </ContextMenuItem>

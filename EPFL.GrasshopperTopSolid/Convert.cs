@@ -60,6 +60,10 @@ namespace EPFL.GrasshopperTopSolid
         internal static double ModelScaleFactorToHost => UnitConverter.ToInternalLength;
 
         internal static GeometryTolerance ToleranceHost => GeometryTolerance.Internal;
+
+        //TODO make ModelScaleFactorToRhino and ToleranceRhino
+
+
         public static double ToInternalLength(double value) => ToInternalLength(value, ModelScaleFactorToHost);
         internal static double ToInternalLength(double value, double factor) => value * factor;
 
@@ -72,9 +76,13 @@ namespace EPFL.GrasshopperTopSolid
         #region Point
         static public TKG.D3.Point ToHost(this Point3d p)
         {
-            return new TKG.D3.Point(p.X, p.Y, p.Z);
+            return p.ToHost(1.0);
         }
 
+        static public TKG.D3.Point ToHost(this Point3d p, double scaleFactor)
+        {
+            return new TKG.D3.Point(p.X * scaleFactor, p.Y * scaleFactor, p.Z * scaleFactor);
+        }
         static public TKG.D3.Point ToHost(this Point3f p)
         {
             return new TKG.D3.Point(p.X, p.Y, p.Z);

@@ -61,7 +61,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 
 
         private static bool _grasshopperLoaded = false;
-        public static Grasshopper.Plugin.GH_RhinoScriptInterface Script { get; private set; }
+        public static readonly Grasshopper.Plugin.GH_RhinoScriptInterface Script = new Grasshopper.Plugin.GH_RhinoScriptInterface();
 
         //static System.Globalization.CultureInfo cultureInfo = TopSolid.Kernel.SX.Globalization.CultureInfo.LocalizationCulture;
 
@@ -69,12 +69,6 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
         protected override void Invoke()
         {
             Rhinoceros.RhinoStartup();
-
-            if (!LoadGrasshopperComponents())
-            {
-                TopSolid.Kernel.SX.UI.Reporting.ReportInformation($"\nFailed to start Rhino");
-                return;
-            }
 
             if (Script.IsEditorVisible())
                 Script.HideEditor();
@@ -124,7 +118,6 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
             var GrasshopperGuid = new Guid(0xB45A29B1, 0x4343, 0x4035, 0x98, 0x9E, 0x04, 0x4E, 0x85, 0x80, 0xD9, 0xCF);
             rc = Rhino.PlugIns.PlugIn.LoadPlugIn(GrasshopperGuid);
 
-            Script = new Grasshopper.Plugin.GH_RhinoScriptInterface();
             Script.LoadEditor();
             rc = Script.IsEditorLoaded();
 

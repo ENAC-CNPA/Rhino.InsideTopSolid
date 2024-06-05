@@ -1,4 +1,6 @@
-﻿using Rhino;
+﻿using Grasshopper.Kernel;
+using Grasshopper;
+using Rhino;
 using Rhino.Runtime.InProcess;
 using System;
 using System.Reflection;
@@ -6,14 +8,14 @@ using TK = TopSolid.Kernel;
 
 namespace EPFL.RhinoInsideTopSolid.UI.GHTS
 {
-    public partial class RhinoCommand : TopSolid.Kernel.UI.Commands.MenuCommand
+    public partial class LockSolver : TopSolid.Kernel.UI.Commands.MenuCommand
     {
         // Constructors:
 
         /// <summary>
         /// Command constructor
         /// </summary>
-        public RhinoCommand()
+        public LockSolver()
         {
             Console.WriteLine("Test Start 0");
         }
@@ -27,7 +29,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
         {
             get
             {
-                if (!base.CanInvoke)
+                if (!base.CanInvoke || Rhinoceros.rhinoCore == null)
                     return false;
                 return true;
             }
@@ -38,8 +40,17 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
         // Methods:
         protected override void Invoke()
         {
-            Rhinoceros.RhinoStartup();
-            Rhinoceros.Show();
+            GH_Document.EnableSolutions = !GH_Document.EnableSolutions;
+
+            if (GH_Document.EnableSolutions)
+            {
+                if (Instances.ActiveCanvas?.Document is GH_Document definition)
+                    definition.NewSolution(false);
+            }
+            else
+            {
+                //Revit.RefreshActiveView();
+            }
         }
 
 
