@@ -146,7 +146,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
 
 
                     int positionOnPath = longestPathDimension - 1;
-                    while (positionOnPath >= longestPathDimension-1 && positionOnPath > 0)
+                    while (positionOnPath >= longestPathDimension - 1 && positionOnPath > 0)
                     {
                         if (currentPath.Length - positionOnPath < 0)
                             continue;
@@ -333,6 +333,10 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
                     }
 
 
+                }
+                else
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Data Trees for input do not match");
                 }
 
                 assemblyDocument.Update(true, true);

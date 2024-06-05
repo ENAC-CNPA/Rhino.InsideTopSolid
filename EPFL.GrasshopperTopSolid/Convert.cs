@@ -1,54 +1,34 @@
-using NLog.Fluent;
+
 using Rhino;
 using Rhino.Geometry;
 using Rhino.Geometry.Collections;
-using System.Collections.Generic;
+
 using System.Linq;
-using TopSolid.Kernel.DB.D3.Documents;
-using TopSolid.Kernel.DB.D3.Modeling.Documents;
-using TopSolid.Kernel.DB.D3.Shapes;
-using TopSolid.Kernel.DB.D3.Sketches;
-using TopSolid.Kernel.DB.D2.Sketches;
 
 using G = TopSolid.Kernel.G;
 using TopSolid.Kernel.G.D1;
 using TopSolid.Kernel.G.D3;
 using TopSolid.Kernel.G.D3.Curves;
 using TopSolid.Kernel.G.D3.Shapes;
-using TopSolid.Kernel.G.D3.Shapes.Creations;
-using TopSolid.Kernel.G.D3.Shapes.Modifications;
-using TopSolid.Kernel.G.D3.Shapes.Sew;
-using TopSolid.Kernel.G.D3.Shapes.Sketches;
-using TopSolid.Kernel.G.D3.Sketches;
+
 using TopSolid.Kernel.G.D3.Surfaces;
 using TopSolid.Kernel.SX;
 using TopSolid.Kernel.SX.Collections;
 using TopSolid.Kernel.TX.Items;
+using TK = TopSolid.Kernel;
 using TKG = TopSolid.Kernel.G;
 using TKGD2 = TopSolid.Kernel.G.D2;
 using TKGD3 = TopSolid.Kernel.G.D3;
-using TSXGen = TopSolid.Kernel.SX.Collections.Generic;
-using SketchEntity = TopSolid.Kernel.DB.D2.Sketches.SketchEntity;
-using TopSolid.Kernel.G.D3.Shapes.Healing;
-using TopSolid.Kernel.DB.Operations;
-using TopSolid.Kernel.DB.D3.Sketches.Operations;
-using TopSolid.Kernel.DB.D3.Curves;
-using TopSolid.Kernel.TX.Undo;
-using TX = TopSolid.Kernel.TX;
+
+
 using SX = TopSolid.Kernel.SX;
-using TUI = TopSolid.Kernel.UI;
-using TopSolid.Kernel.SX.Drawing;
+
 using Console = System.Console;
 using TopSolid.Kernel.G;
-using System;
-using TopSolid.Kernel.WX;
-using System.Diagnostics;
-using TopSolid.Kernel.SX.Collections.Generic;
-using Rhino.PlugIns;
-using TopSolid.Kernel.UI.Commands;
+
 using TopSolid.Kernel.TX.Units;
-using TopSolid.Kernel.G.D3.Shapes.Polyhedrons;
-using EPFL.RhinoInsideTopSolid.UI;
+
+using TopSolid.Kernel.G.D2;
 
 namespace EPFL.GrasshopperTopSolid
 {
@@ -72,116 +52,125 @@ namespace EPFL.GrasshopperTopSolid
         static public double topSolidLinear = TopSolid.Kernel.G.Precision.ModelingLinearTolerance;
         static public double topSolidAngular = TopSolid.Kernel.G.Precision.AngularPrecision;
 
-
         #region Point
+        #region To Host
         static public TKG.D3.Point ToHost(this Point3d p)
         {
             return p.ToHost(1.0);
         }
-
         static public TKG.D3.Point ToHost(this Point3d p, double scaleFactor)
         {
             return new TKG.D3.Point(p.X * scaleFactor, p.Y * scaleFactor, p.Z * scaleFactor);
         }
+
         static public TKG.D3.Point ToHost(this Point3f p)
         {
-            return new TKG.D3.Point(p.X, p.Y, p.Z);
+            return p.ToHost(1.0);
+        }
+        static public TKG.D3.Point ToHost(this Point3f p, double scaleFactor)
+        {
+            return new TKG.D3.Point(p.X * scaleFactor, p.Y * scaleFactor, p.Z * scaleFactor);
         }
 
         static public TKG.D2.Point ToHost2d(this Point3d p)
         {
-            return new TKG.D2.Point(p.X, p.Y);
+            return p.ToHost2d(1.0);
         }
-        static public TKG.D3.Point ToHost(this Rhino.Geometry.Point p)
+        static public TKG.D2.Point ToHost2d(this Point3d p, double scaleFactor)
         {
-            Point3d pt = p.Location;
-            return new TKG.D3.Point(pt.X, pt.Y, pt.Z);
+            return new TKG.D2.Point(p.X * scaleFactor, p.Y * scaleFactor);
         }
-        static public TKG.D2.Point ToHost2d(this Rhino.Geometry.Point p)
-        {
-            Point3d pt = p.Location;
-            return new TKG.D2.Point(pt.X, pt.Y);
-        }
+        #endregion
+        #region To Rhino
         static public Point3d ToRhino(this TKG.D3.Point p)
         {
-            return new Point3d(p.X, p.Y, p.Z);
+            return p.ToRhino(1.0);
+        }
+        static public Point3d ToRhino(this TKG.D3.Point p, double scaleFactor)
+        {
+            return new Point3d(p.X * scaleFactor, p.Y * scaleFactor, p.Z * scaleFactor);
         }
 
         static public Point2d ToRhino(this TKG.D2.Point p)
         {
-            return new Point2d(p.X, p.Y);
+            return p.ToRhino(1.0);
         }
-
+        static public Point2d ToRhino(this TKG.D2.Point p, double scaleFactor)
+        {
+            return new Point2d(p.X * scaleFactor, p.Y * scaleFactor);
+        }
+        #endregion
 
 
         #endregion
         #region Vector
+        #region To Host
         static public TKG.D3.Vector ToHost(this Vector3d v)
         {
-            return new TKG.D3.Vector(v.X, v.Y, v.Z);
+            return v.ToHost(1.0);
         }
+        static public TKG.D3.Vector ToHost(this Vector3d v, double scaleFactor)
+        {
+            return new TKG.D3.Vector(v.X * scaleFactor, v.Y * scaleFactor, v.Z * scaleFactor);
+        }
+        #endregion
+        #region ToRhino
         static public Vector3d ToRhino(this TKG.D3.Vector v)
         {
-            return new Vector3d(v.X, v.Y, v.Z);
+            return v.ToRhino(1.0);
         }
-
-        public static Rhino.Geometry.Vector3d ToRhino(this TKGD3.Axis axis)
+        static public Vector3d ToRhino(this TKG.D3.Vector v, double scaleFactor)
         {
-            return new Vector3d(axis.Vx.X, axis.Vx.Y, axis.Vx.Z);
+            return new Vector3d(v.X * scaleFactor, v.Y * scaleFactor, v.Z * scaleFactor);
         }
 
         static public Vector3d ToRhino(this TKG.D3.UnitVector v)
         {
-            return new Vector3d(v.X, v.Y, v.Z);
+            return v.ToRhino(1.0);
         }
-
+        static public Vector3d ToRhino(this TKG.D3.UnitVector v, double scaleFactor)
+        {
+            return new Vector3d(v.X * scaleFactor, v.Y * scaleFactor, v.Z * scaleFactor);
+        }
+        #endregion
 
         #endregion
+
         #region Line
+        #region To Host
         static public TKG.D3.Curves.LineCurve ToHost(this Rhino.Geometry.Line l)
         {
             return new TKG.D3.Curves.LineCurve(l.From.ToHost(), l.To.ToHost());
         }
-
-        static public Rhino.Geometry.LineCurve ToRhino(this TKG.D3.Curves.LineCurve l)
-        {
-            if (l.Range.IsInfinite)
-                return new Rhino.Geometry.LineCurve(l.Axis.Po.ToRhino(), new Rhino.Geometry.Point3d(
-                    l.Axis.Po.X + l.Axis.Vx.X,
-                    l.Axis.Po.Y + l.Axis.Vx.Y,
-                    l.Axis.Po.Z + l.Axis.Vx.Z));
-
-            return new Rhino.Geometry.LineCurve(l.Ps.ToRhino(), l.Pe.ToRhino());
-        }
-
-        static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD3.Curves.EllipseCurve ellipseCurve)
-        {
-
-            var ellipse = new Rhino.Geometry.Ellipse(ellipseCurve.Plane.ToRhino(), ellipseCurve.RadiusX, ellipseCurve.RadiusY);
-            bool isClosed = ellipseCurve.IsClosed();
-            if (!ellipseCurve.IsClosed())
-            {
-                return ellipseCurve.GetBSplineCurve(true, true).ToRhino();
-            }
-
-            return NurbsCurve.CreateFromEllipse(ellipse);
-        }
-
-        static public Rhino.Geometry.LineCurve ToRhino(this TKG.D2.Curves.LineCurve l)
-        {
-            var line = new Rhino.Geometry.Line(new Point3d(l.Ps.X, l.Ps.Y, 0), new Point3d(l.Pe.X, l.Pe.Y, 0));
-            return new Rhino.Geometry.LineCurve(line);
-        }
-
-
-
-        //2D
         static public TKG.D2.Curves.LineCurve ToHost2d(this Rhino.Geometry.LineCurve lineCurve)
         {
             return new TKG.D2.Curves.LineCurve(lineCurve.PointAtStart.ToHost2d(), lineCurve.PointAtEnd.ToHost2d());
         }
-
         #endregion
+        #region To Rhino
+        static public Rhino.Geometry.LineCurve ToRhino(this TKG.D3.Curves.LineCurve l)
+        {
+            return l.ToRhino(1.0);
+        }
+        static public Rhino.Geometry.LineCurve ToRhino(this TKG.D3.Curves.LineCurve l, double scaleFactor)
+        {
+            if (l.Range.IsInfinite)
+                return new Rhino.Geometry.LineCurve(l.Axis.Po.ToRhino(),
+                    new Rhino.Geometry.Point3d(
+                    l.Axis.Po.X * scaleFactor + l.Axis.Vx.X * scaleFactor,
+                    l.Axis.Po.Y * scaleFactor + l.Axis.Vx.Y * scaleFactor,
+                    l.Axis.Po.Z * scaleFactor + l.Axis.Vx.Z * scaleFactor));
+
+            return new Rhino.Geometry.LineCurve(l.Ps.ToRhino(), l.Pe.ToRhino());
+        }
+
+        static public Rhino.Geometry.LineCurve ToRhino(this TKG.D2.Curves.LineCurve l)
+        {
+            return new Rhino.Geometry.LineCurve(l.Ps.ToRhino(), l.Pe.ToRhino());
+        }
+        #endregion
+        #endregion
+
         #region Plane
         static public TKG.D3.Plane ToHost(this Rhino.Geometry.Plane plane)
         {
@@ -192,26 +181,24 @@ namespace EPFL.GrasshopperTopSolid
             return new TKG.D3.Plane(plane.Origin.ToHost(), new UnitVector(vx.ToHost()), new UnitVector(y.ToHost()));
         }
 
-        static public TKG.D3.Frame ToHost(this Rhino.Geometry.Plane p, Vector xVec, Vector yVec, Vector zVec)
-        {
-            return new TKG.D3.Frame(p.Origin.ToHost(), new UnitVector(xVec), new UnitVector(yVec), new UnitVector(zVec));
-        }
-
-        //2D
         static public TKG.D2.Frame ToHost2d(this Rhino.Geometry.Plane plane)
         {
-            Rhino.Geometry.Vector3d x = plane.XAxis;
-            x.Unitize();
-            Rhino.Geometry.Vector3d y = plane.YAxis;
+            return plane.ToHost2d(1.0);
+        }
+        static public TKG.D2.Frame ToHost2d(this Rhino.Geometry.Plane plane, double scaleFactor)
+        {
+            var x = (UnitVector)plane.XAxis.ToHost();
+
+            var y = plane.YAxis.ToHost();
             y.Unitize();
-            TKG.D2.UnitVector vx = new TKGD2.UnitVector(x.X, x.Y);
-            TKG.D2.UnitVector vy = new TKGD2.UnitVector(x.X, x.Y);
+            TKG.D2.UnitVector vx = new TKGD2.UnitVector(x.X * scaleFactor, x.Y * scaleFactor);
+            TKG.D2.UnitVector vy = new TKGD2.UnitVector(x.X * scaleFactor, x.Y * scaleFactor);
             return new TKG.D2.Frame(plane.Origin.ToHost2d(), vx, vy);
         }
 
-        static public Rhino.Geometry.Plane ToRhino(this TKG.D3.Frame p)
+        static public Rhino.Geometry.Plane ToRhino(this TKG.D3.Frame frame)
         {
-            return new Rhino.Geometry.Plane(p.Po.ToRhino(), new Vector3d(p.Ax.Vx.X, p.Ax.Vx.Y, p.Ax.Vx.Z));
+            return new Rhino.Geometry.Plane(frame.Po.ToRhino(), new Vector3d(frame.Ax.Vx.X, frame.Ax.Vx.Y, frame.Ax.Vx.Z));
         }
 
         static public Rhino.Geometry.Plane ToRhino(this TKG.D2.Frame p)
@@ -226,31 +213,7 @@ namespace EPFL.GrasshopperTopSolid
             //return new Rhino.Geometry.Plane(p.Po.ToRhino(), new Vector3d(p.Ax.Vx.X, p.Ax.Vx.Y, p.Ax.Vx.Z));
         }
         #endregion
-        #region Polyline
-        static public TKG.D3.Curves.PolylineCurve ToHost(this Rhino.Geometry.Polyline p)
-        {
-            var pointList = new PointList(p.Count);
-            foreach (var pt in p)
-            {
-                pointList.Add(pt.ToHost());
-            }
 
-            return new TKG.D3.Curves.PolylineCurve(p.IsClosed, pointList);
-        }
-
-
-
-        static public TKG.D2.Curves.PolylineCurve ToHost2d(this Rhino.Geometry.Polyline p)
-        {
-            var pointList = new TopSolid.Kernel.G.D2.PointList(p.Count);
-            foreach (var pt in p)
-            {
-                pointList.Add(pt.ToHost2d());
-            }
-
-            return new TKG.D2.Curves.PolylineCurve(p.IsClosed, pointList);
-        }
-        #endregion
         #region Curve
         static public Rhino.Geometry.Curve ToRhino(this TKGD3.Curves.Curve curve)
         {
@@ -266,6 +229,19 @@ namespace EPFL.GrasshopperTopSolid
                 return bsCurve.ToRhino();
 
             return curve.GetBSplineCurve(false, false).ToRhino();
+        }
+
+        static public Rhino.Geometry.NurbsCurve ToRhino(this TKGD3.Curves.EllipseCurve ellipseCurve)
+        {
+
+            var ellipse = new Rhino.Geometry.Ellipse(ellipseCurve.Plane.ToRhino(), ellipseCurve.RadiusX, ellipseCurve.RadiusY);
+            bool isClosed = ellipseCurve.IsClosed();
+            if (!ellipseCurve.IsClosed())
+            {
+                return ellipseCurve.GetBSplineCurve(true, true).ToRhino();
+            }
+
+            return NurbsCurve.CreateFromEllipse(ellipse);
         }
 
         static public Rhino.Geometry.Curve ToRhino(this TKGD2.Curves.Curve curve)

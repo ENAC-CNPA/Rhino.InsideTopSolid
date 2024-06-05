@@ -34,7 +34,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("RhinoBrep", "RhBrep", "Converted Rhino Brep", GH_ParamAccess.list);
+            pManager.AddBrepParameter("RhinoBrep", "RhBrep", "Converted Rhino Brep", GH_ParamAccess.list);
             pManager.AddGenericParameter("TopSolidShape", "TSShape", "TopSolid Shape", GH_ParamAccess.list);
         }
 
