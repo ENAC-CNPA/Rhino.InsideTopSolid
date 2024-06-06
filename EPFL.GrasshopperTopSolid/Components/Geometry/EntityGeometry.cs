@@ -11,7 +11,8 @@ using TopSolid.Kernel.DB.Entities;
 using TopSolid.Kernel.G;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Pdm;
-using TKG = TopSolid.Kernel.G;
+using TK = TopSolid.Kernel;
+//using TK.G = TopSolid.Kernel.G;
 using TKUI = TopSolid.Kernel.UI;
 using SK2D = TopSolid.Kernel.G.D2.Sketches;
 using SK3D = TopSolid.Kernel.G.D3.Sketches;
@@ -57,7 +58,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
-            TKG.IGeometry geometry = null;
+            TK.G.IGeometry geometry = null;
             Entity res = null;
             Document currentDocument = null;
             if (DA.GetData("TSDocument", ref wrapper))
@@ -123,19 +124,19 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
                     geometry = vertex.Geometry;
                 }
 
-                else if (wrapper.Value is TKG.D3.Curves.GeometricSegment segment)
+                else if (wrapper.Value is TK.G.D3.Curves.GeometricSegment segment)
                 {
                     geometry = segment.GetOrientedCurve();
                 }
-                else if (wrapper.Value is TKG.D2.Curves.GeometricSegment segment2d)
+                else if (wrapper.Value is TK.G.D2.Curves.GeometricSegment segment2d)
                 {
                     geometry = segment2d.GetOrientedCurve();
                 }
-                else if (wrapper.Value is TKG.D3.Sketches.Segment skSegment)
+                else if (wrapper.Value is TK.G.D3.Sketches.Segment skSegment)
                 {
                     geometry = skSegment.Geometry;
                 }
-                else if (wrapper.Value is TKG.D3.Sketches.Segment skSegment2d)
+                else if (wrapper.Value is TK.G.D3.Sketches.Segment skSegment2d)
                 {
                     geometry = skSegment2d.Geometry;
                 }

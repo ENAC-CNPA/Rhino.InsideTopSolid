@@ -7,7 +7,9 @@ using Rhino.Geometry;
 using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using TopSolid.Kernel.DB.Entities;
 using TopSolid.Kernel.G.D3.Shapes;
-using TKG = TopSolid.Kernel.G;
+using TK = TopSolid.Kernel;
+
+//using TK.G = TopSolid.Kernel.G;
 
 namespace EPFL.GrasshopperTopSolid.Components.Geometry
 {
@@ -49,10 +51,10 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         {
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
             DA.GetData("TSShape", ref wrapper);
-            TKG.IGeometry tsGeometry = null;
+            TK.G.IGeometry tsGeometry = null;
             ModelingDocument currentDocument = TopSolid.Kernel.UI.Application.CurrentDocument as ModelingDocument;
             if (wrapper.Value is Entity ent) tsGeometry = ent.Geometry;
-            else if (wrapper.Value is TKG.IGeometry geometry) tsGeometry = geometry;
+            else if (wrapper.Value is TK.G.IGeometry geometry) tsGeometry = geometry;
             else if (wrapper.Value is GH_String || wrapper.Value is string)
             {
                 tsGeometry = currentDocument.RootEntity.SearchDeepEntity(wrapper.Value.ToString())?.Geometry;
@@ -60,7 +62,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
 
             else
             {
-                tsGeometry = wrapper.Value as TKG.IGeometry;
+                tsGeometry = wrapper.Value as TK.G.IGeometry;
             }
 
             if (tsGeometry == null)
@@ -69,10 +71,11 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
                 return;
             }
 
-            if (!(tsGeometry is TKG.D3.Shapes.Shape)) AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Geometry is not a shape, make sure input is either TS Shapes or Shape Entity");
-
-            Shape shape = tsGeometry as Shape;
-            if (shape is null) return;
+            if (!(tsGeometry is Shape shape))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Geometry is not a shape, make sure input is either TS Shapes or Shape Entity");
+                return;
+            }
 
             DA.SetDataList("Vertices", shape.Vertices.Select(x => x.GetGeometry()));
             DA.SetDataList("Edges", shape.Edges.Select(x => x.GetGeometry(true)));

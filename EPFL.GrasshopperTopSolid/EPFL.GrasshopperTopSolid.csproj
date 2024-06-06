@@ -100,6 +100,12 @@
     <Reference Include="TopSolid.Kernel.UI">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.17\Debug x64\TopSolid.Kernel.UI.dll</HintPath>
     </Reference>
+    <Reference Include="TopSolid.Kernel.UI.D3.Shapes">
+      <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.17\Debug x64\TopSolid.Kernel.UI.D3.Shapes.dll</HintPath>
+    </Reference>
+    <Reference Include="TopSolid.Kernel.WG">
+      <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.17\Debug x64\TopSolid.Kernel.WG.dll</HintPath>
+    </Reference>
     <Reference Include="TopSolid.Kernel.WX">
       <HintPath>..\..\..\..\..\..\Sources\Topsolid 7.17\Debug x64\TopSolid.Kernel.WX.dll</HintPath>
     </Reference>

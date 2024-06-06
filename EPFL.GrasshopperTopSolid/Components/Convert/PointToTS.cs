@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using TKG = TopSolid.Kernel.G;
+using TK = TopSolid.Kernel;
+//using TK.G = TopSolid.Kernel.G;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 using TopSolid.Kernel.GR;
@@ -48,16 +49,16 @@ namespace EPFL.GrasshopperTopSolid.Components
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             List<Point3d> pts = new List<Point3d>();
-            
+
             if (!DA.GetDataList(0, pts)) { return; }
-            
+
             if (pts == null) { return; }
             if (pts.Count == 0) { return; }
 
-            
+
             GeometricDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
             GeneralDisplay myGeneralDisplay = new GeneralDisplay(null);
-            List<TKG.D3.Point> TSpts = new List<TKG.D3.Point>();
+            List<TK.G.D3.Point> TSpts = new List<TK.G.D3.Point>();
 
             if (myGeneralDisplay != null && document.Display.ContainsDisplay(myGeneralDisplay))
             {
@@ -74,14 +75,14 @@ namespace EPFL.GrasshopperTopSolid.Components
                 markerTSpoint.MarkerStyle = MarkerStyle.ExtraLargeTriangle;
                 myGeneralDisplay.Add(markerTSpoint);
             }
-                        
+
             document.Display.AddDisplay(myGeneralDisplay);
             TopSolid.Kernel.UI.Application.Update();
 
             DA.SetDataList(0, TSpts);
 
         }
-       
+
         /// <summary>
         /// Provides an Icon for the component.
         /// </summary>

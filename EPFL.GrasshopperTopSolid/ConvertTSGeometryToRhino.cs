@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TKG = TopSolid.Kernel.G;
+using TK = TopSolid.Kernel;
+//using TKG = TopSolid.Kernel.G;
 using Grasshopper.Kernel;
 using TopSolid.Kernel.G.D3.Curves;
 
@@ -13,7 +14,7 @@ namespace EPFL.GrasshopperTopSolid
 {
     public static class TsIGeometryToRhino
     {
-        static public List<IGH_GeometricGoo> ToRhino(TKG.IGeometry tsGeometry)
+        static public List<IGH_GeometricGoo> ToRhino(TK.G.IGeometry tsGeometry)
         {
             List<IGH_GeometricGoo> ghGeometry = new List<IGH_GeometricGoo>();
 
@@ -50,7 +51,7 @@ namespace EPFL.GrasshopperTopSolid
                         ghGeometry.Add(ghCurve);
                         break;
                     }
-                case TKG.D3.Curves.IGeometricSegment segment:
+                case TK.G.D3.Curves.IGeometricSegment segment:
                     {
                         {
                             GH_Curve ghCurve = new GH_Curve();
@@ -59,7 +60,7 @@ namespace EPFL.GrasshopperTopSolid
                             break;
                         }
                     }
-                case TKG.D2.Curves.IGeometricSegment segment:
+                case TK.G.D2.Curves.IGeometricSegment segment:
                     {
                         {
                             GH_Curve ghCurve = new GH_Curve();
@@ -70,7 +71,7 @@ namespace EPFL.GrasshopperTopSolid
                     }
 
 
-                case TKG.D2.Curves.IGeometricProfile profile2d:
+                case TK.G.D2.Curves.IGeometricProfile profile2d:
                     {
                         GH_Curve ghCurve = new GH_Curve();
                         GH_Convert.ToGHCurve(profile2d.ToRhino(), GH_Conversion.Both, ref ghCurve);
@@ -78,7 +79,7 @@ namespace EPFL.GrasshopperTopSolid
                         break;
                     }
 
-                case TKG.D3.Curves.Curve curve:
+                case TK.G.D3.Curves.Curve curve:
                     {
                         GH_Curve ghCurve = new GH_Curve();
                         GH_Convert.ToGHCurve(curve.ToRhino(), GH_Conversion.Both, ref ghCurve);
@@ -86,7 +87,7 @@ namespace EPFL.GrasshopperTopSolid
                         break;
                     }
 
-                case TKG.D3.Shapes.Shape shape:
+                case TK.G.D3.Shapes.Shape shape:
                     {
                         GH_Brep ghBrep = new GH_Brep();
                         GH_Convert.ToGHBrep(shape.ToRhino().First(), GH_Conversion.Both, ref ghBrep);
@@ -95,7 +96,7 @@ namespace EPFL.GrasshopperTopSolid
                     }
                 //TopSolid Frame converted to Rhino Planes
                 #region Frames
-                case TKG.D3.Frame frame:
+                case TK.G.D3.Frame frame:
                     {
                         GH_Plane ghPlan = new GH_Plane();
                         GH_Convert.ToGHPlane(frame.ToRhino(), GH_Conversion.Both, ref ghPlan);
@@ -103,7 +104,7 @@ namespace EPFL.GrasshopperTopSolid
                         break;
                     }
 
-                case TKG.D2.Frame frame:
+                case TK.G.D2.Frame frame:
                     {
                         GH_Plane ghPlan = new GH_Plane();
                         GH_Convert.ToGHPlane(frame.ToRhino(), GH_Conversion.Both, ref ghPlan);
@@ -114,7 +115,7 @@ namespace EPFL.GrasshopperTopSolid
 
 
                 #region Sketches
-                case TKG.D3.Sketches.Sketch sk:
+                case TK.G.D3.Sketches.Sketch sk:
                     {
 
                         foreach (var profile in sk.Profiles)
@@ -127,7 +128,7 @@ namespace EPFL.GrasshopperTopSolid
                         break;
                     }
 
-                case TKG.D2.Sketches.Sketch sk:
+                case TK.G.D2.Sketches.Sketch sk:
                     {
                         foreach (var profile in sk.Profiles)
                         {

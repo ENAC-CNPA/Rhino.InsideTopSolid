@@ -11,19 +11,14 @@ using TopSolid.Kernel.G.D3;
 using TopSolid.Kernel.SX.Collections;
 
 using TSXGen = TopSolid.Kernel.SX.Collections.Generic;
-using TKGD2 = TopSolid.Kernel.G.D2;
-using TKGD3 = TopSolid.Kernel.G.D3;
-using NLog.Fluent;
-using TopSolid.Kernel.G.D3.Shapes.Creations;
-using TopSolid.Kernel.G;
-using TopSolid.Kernel.TX.Items;
-using TopSolid.Kernel.WX;
 using SX = TopSolid.Kernel.SX;
 using TX = TopSolid.Kernel.TX;
 using G = TopSolid.Kernel.G;
+//using G.D2 = TopSolid.Kernel.G.D2;
+//using G.D3 = TopSolid.Kernel.G.D3;
+using TopSolid.Kernel.G.D3.Shapes.Creations;
+using TopSolid.Kernel.TX.Items;
 using TopSolid.Kernel.G.D3.Shapes.Sew;
-using Eto.Forms;
-using TopSolid.Cad.Design.DB.Constraints;
 using TopSolid.Kernel.G.D3.Shapes.Healing;
 
 namespace EPFL.GrasshopperTopSolid
@@ -36,10 +31,10 @@ namespace EPFL.GrasshopperTopSolid
         {
             //Create the *out* variables
             BoolList outer = new BoolList();
-            TSXGen.List<TKGD2.Curves.IGeometricProfile> list2D = new TSXGen.List<TKGD2.Curves.IGeometricProfile>();
-            TSXGen.List<TKGD3.Curves.IGeometricProfile> list3D = new TSXGen.List<TKGD3.Curves.IGeometricProfile>();
+            TSXGen.List<G.D2.Curves.IGeometricProfile> list2D = new TSXGen.List<G.D2.Curves.IGeometricProfile>();
+            TSXGen.List<G.D3.Curves.IGeometricProfile> list3D = new TSXGen.List<G.D3.Curves.IGeometricProfile>();
             TSXGen.List<EdgeList> listEdges = new TSXGen.List<EdgeList>();
-            //TSXGen.List<TKGD3.Shapes.Vertex> vertexlist = new TSXGen.List<TKGD3.Shapes.Vertex>();
+            //TSXGen.List<G.D3.Shapes.Vertex> vertexlist = new TSXGen.List<G.D3.Shapes.Vertex>();
             double tol_Rh = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
             double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance / 2;
             bool forcesNonPeriodic = false;
@@ -55,7 +50,7 @@ namespace EPFL.GrasshopperTopSolid
 
             //function added on request, gets the 2DCurves, 3dCurves and Edges in the correct order
             OrientedSurface osurf = face.GetOrientedBsplineTrimmedGeometry(tol_TS, false, false, forcesNonPeriodic, FaceTrimmingLoopsConfine.Periph, outer, list2D, list3D, listEdges, true);
-            TKGD3.Surfaces.Surface topSolidSurface = osurf.Surface;
+            G.D3.Surfaces.Surface topSolidSurface = osurf.Surface;
 
             var list2Dflat = list2D.SelectMany(f => f.Segments).ToList();
             var list3Dflat = list3D.SelectMany(f => f.Segments).ToList();
@@ -98,10 +93,10 @@ namespace EPFL.GrasshopperTopSolid
             int ind = 0;
             int indperLoop = 0;
             //bool rev;
-            foreach (TKGD3.Curves.IGeometricProfile c in list3D)
+            foreach (G.D3.Curves.IGeometricProfile c in list3D)
             {
 
-                foreach (TKGD3.Curves.IGeometricSegment ic in c.Segments)
+                foreach (G.D3.Curves.IGeometricSegment ic in c.Segments)
                 {
                     var orientedcrv = ic.GetOrientedCurve();
                     var crv = orientedcrv.Curve.ToRhino();
@@ -203,7 +198,7 @@ namespace EPFL.GrasshopperTopSolid
 
             //Get the 2D Curves and convert them to Rhino
             int x = 0;
-            foreach (TKGD2.Curves.IGeometricProfile c in list2D)
+            foreach (G.D2.Curves.IGeometricProfile c in list2D)
             {
                 if (list2D.Count == 1)
                 {
@@ -238,10 +233,10 @@ namespace EPFL.GrasshopperTopSolid
                     rhinoLoop = brepsrf.Loops.Add(BrepLoopType.Inner, bface);
 
 
-                foreach (TKGD2.Curves.IGeometricSegment ic in c.Segments)
+                foreach (G.D2.Curves.IGeometricSegment ic in c.Segments)
                 {
                     Rhino.Geometry.Curve crv;
-                    TKGD2.Curves.BSplineCurve tcrvv = ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false);
+                    G.D2.Curves.BSplineCurve tcrvv = ic.GetOrientedCurve().Curve.GetBSplineCurve(false, false);
 
                     if (isOuter)
                     {
@@ -290,8 +285,7 @@ namespace EPFL.GrasshopperTopSolid
                     {
                         rhTrim[x].TrimType = BrepTrimType.Boundary;
                         rhTrim[x].IsoStatus = IsoStatus.None;
-                        string log1 = null;
-                        rhTrim[x].IsValidWithLog(out log1);
+                        //rhTrim[x].IsValidWithLog(out string log1);
                     }
                     x++;
                 }
@@ -304,17 +298,17 @@ namespace EPFL.GrasshopperTopSolid
                 brepsrf.Faces.First().OrientationIsReversed = true;
             }
 
-            string log = null;
-            brepsrf.IsValidWithLog(out log);
+            //string log = null;
+            //brepsrf.IsValidWithLog(out log);
 
 
             bool match = true;
             if (!brepsrf.IsValid)
             {
                 brepsrf.Repair(tol_TS);
-                brepsrf.IsValidWithLog(out log);
+                //brepsrf.IsValidWithLog(out log);
                 match = brepsrf.Trims.MatchEnds();
-                brepsrf.IsValidWithLog(out log);
+                //brepsrf.IsValidWithLog(out log);
             }
 
             brepsrf.SetTolerancesBoxesAndFlags(false, true, true, true, true, false, false, false);
@@ -390,12 +384,12 @@ namespace EPFL.GrasshopperTopSolid
         /// <param name="listEdges">list of EdgeList with loops</param>
         /// <param name="loopCount">Face.LoopCount</param>
         /// <returns></returns>
-        static public bool CheckTopologicalCoherence(TSXGen.List<TKGD2.Curves.IGeometricProfile> list2D,
-        TSXGen.List<TKGD3.Curves.IGeometricProfile> list3D,
+        static public bool CheckTopologicalCoherence(TSXGen.List<G.D2.Curves.IGeometricProfile> list2D,
+        TSXGen.List<G.D3.Curves.IGeometricProfile> list3D,
         TSXGen.List<EdgeList> listEdges, int loopCount)
         {
-            IEnumerable<TKGD2.Curves.GeometricSegment> list2dSegmentsFlattened = list2D.SelectMany(x => x.Segments);
-            IEnumerable<TKGD3.Curves.IGeometricSegment> list3dSgementsFlattened = list3D.SelectMany(x => x.Segments);
+            IEnumerable<G.D2.Curves.GeometricSegment> list2dSegmentsFlattened = list2D.SelectMany(x => x.Segments);
+            IEnumerable<G.D3.Curves.IGeometricSegment> list3dSgementsFlattened = list3D.SelectMany(x => x.Segments);
             IEnumerable<Edge> listEdgesFlattened = listEdges.SelectMany(x => x);
 
             int count2dProfiles = list2D.Count;
@@ -492,7 +486,7 @@ namespace EPFL.GrasshopperTopSolid
             // If new problems come, see about the periodicity of the curves.
 
             //TODO check if planar to simplify
-            TKGD3.Surfaces.Surface topSolidSurface = surface.ToHost();
+            G.D3.Surfaces.Surface topSolidSurface = surface.ToHost();
             if (!topSolidSurface.IsValid)
             {
                 Console.WriteLine("error");
@@ -519,13 +513,13 @@ namespace EPFL.GrasshopperTopSolid
             sheetMaker.SurfaceMoniker = new ItemMoniker(false, (byte)ItemType.ShapeFace, key, 1);
 
             // Get spatial curves and set to maker.
-            TopSolid.Kernel.SX.Collections.Generic.List<TKGD3.Curves.CurveList> loops3d = new TSXGen.List<TKGD3.Curves.CurveList>();
+            TopSolid.Kernel.SX.Collections.Generic.List<G.D3.Curves.CurveList> loops3d = new TSXGen.List<G.D3.Curves.CurveList>();
             TopSolid.Kernel.SX.Collections.Generic.List<ItemMonikerList> listItemMok = new TSXGen.List<ItemMonikerList>();
             int i = 0;
             int loopIndex = 0;
             foreach (Rhino.Geometry.BrepLoop loop in inFace.Loops)
             {
-                loops3d.Add(new TKGD3.Curves.CurveList());
+                loops3d.Add(new G.D3.Curves.CurveList());
                 listItemMok.Add(new ItemMonikerList());
                 foreach (var trim in loop.Trims)
                 {
@@ -577,7 +571,7 @@ namespace EPFL.GrasshopperTopSolid
 
             // Closed BSpline surfaces must be made periodic for parasolid with 2d curves (according to torus and sphere in v5_example.3dm).
             // If new problems come, see about the periodicity of the curves.
-            TKGD3.Surfaces.Surface topSolidSurface = surface.ToHost();
+            G.D3.Surfaces.Surface topSolidSurface = surface.ToHost();
             if (!topSolidSurface.IsValid)
             {
                 Console.WriteLine("error");
@@ -603,14 +597,14 @@ namespace EPFL.GrasshopperTopSolid
                 sheetMaker.Surface = osurf;
             }
 
-            TopSolid.Kernel.SX.Collections.Generic.List<TKGD2.Curves.CurveList> loops2d = new TSXGen.List<TKGD2.Curves.CurveList>();
+            TopSolid.Kernel.SX.Collections.Generic.List<G.D2.Curves.CurveList> loops2d = new TSXGen.List<G.D2.Curves.CurveList>();
             TopSolid.Kernel.SX.Collections.Generic.List<ItemMonikerList> listItemMok = new TSXGen.List<ItemMonikerList>();
             ItemMonikerKey key = new ItemMonikerKey(ItemOperationKey.BasicKey);
             int i = 0;
             int loopIndex = 0;
             foreach (Rhino.Geometry.BrepLoop loop in inFace.Loops)
             {
-                loops2d.Add(new TKGD2.Curves.CurveList());
+                loops2d.Add(new G.D2.Curves.CurveList());
                 listItemMok.Add(new ItemMonikerList());
                 foreach (var trim in loop.Trims)
                 {
@@ -623,7 +617,7 @@ namespace EPFL.GrasshopperTopSolid
 
 
             //var entity = new TopSolid.Kernel.DB.D2.Sketches.PositionedSketchEntity(TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument, 0);
-            //TopSolid.Kernel.G.D2.Sketches.Sketch sk2d = new TKGD2.Sketches.Sketch(entity, null, false);
+            //TopSolid.Kernel.G.D2.Sketches.Sketch sk2d = new G.D2.Sketches.Sketch(entity, null, false);
 
             sheetMaker.SetCurves(loops2d, listItemMok);
             try
