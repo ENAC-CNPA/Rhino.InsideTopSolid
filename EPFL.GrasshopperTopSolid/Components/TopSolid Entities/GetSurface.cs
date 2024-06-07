@@ -7,6 +7,7 @@ using TopSolid.Kernel.DB.D3.Documents;
 using TopSolid.Kernel.DB.D3.Shapes;
 using TopSolid.Kernel.G.D3.Shapes;
 using TopSolid.Kernel.G.D3.Surfaces;
+using TK = TopSolid.Kernel;
 
 namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
 {
@@ -48,8 +49,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
             string _name = "";
             DA.GetData("Name", ref _name);
             GeometricDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
-            List<NurbsSurface> list = new List<NurbsSurface>();
-            List<BSplineSurface> listTs = new List<BSplineSurface>();
+            List<Rhino.Geometry.Surface> list = new List<Rhino.Geometry.Surface>();
+            List<TK.G.D3.Surfaces.Surface> listTs = new List<TK.G.D3.Surfaces.Surface>();
 
             ShapeEntity entity = document.RootEntity.SearchDeepEntity(_name) as ShapeEntity;
             if (entity.Geometry.Faces.Count() == 0)
@@ -61,8 +62,9 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
             {
                 foreach (Face f in entity.Geometry.Faces)
                 {
-                    list.Add(Convert.ToRhino(f.GetBsplineGeometry(TopSolid.Kernel.G.Precision.LinearPrecision, false, false, false) as BSplineSurface).ToNurbsSurface());
-                    listTs.Add(f.GetBsplineGeometry(TopSolid.Kernel.G.Precision.LinearPrecision, false, false, false) as BSplineSurface);
+                    var surf = f.GetGeometry(true);
+                    list.Add(surf.ToRhino());
+                    listTs.Add(surf);
                 }
             }
 
@@ -70,16 +72,8 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
             DA.SetDataList("TopSolidSurface", listTs);
         }
 
-        /// <summary>
-        /// Provides an Icon for the component.
-        /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Properties.Resources.TopSolid;
-            }
-        }
+
+        protected override System.Drawing.Bitmap Icon => new System.Drawing.Icon(Properties.Resources.SurfaceEntity, 24, 24).ToBitmap();
 
         /// <summary>
         /// Gets the unique ID for this component. Do not change this ID after release.

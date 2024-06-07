@@ -16,6 +16,7 @@ using TK = TopSolid.Kernel;
 using TKUI = TopSolid.Kernel.UI;
 using SK2D = TopSolid.Kernel.G.D2.Sketches;
 using SK3D = TopSolid.Kernel.G.D3.Sketches;
+using TopSolid.Cad.Design.DB.Documents;
 
 namespace EPFL.GrasshopperTopSolid.Components.Geometry
 {
@@ -51,40 +52,40 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             pManager.AddGeometryParameter("RhGeometry", "Geometry", "Geometry converted to Rhino as List", GH_ParamAccess.list);
         }
 
+        DesignDocument document;
+        GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
+        Entity res;
+        TK.G.IGeometry geometry = null;
+
         /// <summary>
         /// This is the method that actually does the work.
         /// </summary>
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
-            TK.G.IGeometry geometry = null;
-            Entity res = null;
-            Document currentDocument = null;
-            if (DA.GetData("TSDocument", ref wrapper))
+            GetInputdocument(DA);
+            GetInputEntityGeometry(DA);
+
+            if (geometry is null)
             {
-                if (wrapper.Value != null)
-                {
-                    if (wrapper.Value is string || wrapper.Value is GH_String)
-                    {
-                        currentDocument = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as ModelingDocument;
-                    }
-                    else if (wrapper.Value is IDocumentItem)
-                        currentDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as ModelingDocument;
-                    else if (wrapper.Value is IDocument)
-                        currentDocument = wrapper.Value as ModelingDocument;
-                }
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Could not find any Geometry for this input");
+                return;
             }
+            else
+            {
+                DA.SetData("TSGeometry", geometry);
+                DA.SetDataList("RhGeometry", HostIGeometryToRhino.ToRhino(geometry));
+            }
+        }
 
-            if (currentDocument is null)
-                currentDocument = TKUI.Application.CurrentDocument as ModelingDocument;
-
+        private void GetInputEntityGeometry(IGH_DataAccess DA)
+        {
             DA.GetData("TSEntity", ref wrapper);
             if (wrapper != null)
             {
                 if (wrapper.Value is string || wrapper.Value is GH_String)
                 {
-                    res = currentDocument.RootEntity.SearchDeepEntity(wrapper.Value.ToString());
+                    res = document.RootEntity.SearchDeepEntity(wrapper.Value.ToString());
                     if (res != null)
                     {
                         if (!res.HasGeometry)
@@ -143,17 +144,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
 
 
                 //for Debug
-
-                var type = wrapper.Value?.GetType();
-            }
-
-            if (geometry is null)
-                return;
-
-            else
-            {
-                DA.SetData("TSGeometry", geometry);
-                DA.SetDataList("RhGeometry", TsIGeometryToRhino.ToRhino(geometry));
+                //var type = wrapper.Value?.GetType();
             }
         }
 
@@ -176,6 +167,29 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
         public override Guid ComponentGuid
         {
             get { return new Guid("64ECB5CA-BB4B-4228-B851-809E21A722B5"); }
+        }
+
+        private void GetInputdocument(IGH_DataAccess DA)
+        {
+
+            if (DA.GetData("TSDocument", ref wrapper))
+            {
+                if (wrapper.Value != null)
+                {
+                    if (wrapper.Value is string || wrapper.Value is GH_String)
+                    {
+                        document = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault() as DesignDocument;
+                    }
+                    else if (wrapper.Value is IDocumentItem)
+                        document = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as DesignDocument;
+                    else if (wrapper.Value is IDocument)
+                        document = wrapper.Value as DesignDocument;
+                }
+            }
+
+            if (document is null)
+                document = TKUI.Application.CurrentDocument as DesignDocument;
+
         }
     }
 }

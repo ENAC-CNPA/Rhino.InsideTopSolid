@@ -5,7 +5,7 @@ namespace EPFL.GrasshopperTopSolid
     using Units;
 
     /// <summary>
-    /// Tolerance values to be used on <see cref="Autodesk.Revit.DB.GeometryObject"/> instances.
+    /// Tolerance values to be used on <see cref="TopSolid.Kernel.G.IGeometry"/> instances.
     /// </summary>
     readonly struct GeometryTolerance
     {

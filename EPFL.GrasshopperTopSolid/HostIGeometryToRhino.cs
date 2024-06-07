@@ -12,7 +12,7 @@ using TopSolid.Kernel.G.D3.Curves;
 
 namespace EPFL.GrasshopperTopSolid
 {
-    public static class TsIGeometryToRhino
+    public static class HostIGeometryToRhino
     {
         static public List<IGH_GeometricGoo> ToRhino(TK.G.IGeometry tsGeometry)
         {
@@ -27,7 +27,6 @@ namespace EPFL.GrasshopperTopSolid
                         ghGeometry.Add(ghPlane);
                         break;
                     }
-
                 case TopSolid.Kernel.G.D3.Point point:
                     {
                         GH_Point ghPoint = new GH_Point();
@@ -35,7 +34,6 @@ namespace EPFL.GrasshopperTopSolid
                         ghGeometry.Add(ghPoint);
                         break;
                     }
-
                 case TopSolid.Kernel.G.D2.Point point:
                     {
                         GH_Point ghPoint = new GH_Point();
@@ -43,7 +41,6 @@ namespace EPFL.GrasshopperTopSolid
                         ghGeometry.Add(ghPoint);
                         break;
                     }
-
                 case IGeometricProfile profile:
                     {
                         GH_Curve ghCurve = new GH_Curve();
@@ -55,7 +52,7 @@ namespace EPFL.GrasshopperTopSolid
                     {
                         {
                             GH_Curve ghCurve = new GH_Curve();
-                            GH_Convert.ToGHCurve(TsIGeometryToRhino.ToRhino(segment.GetOrientedCurve()), GH_Conversion.Both, ref ghCurve);
+                            GH_Convert.ToGHCurve(segment.GetOrientedCurve().Curve.ToRhino(), GH_Conversion.Both, ref ghCurve);
                             ghGeometry.Add(ghCurve);
                             break;
                         }
@@ -64,13 +61,11 @@ namespace EPFL.GrasshopperTopSolid
                     {
                         {
                             GH_Curve ghCurve = new GH_Curve();
-                            GH_Convert.ToGHCurve(TsIGeometryToRhino.ToRhino(segment.GetOrientedCurve()), GH_Conversion.Both, ref ghCurve);
+                            GH_Convert.ToGHCurve(segment.GetOrientedCurve().Curve.ToRhino(), GH_Conversion.Both, ref ghCurve);
                             ghGeometry.Add(ghCurve);
                             break;
                         }
                     }
-
-
                 case TK.G.D2.Curves.IGeometricProfile profile2d:
                     {
                         GH_Curve ghCurve = new GH_Curve();
@@ -78,7 +73,6 @@ namespace EPFL.GrasshopperTopSolid
                         ghGeometry.Add(ghCurve);
                         break;
                     }
-
                 case TK.G.D3.Curves.Curve curve:
                     {
                         GH_Curve ghCurve = new GH_Curve();
@@ -86,7 +80,6 @@ namespace EPFL.GrasshopperTopSolid
                         ghGeometry.Add(ghCurve);
                         break;
                     }
-
                 case TK.G.D3.Shapes.Shape shape:
                     {
                         GH_Brep ghBrep = new GH_Brep();
@@ -103,7 +96,6 @@ namespace EPFL.GrasshopperTopSolid
                         ghGeometry.Add(ghPlan);
                         break;
                     }
-
                 case TK.G.D2.Frame frame:
                     {
                         GH_Plane ghPlan = new GH_Plane();
@@ -145,5 +137,8 @@ namespace EPFL.GrasshopperTopSolid
 
 
         }
+
+
+
     }
 }

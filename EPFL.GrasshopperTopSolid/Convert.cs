@@ -859,8 +859,8 @@ namespace EPFL.GrasshopperTopSolid
                 return RevSurface.Create(revSurf.Curve.ToRhino(), new Line(revSurf.Axis.Po.ToRhino(), revSurf.Axis.Vx.ToRhino()));
             }
 
-            if (topSolidSurface is ConeSurface coneSurface)
-                return coneSurface.ToRhino();
+            /*if (topSolidSurface is ConeSurface coneSurface)
+                return coneSurface.ToRhino();*/
 
             if (topSolidSurface is BSplineSurface bsplineSurface)
                 return bsplineSurface.ToRhino();
@@ -876,6 +876,7 @@ namespace EPFL.GrasshopperTopSolid
 
         }
 
+        /*
         public static Rhino.Geometry.Surface ToRhino(this ConeSurface coneSurface)
         {
             return coneSurface.ToRhino(1.0);
@@ -888,7 +889,7 @@ namespace EPFL.GrasshopperTopSolid
             Rhino.Geometry.Cone cone = new Cone(plane, height * scaleFactor, coneSurface.Radius * scaleFactor);
             return NurbsSurface.CreateFromCone(cone);
         }
-
+        */
 
         public static Rhino.Geometry.Surface ToRhino(this G.D3.Surfaces.ExtrudedSurface extrudedSurface)
         {
@@ -929,12 +930,29 @@ namespace EPFL.GrasshopperTopSolid
             //bool knotU = uDegree + uCount - 1 == bsplineSurface.UBs.Count - 2;
             //bool knotV = vDegree + vCount - 1 == bsplineSurface.VBs.Count - 2;
 
-            //add the knots + Adjusting to Rhino removing the 2 extra knots (Superfluous)
-            for (int u = 1; u < (bsplineSurface.UBs.Count - 1); u++)
-                rhinoSurface.KnotsU[u - 1] = bsplineSurface.UBs[u];
-            for (int v = 1; v < (bsplineSurface.VBs.Count - 1); v++)
-                rhinoSurface.KnotsV[v - 1] = bsplineSurface.VBs[v];
+            if (bsplineSurface.IsUPeriodic)
+            {
+                for (int u = 0; u < (bsplineSurface.UBs.Count); u++)
+                    rhinoSurface.KnotsU[u] = bsplineSurface.UBs[u];
+            }
+            else
+            {
+                for (int u = 1; u < (bsplineSurface.UBs.Count - 1); u++)
+                    rhinoSurface.KnotsU[u - 1] = bsplineSurface.UBs[u];
+            }
 
+            if (bsplineSurface.IsVPeriodic)
+            {
+
+                for (int v = 0; v < (bsplineSurface.VBs.Count); v++)
+                    rhinoSurface.KnotsV[v] = bsplineSurface.VBs[v];
+                
+            }
+            else
+            {
+                for (int v = 1; v < (bsplineSurface.VBs.Count - 1); v++)
+                    rhinoSurface.KnotsV[v - 1] = bsplineSurface.VBs[v];
+            }
             double weight = 1;
             bool CwtsNotEmpty = bsplineSurface.CWts != null && !bsplineSurface.CWts.IsEmpty;
 

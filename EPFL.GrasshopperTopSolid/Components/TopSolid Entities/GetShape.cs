@@ -47,6 +47,11 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
             string _name = "";
             if (!DA.GetData("Name", ref _name)) return;
             DesignDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
+            if (document == null)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "couldn't find current document in TopSolid");
+                return;
+            }
             List<Brep> list = new List<Brep>();
 
             ShapeEntity entity = document.RootEntity.SearchDeepEntity(_name) as ShapeEntity;

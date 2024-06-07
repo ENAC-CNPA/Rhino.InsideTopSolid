@@ -142,7 +142,7 @@ namespace EPFL.GrasshopperTopSolid.Components
             DA.GetData("Bake?", ref run);
             DA.GetData("Name", ref name);
 
-            GetPartdocument(DA);
+            GetInputPartdocument(DA);
 
             if (run == true)
             {
@@ -263,13 +263,13 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                     EntitiesCreation entitiesCreation = new EntitiesCreation(doc, 0);
                     FacetedShapeMaker maker = new FacetedShapeMaker(TK.SX.Version.Current);
-                        bool ok = false;
+                    bool ok = false;
                     if (rhinoMesh.Faces.ConvertQuadsToTriangles())
                     {
                         ItemOperationKey opKey = new ItemOperationKey(entitiesCreation.Id);
                         ShapesFolderEntity folder = doc.ShapesFolderEntity;
 
-                        
+
                         TrianglesFacetedShapeMaker shapeMaker = new TrianglesFacetedShapeMaker(TK.SX.Version.Current);
                         shapeMaker.DistancePrecision = TK.G.Precision.LinearPrecision;
                         shapeMaker.PlanarAngularPrecision = TK.G.Precision.LinearPrecision;
@@ -279,11 +279,11 @@ namespace EPFL.GrasshopperTopSolid.Components
                         //    shapeMaker.FindFaces = this.FindsFaces;
                         //else
                         //    shapeMaker.FindFaces = false;
-                        
+
                         shapeMaker.AngularPrecision = Rhino.RhinoDoc.ActiveDoc.ModelAngleToleranceDegrees;
                         //shapeMaker.FillsHoles = this.FillsHoles;
 
-                        for (int j=0; j < rhinoMesh.Faces.Count; j++)
+                        for (int j = 0; j < rhinoMesh.Faces.Count; j++)
                         {
                             var triangle = rhinoMesh.Faces[j];
                             shapeMaker.AddTriangle(rhinoMesh.Vertices[triangle.A].ToHost(), rhinoMesh.Vertices[triangle.B].ToHost(), rhinoMesh.Vertices[triangle.C].ToHost());
@@ -314,9 +314,9 @@ namespace EPFL.GrasshopperTopSolid.Components
 
                             ok = true;
                         }
-                           
-                        
-                        
+
+
+
                         if (!ok)
                         {
                             //polyhedron
@@ -382,7 +382,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// </summary>
         /// <param name="dA"></param>
         /// <exception cref="NotImplementedException"></exception>
-        private void GetPartdocument(IGH_DataAccess DA)
+        private void GetInputPartdocument(IGH_DataAccess DA)
         {
             GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
             IDocument res = null;
