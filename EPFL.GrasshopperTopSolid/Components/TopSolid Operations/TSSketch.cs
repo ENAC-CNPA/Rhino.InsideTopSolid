@@ -159,6 +159,34 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Operations
 
                 }
 
+                else
+                {
+                    TopSolid.Kernel.G.D3.Sketches.Planar.PlanarSketch plSketch = maker.NewSolvingOperation.ChildEntity.Geometry;
+                    ItemOperationKey key = new ItemOperationKey(maker.NewSolvingOperation.Id);
+                    var svex = plSketch.AddProfile(key, false,rc.ToHost2d().MakeGeometricProfile(ItemMoniker.Empty));
+                    //var abssvex = svex;
+                    //List<TopSolid.Kernel.G.D2.Sketches.Segment> listseg = new List<TopSolid.Kernel.G.D2.Sketches.Segment>();
+                    TopSolid.Kernel.G.D2.Sketches.SegmentList seglist = new TopSolid.Kernel.G.D2.Sketches.SegmentList();
+                    //int count = 0;
+                    //var dup = rc.DuplicateSegments();
+                    //foreach (var seg in dup)
+                    //{
+                    //    var evex = plSketch.AddVertex(key, seg.PointAtEnd.ToHost2d());
+                    //    if (count == dup.Length - 1)
+                    //        evex = abssvex;
+
+                    //    Line line = new Line(seg.PointAtStart, seg.PointAtEnd);
+                    //    var segm = plSketch.AddSegment(key, svex, evex, new TopSolid.Kernel.G.D2.Curves.LineCurve(svex.Geometry, evex.Geometry), false);
+
+                    //    svex = evex;
+
+                    //    seglist.Add(segm);
+                    //    count++;
+                    //}
+
+                    //plSketch.AddProfile(key, seglist);
+                }
+
                 maker.NewSolvingOperation.Update();
                 ops.Add(maker.NewSolvingOperation.Id);
 

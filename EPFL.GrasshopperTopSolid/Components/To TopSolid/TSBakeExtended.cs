@@ -36,6 +36,8 @@ using TopSolid.Kernel.G.D3.Shapes.FacetShapes;
 using TopSolid.Kernel.SX.IO;
 using TopSolid.Kernel.TX.Items;
 using TopSolid.Kernel.WX;
+using TopSolid.Kernel.DB.D3.Profiles.Operations;
+using TopSolid.Kernel.G.D2.Curves;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -230,12 +232,16 @@ namespace EPFL.GrasshopperTopSolid.Components
                 }
                 else if (geo is GH_Curve gc)
                 {
-                    Curve rhinoCurve = null;
+                    EntitiesCreation creation = new EntitiesCreation(doc, 0);
+                    Rhino.Geometry.Curve rhinoCurve = null;
                     GH_Convert.ToCurve(gc, ref rhinoCurve, 0);
                     TK.G.D3.Curves.Curve topSolidCurve = rhinoCurve.ToHost();
-                    CurveEntity curveEntity = new CurveEntity(doc, 0);
-                    curveEntity.Geometry = topSolidCurve;
-                    curveEntity.Create(ProfilesFolderEntity.GetOrCreateFolder(doc));
+                    TopSolid.Kernel.DB.D3.Profiles.ProfileEntity profileEntity = new TopSolid.Kernel.DB.D3.Profiles.ProfileEntity(doc, 0);
+                    profileEntity.Geometry = new TopSolid.Kernel.G.D3.Curves.GeometricProfile(topSolidCurve.MakeGeometricProfile(ItemMoniker.Empty));
+                    creation.AddChildEntity(profileEntity);
+                    creation.Create();
+                    ProfilesFolderEntity.GetOrCreateFolder(doc).AddEntity(profileEntity);
+                    //curveEntity.Create(ProfilesFolderEntity.GetOrCreateFolder(doc));
                     //list.Add(ce);
                 }
                 else if (geo is GH_Surface gs)

@@ -3,6 +3,7 @@ using System;
 using TopSolid.Kernel.DB.D3.Documents;
 using TopSolid.Kernel.DB.Entities;
 using TopSolid.Kernel.DB.Parameters;
+using TopSolid.Kernel.SX;
 
 namespace EPFL.GrasshopperTopSolid.Components
 {
@@ -25,6 +26,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         {
             pManager.AddTextParameter("Name", "N", "Name of the Parameter to Get", GH_ParamAccess.item);
             pManager.AddGenericParameter("Value", "V", "Value to feed", GH_ParamAccess.item);
+            Params.Input[1].Optional = true;
         }
 
         /// <summary>
@@ -32,6 +34,7 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
+            pManager.AddGenericParameter("Value", "V", "Parameter Value", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -43,69 +46,59 @@ namespace EPFL.GrasshopperTopSolid.Components
             string name = "";
             DA.GetData(0, ref name);
             GeometricDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as GeometricDocument;
-            Entity entity = document.RootEntity.SearchDeepEntity(name);
+            ParameterEntity parameterEntity = document.RootEntity.SearchDeepEntity(name) as ParameterEntity;
+            Grasshopper.Kernel.Types.GH_ObjectWrapper obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
+            
 
-            if (entity == null)
+            if (parameterEntity == null)
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No entity was found");
-            else
+            else 
             {
+                DA.GetData(1, ref obj);
                 TopSolid.Kernel.TX.Undo.UndoSequence.UndoCurrent();
                 TopSolid.Kernel.TX.Undo.UndoSequence.Start("intparam", true);
-                Grasshopper.Kernel.Types.GH_ObjectWrapper _obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
-                DA.GetData(1, ref _obj);
-                switch (entity.GetType().ToString())
+                
+                if (parameterEntity is TextParameterEntity textparam)
                 {
-                    case "TopSolid.Kernel.DB.Parameters.TextParameterEntity":
-                        var _textParam = entity as TextParameterEntity;
-                        string _string = "";
-                        if (GH_Convert.ToString(_obj.Value, out _string, GH_Conversion.Both))
-                            _textParam.Value = _string;
-                        else
-                            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "input format not string");
-                        break;
-
-                    case "TopSolid.Kernel.DB.Parameters.BooleanParameterEntity":
-                        var _boolParam = entity as BooleanParameterEntity;
-                        bool _bool = true;
-                        if (GH_Convert.ToBoolean(_obj.Value, out _bool, GH_Conversion.Both))
-                            _boolParam.Value = _bool;
-                        else
-                            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "input format not bool");
-                        break;
-
-                    case "TopSolid.Kernel.DB.Parameters.RealParameterEntity":
-                        var _realParam = entity as RealParameterEntity;
-                        double _double = 0.0;
-                        if (GH_Convert.ToDouble(_obj.Value, out _double, GH_Conversion.Both))
-                            _realParam.Value = _double;
-                        else
-                            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "input format not float");
-                        break;
-
-                    case "TopSolid.Kernel.DB.Parameters.IntegerParameterEntity":
-                        IntegerParameterEntity _intParam = entity as IntegerParameterEntity;
-                        int _int = 0;
-                        if (GH_Convert.ToInt32(_obj.Value, out _int, GH_Conversion.Both))
-                            _intParam.Value = _int;
-                        else
-                            AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "input format not integer");
-                        break;
-
-                    default:
-                        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Parameter Type not Supported");
-                        return;
+                    textparam.Value = obj.Value.ToString();
+                    DA.SetData(0, textparam.Value);
                 }
+                else if (parameterEntity is BooleanParameterEntity boolparam)
+                {
+                    if (GH_Convert.ToBoolean(obj.Value, out bool value, GH_Conversion.Both))
+                    {
+                        boolparam.Value = value;
+                        DA.SetData(0, boolparam.Value);
+                    }
+
+                }
+
+                else if (parameterEntity is RealParameterEntity realparam)
+                {
+                    if (GH_Convert.ToDouble(obj.Value, out double value, GH_Conversion.Both))
+                    {
+                        realparam.Value = value;
+                        DA.SetData(0, realparam.Value);
+                    }
+                }
+                else if (parameterEntity is IntegerParameterEntity integerParameter)
+                {
+                    if (GH_Convert.ToInt32(obj.Value, out int value, GH_Conversion.Both))
+                    {
+                        integerParameter.Value = value;
+                        DA.SetData(0, integerParameter.Value);
+                    }
+                }
+                else
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Parameter Type not Supported");                    
+                }
+
                 TopSolid.Kernel.UI.Application.Update();
                 TopSolid.Kernel.TX.Undo.UndoSequence.End();
-
             }
 
-
-
-
-
-
-
+            
         }
 
         /// <summary>
@@ -122,9 +115,9 @@ namespace EPFL.GrasshopperTopSolid.Components
         /// <summary>
         /// Gets the unique ID for this component. Do not change this ID after release.
         /// </summary>
-        public override Guid ComponentGuid
+        public override System.Guid ComponentGuid
         {
-            get { return new Guid("5569f147-3d74-443f-a9ba-1b04bf47287f"); }
+            get { return new System.Guid("5569f147-3d74-443f-a9ba-1b04bf47287f"); }
         }
     }
 }
