@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\..\..\Sources\TopSolid 7.17\Debug x64\</OutputPath>
+    <OutputPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -31,7 +31,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\..\..\Program Files\TOPSOLID\TopSolid 7.17\bin\</OutputPath>
+    <OutputPath>..\..\..\..\..\..\Program Files\TOPSOLID\TopSolid 7.18\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>0</WarningLevel>
@@ -171,8 +171,9 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-    <Reference Include="TopSolid.Kernel.SX.XmlSerializers">
-      <Private>False</Private>
+    <Reference Include="TopSolid.Kernel.SX.NetStandard, Version=7.18.400.160, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\TopSolid.Kernel.SX.NetStandard.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.TX">
       <SpecificVersion>False</SpecificVersion>
@@ -180,6 +181,10 @@
     </Reference>
     <Reference Include="TopSolid.Kernel.TX.Formulas">
       <Private>False</Private>
+    </Reference>
+    <Reference Include="TopSolid.Kernel.TX.NetStandard, Version=7.18.400.160, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\TopSolid.Kernel.TX.NetStandard.dll</HintPath>
     </Reference>
     <Reference Include="TopSolid.Kernel.TX.OpenPackageCreator">
       <Private>False</Private>

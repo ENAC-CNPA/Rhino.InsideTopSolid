@@ -3,6 +3,6 @@
 	<AddInAssemblyName>EPFL.RhinoInsideTopSolid.AddIn</AddInAssemblyName>
 	<AddInClassName>EPFL.RhinoInsideTopSolid.AddIn.AddIn</AddInClassName>
 	<AddInGuid>62b69852-5ad7-4ae1-9470-b7cac5cef940</AddInGuid>
-	<TopSolidVersion>7.17</TopSolidVersion>
+	<TopSolidVersion>7.18</TopSolidVersion>
 	<Certificate>FtKlMh7cWe6D06vMZx8WaEpdZyLIHD/IwvH+ga8TcR1Nq8ti747Tdh1kuZ3lzL0zavEaQLmMdfjyYTjnrcjpzhQsKo7k/DgT1KLK5RZ69DqLWNc+jHxErHqGZot0ugxa8XHMT69V0LYJA6QiM5C1HgY943W6tiK6JrsytWxeypZBvNMmT34Ktzxqb4soEUQt+/KNLbHHXA1pgohcHpVjPXVD04HfXK/JSwL8pWilK5JLY/HbFy2eJoeSrwG/l3bpoyInZZfkpEQ41CibPr9UiSgNMXEdv5HtsGgDCqQPBXZrJoX/0rJPmpVRprIAWw7RjUcSlYM2NhbvXPmWK8XOUQ==</Certificate>
 </TopSolidAddInCertificate>
