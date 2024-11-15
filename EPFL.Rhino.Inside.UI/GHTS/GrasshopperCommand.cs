@@ -20,6 +20,7 @@ using System.Reflection;
 using TopSolid.Kernel.DB.D3.Modeling.Documents;
 using tsPrec = TopSolid.Kernel.G.Precision;
 using TopSolid.Kernel.TX.Formulas.Scripting;
+using TopSolid.Kernel.TX.Pdm.Globalization;
 
 
 namespace EPFL.RhinoInsideTopSolid.UI.GHTS
@@ -82,7 +83,7 @@ namespace EPFL.RhinoInsideTopSolid.UI.GHTS
             RhinoDoc doc = RhinoDoc.ActiveDoc;
             if (doc != null)
                 doc.ModelUnitSystem = UnitSystem.Meters;
-
+            System.Threading.Thread.CurrentThread.CurrentCulture = Rhinoceros.culture;
             TopSolid.Kernel.SX.UI.Application.IsMouseWheelInterceptedByGraphics = false;
 
 

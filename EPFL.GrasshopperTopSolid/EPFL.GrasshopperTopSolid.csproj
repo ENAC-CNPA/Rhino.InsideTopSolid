@@ -36,6 +36,45 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Reference Include="Cirtes.Strato.Cad.AddIn">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cad.AddIn.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cad.DB">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cad.DB.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cad.G">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cad.G.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cad.SX">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cad.SX.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cad.TX">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cad.TX.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cad.UI">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cad.UI.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cam.AddIn">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cam.AddIn.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cam.DB">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cam.DB.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cam.G">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cam.G.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cam.SubAddin">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cam.SubAddin.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cam.SX">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cam.SX.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cam.TX">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cam.TX.dll</HintPath>
+		</Reference>
+		<Reference Include="Cirtes.Strato.Cam.UI">
+		  <HintPath>..\..\..\..\..\..\Sources\TopSolid 7.18\Debug x64\Cirtes.Strato.Cam.UI.dll</HintPath>
+		</Reference>
 		<Reference Include="System.Windows.Forms" />
 		<Reference Include="TopSolid.Cad.Design.DB">
 			<HintPath>..\..\..\..\..\..\Sources\Topsolid 7.18\Debug x64\TopSolid.Cad.Design.DB.dll</HintPath>

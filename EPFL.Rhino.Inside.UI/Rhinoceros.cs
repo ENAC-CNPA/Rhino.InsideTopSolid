@@ -13,6 +13,7 @@ using Grasshopper;
 using Grasshopper.GUI.Canvas;
 using System.IO;
 using EPFL.RhinoInsideTopSolid.UI.GHTS;
+using System.Globalization;
 
 namespace EPFL.RhinoInsideTopSolid.UI
 {
@@ -20,12 +21,14 @@ namespace EPFL.RhinoInsideTopSolid.UI
     {
         static public RhinoCore rhinoCore;
         internal static WindowHandle MainWindow = WindowHandle.Zero;
+        public static CultureInfo culture;
         public static bool RhinoStartup()
         {
             //Method that works !!
             if (rhinoCore == null)
             {
-                var culture = System.Globalization.CultureInfo.CurrentCulture;
+                culture = TopSolid.Kernel.UI.Application.CurrentDocument.CurrentCulture;
+                //var culture = System.Globalization.CultureInfo.CurrentCulture;
                 try
                 {
                     rhinoCore = new Rhino.Runtime.InProcess.RhinoCore(new string[] { "/NOSPLASH", $"/language={culture.LCID}" }, WindowStyle.Hidden);
