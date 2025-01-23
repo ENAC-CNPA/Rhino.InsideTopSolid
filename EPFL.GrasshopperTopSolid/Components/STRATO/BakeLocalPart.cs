@@ -24,12 +24,12 @@ using TK = TopSolid.Kernel;
 
 namespace EPFL.GrasshopperTopSolid.Components.Preview
 {
-    public class BakeLocalPart : GH_Component
+    public class BakeLocalPartStrato : GH_Component
     {
         /// <summary>
         /// Initializes a new instance of the TSLocalPart class.
         /// </summary>
-        public BakeLocalPart()
+        public BakeLocalPartStrato()
           : base("BakeLocalPart", "LP",
               "Bakes Rhino Geometry into Local Part inserted in Assembly",
               "TopSolid", "To TopSolid")
@@ -71,6 +71,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
             pManager[1].Optional = true;
             pManager.AddTextParameter("Name", "Name", "Name for Local Part Document", GH_ParamAccess.item);
             pManager[2].Optional = true;
+            pManager.AddVectorParameter("Vector", "V", "Vector to TS Axis ", GH_ParamAccess.item);
+            pManager[3].Optional = true;
             pManager.AddGenericParameter("TopSolid Attributes", "attributes", "TopSolid's attributes for the created entities", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Bake?", "b?", "Set true to bake", GH_ParamAccess.item);
         }
@@ -124,6 +126,13 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
                 Shape topSolidShape = brep.ToHost();
 
                 SetTopSolidEntity(topSolidAttributes, shapeEntity, topSolidShape);
+
+                GH_Vector ghVector = new GH_Vector();
+                if (DA.GetData("Vector", ref ghVector))
+                {
+
+
+                }
 
                 entities.Add(shapeEntity);
                 PartEntity partEntity = CreateLocalPart(assemblyDocument, entities, name.Value);
