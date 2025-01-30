@@ -22,7 +22,7 @@ using TopSolid.Kernel.TX.Undo;
 using TopSolid.Kernel.TX.Units;
 using TK = TopSolid.Kernel;
 
-namespace EPFL.GrasshopperTopSolid.Components.Preview
+namespace EPFL.GrasshopperTopSolid.Components.STRATO
 {
     public class BakeLocalPartStrato : GH_Component
     {
