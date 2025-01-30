@@ -30,9 +30,9 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         /// Initializes a new instance of the TSLocalPart class.
         /// </summary>
         public BakeLocalPartStrato()
-          : base("BakeLocalPart", "LP",
+          : base("BakeLocalPartStrato", "LPStrato",
               "Bakes Rhino Geometry into Local Part inserted in Assembly",
-              "TopSolid", "To TopSolid")
+              "TopSolid", "Strato")
         {
         }
 
@@ -71,7 +71,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
             pManager[1].Optional = true;
             pManager.AddTextParameter("Name", "Name", "Name for Local Part Document", GH_ParamAccess.item);
             pManager[2].Optional = true;
-            pManager.AddVectorParameter("Vector", "V", "Vector to TS Axis ", GH_ParamAccess.item);
+            pManager.AddLineParameter("Line", "V", "Line to TS Axis ", GH_ParamAccess.item);
             pManager[3].Optional = true;
             pManager.AddGenericParameter("TopSolid Attributes", "attributes", "TopSolid's attributes for the created entities", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Bake?", "b?", "Set true to bake", GH_ParamAccess.item);
@@ -127,9 +127,17 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
 
                 SetTopSolidEntity(topSolidAttributes, shapeEntity, topSolidShape);
 
-                GH_Vector ghVector = new GH_Vector();
-                if (DA.GetData("Vector", ref ghVector))
+                GH_Line ghLine = new GH_Line();
+                if (DA.GetData("Line", ref ghLine))
                 {
+                    Rhino.Geometry.Line rhinoLine = new Line();
+                    GH_Convert.ToLine(ghLine, ref rhinoLine, GH_Conversion.Both);
+                    Rhino.Geometry.LineCurve rhinoLineCurve = new LineCurve(rhinoLine);
+
+
+                    TK.DB.D3.Axes.AxisEntity axisEntity = new TK.DB.D3.Axes.AxisEntity(assemblyDocument, 0);
+                    axisEntity.Geometry = new TK.G.D3.Axis(rhinoLineCurve.PointAtStart.ToHost(), rhinoLineCurve.PointAtEnd.ToHost());
+                    entities.Add(axisEntity);
 
 
                 }
@@ -174,7 +182,8 @@ namespace EPFL.GrasshopperTopSolid.Components.Preview
         /// </summary>
         public override Guid ComponentGuid
         {
-            get { return new Guid("56F50B6F-7470-450E-9414-060CCC13851F"); }
+            get { return new Guid("DA763CED-325B-48FA-B8AE-606A6865F23D"); }
+
         }
 
 
