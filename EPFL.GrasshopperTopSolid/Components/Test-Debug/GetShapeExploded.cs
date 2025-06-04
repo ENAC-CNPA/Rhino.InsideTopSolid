@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cirtes.Strato.Cad.DB.Documents;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
+using TopSolid.Cad.Design.DB;
 using TopSolid.Cad.Design.DB.Documents;
 using TopSolid.Kernel.DB.D3.Shapes;
 
@@ -46,6 +48,27 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
             if (!DA.GetData("Name", ref _name)) return;
             DesignDocument document = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
             List<Brep> list = new List<Brep>();
+            var ent = document.RootEntity.SearchDeepEntity(_name);
+
+            if (ent is null && document is SlicePartsDocument slicePartsDocument)
+            {
+                ent = slicePartsDocument.PartsFolderEntity.DeepParts.Where(
+                    x => x.Name == _name || x.LocalizedName == _name || x.EditingName == _name).FirstOrDefault();
+                if (ent is PartEntity partEntity)
+                {
+                    int count = 0;
+                    List<Brep> listOfBrep = new List<Brep>();
+                    foreach (var face in partEntity.CurrentRepresentationConstituents.OfType<ShapeEntity>().FirstOrDefault()
+                        .Geometry.Faces)
+                    {
+                        listOfBrep.Add(face.FaceToBrep());
+                        count++;
+                    }
+                    DA.SetDataList("RhinoBrep", partEntity.CurrentRepresentationConstituents.OfType<ShapeEntity>().FirstOrDefault()
+                        .Geometry.Faces.Select(x => x.FaceToBrep()));
+                    return;
+                }
+            }
 
             ShapeEntity entity = document.RootEntity.SearchDeepEntity(_name) as ShapeEntity;
             if (entity is null)
@@ -53,10 +76,9 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"no valid shapes found");
                 return;
             }
-            else
-            {
-                DA.SetDataList("RhinoBrep", entity.Geometry.Faces.Select(x => x.FaceToBrep()));
-            }
+
+            DA.SetDataList("RhinoBrep", entity.Geometry.Faces.Select(x => x.FaceToBrep()));
+
 
         }
 

@@ -946,7 +946,7 @@ namespace EPFL.GrasshopperTopSolid
 
                 for (int v = 0; v < (bsplineSurface.VBs.Count); v++)
                     rhinoSurface.KnotsV[v] = bsplineSurface.VBs[v];
-                
+
             }
             else
             {
@@ -966,8 +966,8 @@ namespace EPFL.GrasshopperTopSolid
                     rhinoSurface.Points.SetPoint(u, v, control_points[u, v], weight);
                 }
             }
-            //string log = "";
-            //rhinoSurface.IsValidWithLog(out log);
+            string log = "";
+            rhinoSurface.IsValidWithLog(out log);
             return rhinoSurface;
         }
 
