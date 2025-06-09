@@ -15,7 +15,7 @@ static class GetTopSolidDocument
     {
         IDocument res = null;
         DesignDocument designDocument = null;
-        TestifStrato(wrapper, designDocument);
+        //TestifStrato(wrapper, designDocument);
         if (designDocument != null) return designDocument;
 
         if (wrapper.Value is string || wrapper.Value is GH_String)
@@ -36,7 +36,7 @@ static class GetTopSolidDocument
 
     private static void TestifStrato(GH_ObjectWrapper wrapper, DesignDocument designDocument)
     {
-        designDocument = GetTopSolidDocumentStrato.GetSliceDocument(wrapper);
+        //designDocument = GetTopSolidDocumentStrato.GetSliceDocument(wrapper);
 
     }
 }
