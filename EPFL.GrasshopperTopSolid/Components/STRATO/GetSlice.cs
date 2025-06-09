@@ -71,7 +71,7 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
             }
 
 
-            slicePartsDocument = GetTopSolidDocument.GetSliceDocument(wrapper);
+            slicePartsDocument = GetTopSolidDocumentStrato.GetSliceDocument(wrapper);
 
             ZonesFolderEntity zonesFolderEntity = ZonesFolderEntity.GetFolder(slicePartsDocument);
             if (zonesFolderEntity is null)

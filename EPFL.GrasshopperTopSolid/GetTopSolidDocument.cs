@@ -1,30 +1,32 @@
 ﻿
-using Cirtes.Strato.Cad.DB.Documents;
+
 using Grasshopper.Kernel.Types;
 using System.Linq;
+using TopSolid.Cad.Design.DB.Documents;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Pdm;
 
 static class GetTopSolidDocument
 {
-    public static SlicePartsDocument GetSliceDocument(GH_ObjectWrapper wrapper)
+
+    public static DesignDocument GetDesignDocument(GH_ObjectWrapper wrapper)
     {
         IDocument res = null;
-        SlicePartsDocument slicePartsDocument = null;
+        DesignDocument designDocument = null;
         if (wrapper.Value is string || wrapper.Value is GH_String)
         {
             res = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault();
-            slicePartsDocument = res as SlicePartsDocument;
+            designDocument = res as DesignDocument;
         }
         else if (wrapper.Value is IDocumentItem)
-            slicePartsDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as SlicePartsDocument;
+            designDocument = (wrapper.Value as IDocumentItem).OpenLastValidMinorRevisionDocument() as DesignDocument;
         else if (wrapper.Value is IDocument)
-            slicePartsDocument = wrapper.Value as SlicePartsDocument;
+            designDocument = wrapper.Value as DesignDocument;
 
-        if (slicePartsDocument is null)
-            slicePartsDocument = TopSolid.Kernel.UI.Application.CurrentDocument as SlicePartsDocument;
+        if (designDocument is null)
+            designDocument = TopSolid.Kernel.UI.Application.CurrentDocument as DesignDocument;
 
-        return slicePartsDocument;
+        return designDocument;
     }
 
 }

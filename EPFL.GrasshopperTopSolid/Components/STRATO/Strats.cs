@@ -67,7 +67,7 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
 
             if (DA.GetData("Document", ref wrapper))
             {
-                SlicePartsDocument = GetTopSolidDocument.GetSliceDocument(wrapper);
+                SlicePartsDocument = GetTopSolidDocumentStrato.GetSliceDocument(wrapper);
             }
 
             if (SlicePartsDocument is null)
