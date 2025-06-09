@@ -16,6 +16,8 @@ using TopSolid.Cad.Design.DB;
 using TopSolid.Cad.Design.DB.Documents;
 using TopSolid.Kernel.DB.D3.Shapes;
 using TopSolid.Kernel.DB.Entities;
+using TopSolid.Kernel.G.D3;
+using TopSolid.Kernel.SX.Collections.Generic;
 using TopSolid.Kernel.TX.Documents;
 using TopSolid.Kernel.TX.Pdm;
 using TopSolid.Kernel.UI.D3.Shapes.Controls;
@@ -90,7 +92,8 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
             }
 
             //look for targetentities, puis 
-            GH_Structure<IGH_Goo> gh_Structure = new GH_Structure<IGH_Goo>();
+            GH_Structure<IGH_Goo> gh_Structure_geometries = new GH_Structure<IGH_Goo>();
+            GH_Structure<IGH_Goo> gh_Structure_heights = new GH_Structure<IGH_Goo>();
             //DataTree<object> dataTree = new DataTree<object>();
 
             GH_Path gh_Path;
@@ -98,6 +101,7 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
             // List<IGH_GeometricGoo> geometries = new List<IGH_GeometricGoo>();
             //PartEntity partEntity;
             TopSolid.Kernel.SX.Collections.Generic.List<ShapeEntity> shapeEntities = new TopSolid.Kernel.SX.Collections.Generic.List<ShapeEntity>();
+            SliceOperation sliceOperation = null;
 
             foreach (ZoneSetDefinitionEntity zone in zonesFolderEntity.Constituents)
             {
@@ -106,9 +110,10 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
                     b = 0;
                     if (entity is SliceSetDefinitionEntity sliceSetDefinitionEntity)
                     {
+                        var slices = sliceSetDefinitionEntity.DeepTargets.OfType<PartEntity>();
                         foreach (PartEntity partEntity in sliceSetDefinitionEntity.DeepTargets.OfType<PartEntity>())
                         {
-
+                            shapeEntities.Clear();
                             if (partEntity == null) continue;
                             if (!partEntity.IsAlive) continue;
 
@@ -116,8 +121,29 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
 
 
                             gh_Path = new GH_Path(a, b);
-                            gh_Structure.AppendRange(shapeEntities.Select(se => new GH_Brep(se.Geometry.ToRhino().FirstOrDefault())), gh_Path);
+                            gh_Structure_geometries.AppendRange(shapeEntities.Select(se => new GH_Brep(se.Geometry.ToRhino().FirstOrDefault())), gh_Path);
                             //geometries.Clear();
+
+
+                            foreach (SliceOperation operation in SlicePartsDocument.SlicingStageOperation.Operations.OfType<SliceOperation>())
+                            {
+                                SliceManagementOperation managementOperation = operation.Operations.OfType<SliceManagementOperation>().FirstOrDefault();
+                                if (managementOperation == null) continue;
+                                if (managementOperation.Set == zone)
+                                {
+                                    sliceOperation = operation;
+                                    TopSolid.Kernel.SX.Collections.Generic.List<PartEntity> partEntities
+                                            = new TopSolid.Kernel.SX.Collections.Generic.List<PartEntity> { partEntity };
+
+                                    Frame slicingFrame = managementOperation.SlicingAxis.Geometry.MakeFrame();
+                                    SliceManagementOperation.MakeTopAndBottomPlanes(partEntities, slicingFrame, out _, out _, out double height);
+                                    gh_Structure_heights.AppendRange(new System.Collections.Generic.List<GH_Number> { new GH_Number(height) }, gh_Path);
+
+                                    break;
+
+                                }
+                            }
+
                         }
                         b++;
 
@@ -132,7 +158,8 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
                 a++;
             }
 
-            DA.SetDataTree(0, gh_Structure);
+            DA.SetDataTree(0, gh_Structure_geometries);
+            DA.SetDataTree(1, gh_Structure_heights);
             //DA.SetDataList("Thicknesses", SlicePartsDocument.CutsFolderEntity.DeepCuts.Select(x=>x.)
         }
 

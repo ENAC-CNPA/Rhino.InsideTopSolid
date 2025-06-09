@@ -1,6 +1,8 @@
 ﻿
 
+using EPFL.GrasshopperTopSolid;
 using Grasshopper.Kernel.Types;
+using System;
 using System.Linq;
 using TopSolid.Cad.Design.DB.Documents;
 using TopSolid.Kernel.TX.Documents;
@@ -13,6 +15,9 @@ static class GetTopSolidDocument
     {
         IDocument res = null;
         DesignDocument designDocument = null;
+        TestifStrato(wrapper, designDocument);
+        if (designDocument != null) return designDocument;
+
         if (wrapper.Value is string || wrapper.Value is GH_String)
         {
             res = DocumentStore.Documents.Where(x => x.Name.ToString() == wrapper.Value.ToString()).FirstOrDefault();
@@ -29,4 +34,9 @@ static class GetTopSolidDocument
         return designDocument;
     }
 
+    private static void TestifStrato(GH_ObjectWrapper wrapper, DesignDocument designDocument)
+    {
+        designDocument = GetTopSolidDocumentStrato.GetSliceDocument(wrapper);
+
+    }
 }

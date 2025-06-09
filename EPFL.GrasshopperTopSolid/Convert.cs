@@ -967,7 +967,7 @@ namespace EPFL.GrasshopperTopSolid
                 }
             }
             string log = "";
-            rhinoSurface.IsValidWithLog(out log);
+            var valid = rhinoSurface.IsValidWithLog(out log);
             return rhinoSurface;
         }
 
