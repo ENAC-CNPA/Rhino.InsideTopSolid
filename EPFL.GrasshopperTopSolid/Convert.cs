@@ -932,9 +932,14 @@ namespace EPFL.GrasshopperTopSolid
 
             if (bsplineSurface.IsUPeriodic)
             {
+                //bool success = rhinoSurface.KnotsU.CreatePeriodicKnots(bsplineSurface.UBs[1] - bsplineSurface.UBs[0]);
+
+                Rhino.Geometry.Surface surface = NurbsSurface.CreatePeriodicSurface(rhinoSurface, 0, false);
                 for (int u = 0; u < (bsplineSurface.UBs.Count); u++)
                     rhinoSurface.KnotsU[u] = bsplineSurface.UBs[u];
             }
+
+
             else
             {
                 for (int u = 1; u < (bsplineSurface.UBs.Count - 1); u++)

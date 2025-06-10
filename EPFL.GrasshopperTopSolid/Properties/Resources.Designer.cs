@@ -63,6 +63,26 @@ namespace EPFL.GrasshopperTopSolid.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
+        internal static System.Drawing.Icon Cirtes_Strato_Cad_UI_Controls_Resources_AllSlices {
+            get {
+                object obj = ResourceManager.GetObject("Cirtes_Strato_Cad_UI_Controls_Resources_AllSlices", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon Cirtes_Strato_Cad_UI_Divisions_Slices_SliceCommand {
+            get {
+                object obj = ResourceManager.GetObject("Cirtes_Strato_Cad_UI_Divisions_Slices_SliceCommand", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
         internal static System.Drawing.Icon CoolingSketchBuildingOperation {
             get {
                 object obj = ResourceManager.GetObject("CoolingSketchBuildingOperation", resourceCulture);
@@ -203,6 +223,16 @@ namespace EPFL.GrasshopperTopSolid.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
+        internal static System.Drawing.Icon PointExportOptionsControl_Point {
+            get {
+                object obj = ResourceManager.GetObject("PointExportOptionsControl_Point", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
         internal static System.Drawing.Icon PreviewWindow_Visualize {
             get {
                 object obj = ResourceManager.GetObject("PreviewWindow_Visualize", resourceCulture);
@@ -216,6 +246,16 @@ namespace EPFL.GrasshopperTopSolid.Properties {
         internal static System.Drawing.Icon ProjectsManager_OpenProject {
             get {
                 object obj = ResourceManager.GetObject("ProjectsManager_OpenProject", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon Resources_ExpandAll {
+            get {
+                object obj = ResourceManager.GetObject("Resources_ExpandAll", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }

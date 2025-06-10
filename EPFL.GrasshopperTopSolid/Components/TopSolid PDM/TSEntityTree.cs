@@ -13,7 +13,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
 {
     public class TSEntityTree : GH_Component, IGH_VariableParameterComponent
     {
-        protected override System.Drawing.Bitmap Icon => new System.Drawing.Icon(Properties.Resources.Document, 24, 24).ToBitmap();
+        protected override System.Drawing.Bitmap Icon => new System.Drawing.Icon(Properties.Resources.Resources_ExpandAll, 24, 24).ToBitmap();
 
         /// <summary>
         /// Initializes a new instance of the TSEntityTree class.
@@ -85,9 +85,9 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
             Grasshopper.Kernel.Types.GH_ObjectWrapper obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
             DA.GetData(0, ref obj);
             IDocumentItem docitem = (IDocumentItem)obj.Value;
-            TopSolid.Kernel.DB.Documents.Document pDoc = (TopSolid.Kernel.DB.Documents.Document)docitem.OpenLastValidMinorRevisionDocument();
+            TopSolid.Kernel.DB.Documents.Document pDoc = (TopSolid.Kernel.DB.Documents.Document)
+                docitem.OpenLastValidMinorRevisionDocument();
 
-            ;
             foreach (var tsObj in pDoc.RootEntity.Constituents.Where(x => !x.IsGhost))
             {
                 DA.SetData(tsObj.EditingName, tsObj);

@@ -73,53 +73,56 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
                 return;
             }
 
-            GD3.Curves.Curve topSolidCurve;
             ProjectedPointCreation pointCreation = new ProjectedPointCreation(document, 0);
-            TopSolid.Kernel.DB.D3.Points.PointEntity pointEntity = null;
-            TopSolid.Kernel.DB.D3.Points.PointEntity projectedPointEntity = null;
 
             if (DA.GetData("Point", ref wrapper) && wrapper != null && wrapper.Value is PointEntity pEntity)
             {
-                pointEntity = pEntity;
-                pointCreation.Point = new BasicSmartPoint(pointEntity, pointEntity.Geometry);
+                GeometricProfile geometricProfile = null;
+
+                if (DA.GetData("Curve", ref wrapper) && wrapper != null)
+                {
+                    GD3.Point pointOnCurve = new GD3.Point();
+
+                    if (wrapper.Value is GeometricProfile)
+                    {
+                        geometricProfile = (GeometricProfile)wrapper.Value;
+                    }
+
+                    if (wrapper.Value is PlanarSketchEntity planarSketchEntity)
+                    {
+                        geometricProfile = planarSketchEntity.GetGeometricProfile() as GeometricProfile;
+                    }
+
+                    else if (wrapper.Value is ProfileEntity profileEntity)
+                    {
+                        geometricProfile = profileEntity.GetGeometricProfile() as GeometricProfile;
+                    }
+
+                    else if (wrapper.Value is DBD3.Sketches.PositionedSketchEntity sketchEntity)
+                    {
+                        geometricProfile = sketchEntity.GetGeometricProfile() as GeometricProfile;
+                    }
+
+                    if (geometricProfile is null)
+                    {
+                        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Couldn't set profile");
+                    }
+
+                    double param;
+                    pointOnCurve = geometricProfile.FindNearestPoint(pEntity.Geometry, out param);
+                    pEntity.Geometry = pointOnCurve;
+
+
+                    //catch (Exception ex)
+                    //{
+                    //    Console.WriteLine(ex);
+                    //    UndoSequence.Stop();
+                    //}
+
+                    DA.SetData(0, pEntity);
+                }
             }
 
-
-            if (DA.GetData("Curve", ref wrapper) && wrapper != null)
-            {
-                //AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"could not find sketch {_name}");
-                //return;
-                if (wrapper.Value is PlanarSketchEntity planarSketchEntity)
-                {
-                    pointCreation.Profile = new BasicSmartProfile(planarSketchEntity, planarSketchEntity.GetGeometricProfile() as GeometricProfile);
-                }
-
-                else if (wrapper.Value is ProfileEntity profileEntity)
-                {
-                    pointCreation.Profile = new BasicSmartProfile(profileEntity, profileEntity.GetGeometricProfile() as GeometricProfile);
-                }
-
-                else if (wrapper.Value is DBD3.Sketches.PositionedSketchEntity sketchEntity)
-                {
-                    pointCreation.Profile = new BasicSmartProfile(sketchEntity, sketchEntity.GetGeometricProfile());
-                }
-
-
-
-                pointCreation.Name = "projected" + pointEntity.Name;
-                try
-                {
-
-                    pointCreation.Create();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                    UndoSequence.Stop();
-                }
-
-                DA.SetData(0, pointCreation.ChildEntity);
-            }
 
 
 
@@ -132,18 +135,12 @@ namespace EPFL.GrasshopperTopSolid.Components.Geometry
             base.AfterSolveInstance();
         }
 
+
         /// <summary>
         /// Provides an Icon for the component.
         /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                //You can add image files to your project resources and access them like this:
-                // return Resources.IconForThisComponent;
-                return null;
-            }
-        }
+        protected override System.Drawing.Bitmap Icon => new System.Drawing.Icon(Properties.Resources.PointExportOptionsControl_Point, 24, 24).ToBitmap();
+
 
         /// <summary>
         /// Gets the unique ID for this component. Do not change this ID after release.

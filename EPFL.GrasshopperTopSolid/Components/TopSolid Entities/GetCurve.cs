@@ -98,7 +98,7 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_Entities
                     crvs.Add(crv);
                 }
                 var profiles = entity.Geometry.Profiles;
-                DA.SetData("TopSolidCurve", profiles);
+                DA.SetData("TopSolidCurve", profiles.FirstOrDefault().MakeGeometricProfile());
             }
 
 

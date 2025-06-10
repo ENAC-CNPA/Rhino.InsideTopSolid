@@ -12,7 +12,7 @@ using TopSolid.Kernel.DB.D3.Shapes;
 using Cirtes.Strato.Cad.DB.Divisions.Slices;
 using TopSolid.Kernel.G.D3.Shapes;
 
-namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
+namespace EPFL.GrasshopperTopSolid.Components.STRATO
 {
     public class GetSliceGeometryExploded : GH_Component
     {
@@ -32,7 +32,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
         /// <summary>
         /// Registers all the input parameters for this component.
         /// </summary>
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
             pManager.AddGenericParameter("StratoDocument", "doc", "TopSolid Strato Document", GH_ParamAccess.item);
             pManager[0].Optional = true;
@@ -43,7 +43,7 @@ namespace EPFL.GrasshopperTopSolid.Components.Test_Debug
         /// <summary>
         /// Registers all the output parameters for this component.
         /// </summary>
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
             pManager.AddGeometryParameter("geometry", "g", "slice rhino geometry", GH_ParamAccess.list);
         }
