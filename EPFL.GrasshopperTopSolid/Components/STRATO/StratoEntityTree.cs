@@ -40,19 +40,24 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
 
             Console.WriteLine("No iter has run");
             var x = Params.Input[0].VolatileData;
-            var tree = x as GH_Structure<GH_String>;
-            List<string> variablelistofNames = GetOutputList(tree);
-            foreach (var docName in variablelistofNames)
+
+            var tree = x as GH_Structure<IGH_Goo>;
+
+            if (tree != null)
             {
-                var newParam = CreateParameter(GH_ParameterSide.Output, Params.Output.Count) as Param_GenericObject;
-                newParam.Name = docName;
-                newParam.NickName = docName;
-                newParam.Description = $" {docName} Entities";
-                newParam.MutableNickName = false;
-                newParam.Access = GH_ParamAccess.list;
-                //newParam.Detachable = isDetached;
-                newParam.Optional = false;
-                Params.RegisterOutputParam(newParam);
+                List<string> variablelistofNames = GetOutputList(tree);
+                foreach (var docName in variablelistofNames)
+                {
+                    var newParam = CreateParameter(GH_ParameterSide.Output, Params.Output.Count) as Param_GenericObject;
+                    newParam.Name = docName;
+                    newParam.NickName = docName;
+                    newParam.Description = $" {docName} Entities";
+                    newParam.MutableNickName = false;
+                    newParam.Access = GH_ParamAccess.list;
+                    //newParam.Detachable = isDetached;
+                    newParam.Optional = false;
+                    Params.RegisterOutputParam(newParam);
+                }
             }
 
             //}
@@ -65,7 +70,7 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("Name", "N", "gets a Strato Document Tree", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Name", "N", "gets a Strato Document Tree", GH_ParamAccess.item);
         }
         SlicePartsDocument document;
         GH_ObjectWrapper wrapper = new GH_ObjectWrapper();
@@ -86,7 +91,12 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
         {
             Grasshopper.Kernel.Types.GH_ObjectWrapper obj = new Grasshopper.Kernel.Types.GH_ObjectWrapper();
             DA.GetData(0, ref obj);
-            SlicePartsDocument slicePartsDocument = (SlicePartsDocument)obj.Value;
+            SlicePartsDocument slicePartsDocument = obj.Value as SlicePartsDocument;
+
+            if (slicePartsDocument is null && obj.Value is IDocumentItem docItem)
+            {
+                slicePartsDocument = docItem.OpenLastValidMinorRevisionDocument() as SlicePartsDocument;
+            }
 
             foreach (var tsObj in slicePartsDocument.RootEntity.Constituents.Where(x => !x.IsGhost))
             {
@@ -125,6 +135,42 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
         public void VariableParameterMaintenance()
         {
 
+        }
+
+        private List<string> GetOutputList(GH_Structure<IGH_Goo> tsProj)
+        {
+            // Get the full list of output parameters
+            var listofDocsNames = new List<string>();
+
+            foreach (var ghGoo in tsProj.AllData(true))
+            {
+
+                GH_ObjectWrapper ghObj = new GH_ObjectWrapper();
+                ghObj = (GH_ObjectWrapper)ghGoo;
+                
+                SlicePartsDocument pDoc = null;
+
+                if (ghObj.Value is IDocumentItem docItem)
+                {
+                    
+                    pDoc = docItem.OpenLastValidMinorRevisionDocument() as SlicePartsDocument;
+                }
+                else if (ghObj.Value is SlicePartsDocument sliceDoc)
+                {
+
+                    pDoc = sliceDoc;
+                }           
+               
+                if (pDoc != null)
+                {
+                    foreach (var item in pDoc.RootEntity.Constituents.Where(x => !x.IsGhost))
+                    {
+                        listofDocsNames.Add(item.EditingName);
+                    }
+                }
+
+            }
+            return listofDocsNames;
         }
 
         private List<string> GetOutputList(GH_Structure<GH_String> tsProj)

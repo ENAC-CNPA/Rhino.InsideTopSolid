@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Cirtes.Strato.Cad.DB.Documents;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 using TopSolid.Cad.Design.DB.Documents;
 
@@ -42,7 +43,8 @@ namespace EPFL.GrasshopperTopSolid.Components.STRATO
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             SlicePartsDocument doc = TopSolid.Kernel.UI.Application.CurrentDocument as SlicePartsDocument;
-            DA.SetData(0, doc);
+            GH_ObjectWrapper wrapper = new GH_ObjectWrapper(doc);
+            DA.SetData(0, wrapper);
         }
 
 

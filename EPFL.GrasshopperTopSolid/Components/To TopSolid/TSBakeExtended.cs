@@ -349,17 +349,31 @@ namespace EPFL.GrasshopperTopSolid.Components
                             entitiesCreation.NeedsExecuting = true;
 
                             ShapeEntity existingShpaeEntity = entitiesCreation.ChildrenEntities.First() as ShapeEntity;
-                            if (existingShpaeEntity != null)
+                            if (existingShpaeEntity != null && existingShpaeEntity.Name == name.ToString())
+                            {
                                 entity = existingShpaeEntity;
 
-                            if (entity != null)
-                            {
                                 entity.Geometry = topSolidShape;
                                 SetShapeAttributes(entity, DA, name);
                                 (entity.Geometry as Shape).UpdateDisplayItems();
                                 entity.NotifyModifying(true);
+
+                                entitiesCreation.IsEdited = false;
                             }
-                            entitiesCreation.IsEdited = false;
+
+
+                            else
+                            {
+                                entity = new ShapeEntity(doc, 0);
+                                entity.Geometry = topSolidShape;
+                                SetShapeAttributes(entity, DA, name);
+
+
+                                entitiesCreation = new EntitiesCreation(doc, 0);
+                                entitiesCreation.AddChildEntity(entity);
+                                entitiesCreation.Create();
+                                doc.ShapesFolderEntity.AddEntity(entity);
+                            }
                         }
 
                         else
@@ -374,6 +388,7 @@ namespace EPFL.GrasshopperTopSolid.Components
                             entitiesCreation.Create();
                             doc.ShapesFolderEntity.AddEntity(entity);
                         }
+
 
                     }
 

@@ -37,7 +37,7 @@ namespace EPFL.GrasshopperTopSolid
             //TSXGen.List<G.D3.Shapes.Vertex> vertexlist = new TSXGen.List<G.D3.Shapes.Vertex>();
             double tol_Rh = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
             double tol_TS = TopSolid.Kernel.G.Precision.ModelingLinearTolerance /*/ 2*/;
-            bool forcesNonPeriodic = false;
+            bool forcesNonPeriodic = true;//AHW Added after an error from an extruded surface
             if (face.GeometryType == SurfaceGeometryType.Cone || face.GeometryType == SurfaceGeometryType.Cylinder || face.GeometryType == SurfaceGeometryType.Sphere || face.GeometryType == SurfaceGeometryType.Torus || face.GeometryType == SurfaceGeometryType.Revolved)
                 forcesNonPeriodic = true;
 
