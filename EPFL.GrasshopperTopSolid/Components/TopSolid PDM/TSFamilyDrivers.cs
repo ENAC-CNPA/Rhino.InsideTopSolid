@@ -195,6 +195,9 @@ namespace EPFL.GrasshopperTopSolid.Components.TopSolid_PDM
                         case InstanceDriverType.Integer:
                             val = new BasicSmartInteger(null, (int)((GH_Number)inputValue.Value).Value);
                             break;
+                        case InstanceDriverType.Boolean:
+                            val = new BasicSmartBoolean(null, (bool)((GH_Boolean)inputValue.Value).Value);
+                            break;
                             //case InstanceDriverType.Point:
                             //    val = new BasicSmartPoint(null, (inputValue.Value as PointEntity)?.Geometry);
                             //    if (val is null)
